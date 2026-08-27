@@ -6,13 +6,15 @@ import (
 	"rtwp_ebitengine/internal/ecs"
 
 	"github.com/yohamta/donburi"
+	dmath "github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/transform"
 )
 
 const DRAG_CLICK_THRESHOLD = 40
 
 type State struct {
-	DragStart *ecs.Point
-	DragEnd   *ecs.Point
+	DragStart *dmath.Vec2
+	DragEnd   *dmath.Vec2
 }
 
 func NewState() State {
@@ -25,7 +27,7 @@ func (g *Game) ClearSelection() {
 	}
 }
 
-func (g *Game) HandleClick(point ecs.Point) {
+func (g *Game) HandleClick(point dmath.Vec2) {
 	if g.SelectAt(point) {
 		return
 	}
@@ -33,7 +35,7 @@ func (g *Game) HandleClick(point ecs.Point) {
 	g.MoveSelectedTo(point)
 }
 
-func (g *Game) SelectAt(point ecs.Point) bool {
+func (g *Game) SelectAt(point dmath.Vec2) bool {
 	for entry := range ecs.ActorTag.Iter(g.World) {
 		x, y, width, height, ok := actorBounds(entry)
 		if !ok {
@@ -73,18 +75,18 @@ func (g *Game) SelectInDragRect() bool {
 	return valid
 }
 
-func (g *Game) MoveSelectedTo(point ecs.Point) {
+func (g *Game) MoveSelectedTo(point dmath.Vec2) {
 	for selected := range ecs.Selected.Iter(g.World) {
 		ecs.WithMovement(selected, point)
 	}
 }
 
-func (g *Game) BeginDrag(point ecs.Point) {
+func (g *Game) BeginDrag(point dmath.Vec2) {
 	g.State.DragStart = &point
 	g.State.DragEnd = nil
 }
 
-func (g *Game) UpdateDrag(point ecs.Point) {
+func (g *Game) UpdateDrag(point dmath.Vec2) {
 	if g.State.DragStart == nil {
 		return
 	}
@@ -92,7 +94,7 @@ func (g *Game) UpdateDrag(point ecs.Point) {
 	g.State.DragEnd = &point
 }
 
-func (g *Game) EndDrag(point ecs.Point) {
+func (g *Game) EndDrag(point dmath.Vec2) {
 	if g.State.DragStart == nil {
 		return
 	}
@@ -143,21 +145,21 @@ func (g *Game) DragRect() (x, y, width, height float64, ok bool) {
 }
 
 func actorBounds(entry *donburi.Entry) (x, y, width, height float64, ok bool) {
-	if !entry.HasComponent(ecs.Position) || !entry.HasComponent(ecs.Image) {
+	if !entry.HasComponent(transform.Transform) || !entry.HasComponent(ecs.Image) {
 		return 0, 0, 0, 0, false
 	}
 
-	position := ecs.Position.Get(entry)
+	trans := transform.Transform.Get(entry)
 	image := *ecs.Image.Get(entry)
 	if image == nil {
 		return 0, 0, 0, 0, false
 	}
 
 	bounds := image.Bounds()
-	return position.X, position.Y, float64(bounds.Dx()), float64(bounds.Dy()), true
+	return trans.LocalPosition.X, trans.LocalPosition.Y, float64(bounds.Dx()), float64(bounds.Dy()), true
 }
 
-func pointInRect(point ecs.Point, x, y, width, height float64) bool {
+func pointInRect(point dmath.Vec2, x, y, width, height float64) bool {
 	return point.X >= x &&
 		point.X < x+width &&
 		point.Y >= y &&

@@ -3,31 +3,37 @@ package ecs
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/transform"
 	"github.com/yohamta/donburi/filter"
 )
 
 var Image = donburi.NewComponentType[*ebiten.Image]()
 var ImageQuery = donburi.NewQuery(filter.And(
 	filter.Contains(Image),
-	filter.Contains(Position),
+	filter.Contains(transform.Transform),
 ))
 
-func WithImage(entry *donburi.Entry, image *ebiten.Image, position Point) {
+func WithImage(entry *donburi.Entry, image *ebiten.Image, position math.Vec2) {
 	entry.AddComponent(Image)
 	Image.SetValue(entry, image)
-	WithPosition(entry, position)
+
+	entry.AddComponent(transform.Transform)
+	transform.Transform.SetValue(entry, transform.TransformData{
+		LocalPosition: position,
+	})
 }
 
 func RenderEntries(screen *ebiten.Image, world donburi.World) {
 	for entry := range ImageQuery.Iter(world) {
-		position := Position.Get(entry)
+		transform := transform.Transform.Get(entry)
 		image := *Image.Get(entry)
 		if entry.HasComponent(Selected) {
 			image = GreenSquareImage
 		}
 
 		options := &ebiten.DrawImageOptions{}
-		options.GeoM.Translate(position.X, position.Y)
+		options.GeoM.Translate(transform.LocalPosition.X, transform.LocalPosition.Y)
 		screen.DrawImage(image, options)
 	}
 }

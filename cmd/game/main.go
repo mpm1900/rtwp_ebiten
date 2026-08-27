@@ -11,6 +11,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/math"
 )
 
 func main() {
@@ -31,8 +32,8 @@ func main() {
 		State: game.NewState(),
 	}
 
-	one := ecs.MakeActor(world, ecs.Point{X: 100, Y: 100})
-	ecs.MakeActor(world, ecs.Point{X: 50, Y: 200})
+	one := ecs.MakeActor(world, math.Vec2{X: 100, Y: 100})
+	ecs.MakeActor(world, math.Vec2{X: 50, Y: 200})
 
 	attack_up := ecs.CreateEffect(world, effects.AttackUp)
 	ecs.WithDuration(attack_up, 60)

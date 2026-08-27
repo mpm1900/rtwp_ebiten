@@ -4,6 +4,8 @@ import (
 	"math"
 
 	"github.com/yohamta/donburi"
+	dmath "github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/transform"
 	"github.com/yohamta/donburi/filter"
 )
 
@@ -13,21 +15,21 @@ const (
 )
 
 type MovementData struct {
-	Target       Point
+	Target       dmath.Vec2
 	Speed        float64
 	StopDistance float64
 }
 
 var Movement = donburi.NewComponentType[MovementData]()
 var MovementQuery = donburi.NewQuery(
-	filter.Contains(Movement, Position),
+	filter.Contains(Movement, transform.Transform),
 )
 
-func WithMovement(entry *donburi.Entry, target Point) {
+func WithMovement(entry *donburi.Entry, target dmath.Vec2) {
 	WithMovementSpeed(entry, target, DefaultMovementSpeed, DEFAULT_STOP_DISTANCE)
 }
 
-func WithMovementSpeed(entry *donburi.Entry, target Point, speed float64, stopDistance float64) {
+func WithMovementSpeed(entry *donburi.Entry, target dmath.Vec2, speed float64, stopDistance float64) {
 	entry.AddComponent(Movement)
 	Movement.SetValue(entry, MovementData{
 		Target:       target,
@@ -40,11 +42,11 @@ func MoveEntities(world donburi.World) {
 	completed := []donburi.Entity{}
 
 	for entry := range MovementQuery.Iter(world) {
-		position := Position.Get(entry)
+		trans := transform.Transform.Get(entry)
 		movement := Movement.Get(entry)
 
-		dx := movement.Target.X - position.X
-		dy := movement.Target.Y - position.Y
+		dx := movement.Target.X - trans.LocalPosition.X
+		dy := movement.Target.Y - trans.LocalPosition.Y
 		distance := math.Hypot(dx, dy)
 		stopDistance := movement.StopDistance
 		if stopDistance <= 0 {
@@ -62,8 +64,8 @@ func MoveEntities(world donburi.World) {
 		}
 
 		step := math.Min(speed, distance)
-		position.X += dx / distance * step
-		position.Y += dy / distance * step
+		trans.LocalPosition.X += dx / distance * step
+		trans.LocalPosition.Y += dy / distance * step
 
 		if distance-step <= stopDistance {
 			completed = append(completed, entry.Entity())

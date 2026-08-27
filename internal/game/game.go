@@ -12,6 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/math"
 )
 
 type Game struct {
@@ -70,9 +71,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return 680, 480
 }
 
-func cursorPoint() ecs.Point {
+func cursorPoint() math.Vec2 {
 	x, y := ebiten.CursorPosition()
-	return ecs.Point{
+	return math.Vec2{
 		X: float64(x),
 		Y: float64(y),
 	}

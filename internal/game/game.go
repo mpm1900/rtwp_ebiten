@@ -11,8 +11,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/transform"
 )
 
 type Game struct {
@@ -34,17 +36,21 @@ func (g *Game) Update() error {
 	}
 
 	g.Frame.Restore(g.World)
+
 	components.DecrementDelays(g.World)
 	components.DecrementDurations(g.World)
 	components.RemoveCompleted(g.World)
 	components.RemoveCompletedDelays(g.World)
+
 	components.ResolveModifiers(g.World, g.Frame, effects.EffectRegistry)
 	components.MoveEntities(g.World)
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	var text strings.Builder
+	g.drawRanges(g.World, screen)
 	effect_entry, ok := components.Duration.First(g.World)
 	if ok {
 		if effect_entry.HasComponent(components.Duration) {
@@ -56,7 +62,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for selected := range components.Selected.Iter(g.World) {
 		if selected.HasComponent(components.Stats) {
 			stats := components.Stats.Get(selected)
-			text.WriteString(fmt.Sprintf("Attack Power = %f, Entity = %d \n", stats.Base[components.StatMelee], selected.Id()))
+			text.WriteString(fmt.Sprintf("Speed = %f, Entity = %d \n", stats.Base[components.StatSpeed], selected.Id()))
 			continue
 		}
 		text.WriteString(fmt.Sprintf("Selected = %s \n", selected.Entity()))
@@ -64,6 +70,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	components.RenderEntries(screen, g.World)
 	g.drawDragRect(screen)
+
 	ebitenutil.DebugPrint(screen, text.String())
 }
 
@@ -86,8 +93,28 @@ func (g *Game) drawDragRect(screen *ebiten.Image) {
 	}
 
 	borderColor := color.RGBA{0, 0xff, 0, 0xff}
-	ebitenutil.DrawRect(screen, x, y, width, 1, borderColor)
-	ebitenutil.DrawRect(screen, x, y+height-1, width, 1, borderColor)
-	ebitenutil.DrawRect(screen, x, y, 1, height, borderColor)
-	ebitenutil.DrawRect(screen, x+width-1, y, 1, height, borderColor)
+	vx := float32(x)
+	vy := float32(y)
+	vheight := float32(height)
+	vwidth := float32(width)
+	vector.FillRect(screen, vx, vy, vwidth, 1, borderColor, false)
+	vector.FillRect(screen, vx, vy+vheight-1, vwidth, 1, borderColor, false)
+	vector.FillRect(screen, vx, vy, 1, vheight, borderColor, false)
+	vector.FillRect(screen, vx+vwidth-1, vy, 1, vheight, borderColor, false)
+}
+
+func (g *Game) drawRanges(world donburi.World, screen *ebiten.Image) {
+	for entry := range components.RangeQuery.Iter(world) {
+		t := transform.GetTransform(entry)
+		r := components.Range.Get(entry)
+		vector.StrokeCircle(
+			screen,
+			float32(t.LocalPosition.X),
+			float32(t.LocalPosition.Y),
+			float32(*r),
+			2,
+			color.RGBA{0xff, 0xff, 0, 0xff},
+			false,
+		)
+	}
 }

@@ -9,6 +9,7 @@ import (
 
 const (
 	StatMelee = iota
+	StatSpeed
 )
 
 type StatsValue map[int]float64

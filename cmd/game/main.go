@@ -27,13 +27,15 @@ func main() {
 		State: game.NewState(),
 	}
 
-	one := components.MakeActor(world, math.Vec2{X: 100, Y: 100})
-	components.MakeActor(world, math.Vec2{X: 50, Y: 200})
+	components.CreateActor(world, math.NewVec2(100, 100))
+	components.CreateActor(world, math.NewVec2(50, 200))
 
-	attack_up := components.CreateEffect(world, effects.AttackUp)
-	components.WithDuration(attack_up, 60)
+	attack_up := components.CreateEffect(world, effects.SpeedUp)
+	// components.WithDuration(attack_up, 60)
 	components.WithDelay(attack_up, 60)
-	components.WithEffect(one, attack_up)
+	// components.WithTargets(attack_up, one.Entity())
+	components.WithRange(attack_up, 120)
+	components.WithImage(attack_up, assets.YellowSquareImage, math.NewVec2(200, 200))
 
 	if err := ebiten.RunGame(&game); err != nil {
 		log.Fatal(err)

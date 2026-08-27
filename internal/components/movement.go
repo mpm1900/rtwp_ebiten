@@ -10,13 +10,11 @@ import (
 )
 
 const (
-	DefaultMovementSpeed  = 2.0
 	DEFAULT_STOP_DISTANCE = 1.0
 )
 
 type MovementData struct {
 	Target       dmath.Vec2
-	Speed        float64
 	StopDistance float64
 }
 
@@ -26,16 +24,26 @@ var MovementQuery = donburi.NewQuery(
 )
 
 func WithMovement(entry *donburi.Entry, target dmath.Vec2) {
-	WithMovementSpeed(entry, target, DefaultMovementSpeed, DEFAULT_STOP_DISTANCE)
+	WithMovementSpeed(entry, target, DEFAULT_STOP_DISTANCE)
 }
 
-func WithMovementSpeed(entry *donburi.Entry, target dmath.Vec2, speed float64, stopDistance float64) {
+func WithMovementSpeed(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
 	entry.AddComponent(Movement)
 	Movement.SetValue(entry, MovementData{
 		Target:       target,
-		Speed:        speed,
 		StopDistance: stopDistance,
 	})
+}
+
+func GetSpeed(entry *donburi.Entry) float64 {
+	speed := 0.0
+
+	if entry.HasComponent(Stats) {
+		stats := Stats.Get(entry)
+		speed = stats.Base[StatSpeed]
+	}
+
+	return speed
 }
 
 func MoveEntities(world donburi.World) {
@@ -58,12 +66,7 @@ func MoveEntities(world donburi.World) {
 			continue
 		}
 
-		speed := movement.Speed
-		if speed <= 0 {
-			speed = DefaultMovementSpeed
-		}
-
-		step := math.Min(speed, distance)
+		step := math.Min(GetSpeed(entry), distance)
 		trans.LocalPosition.X += dx / distance * step
 		trans.LocalPosition.Y += dy / distance * step
 

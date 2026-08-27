@@ -52,4 +52,8 @@ func EachDependent(world donburi.World, modifier *donburi.Entry, yield func(*don
 			yield(world.Entry(entity))
 		}
 	}
+
+	if modifier.HasComponent(Range) {
+		EachActorsInRange(world, modifier, yield)
+	}
 }

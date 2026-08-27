@@ -33,10 +33,10 @@ func (e StatsChange) Apply(world donburi.World, frame *util.Frame, modifier *don
 	})
 }
 
-var AttackUp StatsChange = StatsChange{
+var SpeedUp StatsChange = StatsChange{
 	EffectID: uuid.MustParse("01a03c4e-06de-7469-9bb8-efc31688ee16"),
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
-		stats.Base[components.StatMelee] = stats.Base[components.StatMelee] * 2
+		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] * 2
 	},
 }

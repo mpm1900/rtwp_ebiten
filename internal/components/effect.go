@@ -15,7 +15,3 @@ type Effect interface {
 func CreateEffect(world donburi.World, effect Effect) *donburi.Entry {
 	return CreateModifier(world, effect.Modifier())
 }
-
-func WithEffect(parent *donburi.Entry, effect *donburi.Entry) {
-	WithTargets(effect, parent.Entity())
-}

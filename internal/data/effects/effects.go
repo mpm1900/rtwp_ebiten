@@ -7,6 +7,6 @@ import (
 )
 
 var EffectRegistry = map[uuid.UUID]components.Effect{
-	// attack up
-	SpeedUp.EffectID: SpeedUp,
+	SpeedDown.EffectID: SpeedDown,
+	SpeedUp.EffectID:   SpeedUp,
 }

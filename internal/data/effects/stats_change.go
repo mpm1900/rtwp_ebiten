@@ -40,3 +40,11 @@ var SpeedUp StatsChange = StatsChange{
 		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] * 2
 	},
 }
+
+var SpeedDown StatsChange = StatsChange{
+	EffectID: uuid.MustParse("01a044a8-c3dd-76ae-9f59-0187fae561bc"),
+	Priority: 0,
+	Update: func(stats *components.StatsData) {
+		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] / 2
+	},
+}

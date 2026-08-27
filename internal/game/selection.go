@@ -1,7 +1,7 @@
 package game
 
 import (
-	"fmt"
+	"image"
 	"math"
 	"rtwp_ebitengine/internal/components"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/yohamta/donburi/features/transform"
 )
 
-const DRAG_CLICK_THRESHOLD = 40
+const dragClickThreshold = 40
 
 type State struct {
 	DragStart *dmath.Vec2
@@ -36,13 +36,15 @@ func (g *Game) HandleClick(point dmath.Vec2) {
 }
 
 func (g *Game) SelectAt(point dmath.Vec2) bool {
+	mousePoint := screenPoint(point)
+
 	for entry := range components.ActorTag.Iter(g.World) {
-		x, y, width, height, ok := actorBounds(entry)
+		bounds, ok := actorBounds(entry)
 		if !ok {
 			continue
 		}
 
-		if pointInRect(point, x, y, width, height) {
+		if mousePoint.In(bounds) {
 			g.ClearSelection()
 			entry.AddComponent(components.Selected)
 			return true
@@ -54,19 +56,19 @@ func (g *Game) SelectAt(point dmath.Vec2) bool {
 
 func (g *Game) SelectInDragRect() bool {
 	valid := false
-	x, y, width, height, ok := g.DragRect()
+	dragRect, ok := g.DragRect()
 	if !ok {
 		return false
 	}
 
 	g.ClearSelection()
 	for entry := range components.ActorTag.Iter(g.World) {
-		actorX, actorY, actorWidth, actorHeight, ok := actorBounds(entry)
+		actorRect, ok := actorBounds(entry)
 		if !ok {
 			continue
 		}
 
-		if rectsOverlap(x, y, width, height, actorX, actorY, actorWidth, actorHeight) {
+		if dragRect.Overlaps(actorRect) {
 			entry.AddComponent(components.Selected)
 			valid = true
 		}
@@ -100,9 +102,8 @@ func (g *Game) EndDrag(point dmath.Vec2) {
 	}
 
 	g.UpdateDrag(point)
-	distance := g.DragDistance()
-	fmt.Println(distance)
-	if distance <= DRAG_CLICK_THRESHOLD {
+	distance := g.State.DragStart.Distance(*g.State.DragEnd)
+	if distance <= dragClickThreshold {
 		g.HandleClick(*g.State.DragStart)
 	} else {
 		g.SelectInDragRect()
@@ -116,59 +117,60 @@ func (g *Game) ClearDrag() {
 	g.State.DragEnd = nil
 }
 
-func (g *Game) DragDistance() float64 {
+func (g *Game) DragRect() (image.Rectangle, bool) {
 	if g.State.DragStart == nil || g.State.DragEnd == nil {
-		return 0
+		return image.Rectangle{}, false
 	}
 
-	dx := g.State.DragEnd.X - g.State.DragStart.X
-	dy := g.State.DragEnd.Y - g.State.DragStart.Y
-	return math.Hypot(dx, dy)
+	rect := screenRect(*g.State.DragStart, *g.State.DragEnd)
+	if rect.Dx() < 1 || rect.Dy() < 1 {
+		return image.Rectangle{}, false
+	}
+
+	return rect, true
 }
 
-func (g *Game) DragRect() (x, y, width, height float64, ok bool) {
-	if g.State.DragStart == nil || g.State.DragEnd == nil {
-		return 0, 0, 0, 0, false
-	}
-
-	start := g.State.DragStart
-	end := g.State.DragEnd
-	x = math.Min(start.X, end.X)
-	y = math.Min(start.Y, end.Y)
-	width = math.Abs(end.X - start.X)
-	height = math.Abs(end.Y - start.Y)
-	if width < 1 || height < 1 {
-		return 0, 0, 0, 0, false
-	}
-
-	return x, y, width, height, true
-}
-
-func actorBounds(entry *donburi.Entry) (x, y, width, height float64, ok bool) {
+func actorBounds(entry *donburi.Entry) (image.Rectangle, bool) {
 	if !entry.HasComponent(transform.Transform) || !entry.HasComponent(components.Image) {
-		return 0, 0, 0, 0, false
+		return image.Rectangle{}, false
 	}
 
 	trans := transform.Transform.Get(entry)
-	image := *components.Image.Get(entry)
-	if image == nil {
-		return 0, 0, 0, 0, false
+	sprite := *components.Image.Get(entry)
+	if sprite == nil {
+		return image.Rectangle{}, false
 	}
 
-	bounds := image.Bounds()
-	return trans.LocalPosition.X, trans.LocalPosition.Y, float64(bounds.Dx()), float64(bounds.Dy()), true
+	bounds := sprite.Bounds()
+	min := screenPoint(trans.LocalPosition)
+	max := image.Pt(
+		int(math.Ceil(trans.LocalPosition.X+float64(bounds.Dx()))),
+		int(math.Ceil(trans.LocalPosition.Y+float64(bounds.Dy()))),
+	)
+	return image.Rectangle{
+		Min: min,
+		Max: max,
+	}, true
 }
 
-func pointInRect(point dmath.Vec2, x, y, width, height float64) bool {
-	return point.X >= x &&
-		point.X < x+width &&
-		point.Y >= y &&
-		point.Y < y+height
+func screenPoint(point dmath.Vec2) image.Point {
+	return image.Pt(
+		int(math.Floor(point.X)),
+		int(math.Floor(point.Y)),
+	)
 }
 
-func rectsOverlap(aX, aY, aWidth, aHeight, bX, bY, bWidth, bHeight float64) bool {
-	return aX < bX+bWidth &&
-		aX+aWidth > bX &&
-		aY < bY+bHeight &&
-		aY+aHeight > bY
+func screenRect(start, end dmath.Vec2) image.Rectangle {
+	min := image.Pt(
+		int(math.Floor(math.Min(start.X, end.X))),
+		int(math.Floor(math.Min(start.Y, end.Y))),
+	)
+	max := image.Pt(
+		int(math.Ceil(math.Max(start.X, end.X))),
+		int(math.Ceil(math.Max(start.Y, end.Y))),
+	)
+	return image.Rectangle{
+		Min: min,
+		Max: max,
+	}
 }

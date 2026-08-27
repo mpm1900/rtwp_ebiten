@@ -13,7 +13,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/features/math"
+	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 )
 
@@ -78,25 +78,25 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return 680, 480
 }
 
-func cursorPoint() math.Vec2 {
+func cursorPoint() dmath.Vec2 {
 	x, y := ebiten.CursorPosition()
-	return math.Vec2{
+	return dmath.Vec2{
 		X: float64(x),
 		Y: float64(y),
 	}
 }
 
 func (g *Game) drawDragRect(screen *ebiten.Image) {
-	x, y, width, height, ok := g.DragRect()
+	rect, ok := g.DragRect()
 	if !ok {
 		return
 	}
 
 	borderColor := color.RGBA{0, 0xff, 0, 0xff}
-	vx := float32(x)
-	vy := float32(y)
-	vheight := float32(height)
-	vwidth := float32(width)
+	vx := float32(rect.Min.X)
+	vy := float32(rect.Min.Y)
+	vheight := float32(rect.Dy())
+	vwidth := float32(rect.Dx())
 	vector.FillRect(screen, vx, vy, vwidth, 1, borderColor, false)
 	vector.FillRect(screen, vx, vy+vheight-1, vwidth, 1, borderColor, false)
 	vector.FillRect(screen, vx, vy, 1, vheight, borderColor, false)

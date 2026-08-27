@@ -1,6 +1,8 @@
-package ecs
+package components
 
 import (
+	"rtwp_ebitengine/internal/assets"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
@@ -29,7 +31,7 @@ func RenderEntries(screen *ebiten.Image, world donburi.World) {
 		transform := transform.Transform.Get(entry)
 		image := *Image.Get(entry)
 		if entry.HasComponent(Selected) {
-			image = GreenSquareImage
+			image = assets.GreenSquareImage
 		}
 
 		options := &ebiten.DrawImageOptions{}

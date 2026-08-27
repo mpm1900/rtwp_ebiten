@@ -3,8 +3,8 @@ package game
 import (
 	"fmt"
 	"image/color"
+	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/data/effects"
-	"rtwp_ebitengine/internal/ecs"
 	"rtwp_ebitengine/internal/util"
 	"strings"
 
@@ -34,35 +34,35 @@ func (g *Game) Update() error {
 	}
 
 	g.Frame.Restore(g.World)
-	ecs.DecrementDelays(g.World)
-	ecs.DecrementDurations(g.World)
-	ecs.RemoveCompleted(g.World)
-	ecs.RemoveCompletedDelays(g.World)
-	ecs.ResolveModifiers(g.World, g.Frame, effects.EffectRegistry)
-	ecs.MoveEntities(g.World)
+	components.DecrementDelays(g.World)
+	components.DecrementDurations(g.World)
+	components.RemoveCompleted(g.World)
+	components.RemoveCompletedDelays(g.World)
+	components.ResolveModifiers(g.World, g.Frame, effects.EffectRegistry)
+	components.MoveEntities(g.World)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	var text strings.Builder
-	effect_entry, ok := ecs.Duration.First(g.World)
+	effect_entry, ok := components.Duration.First(g.World)
 	if ok {
-		if effect_entry.HasComponent(ecs.Duration) {
-			duration := ecs.Duration.Get(effect_entry)
+		if effect_entry.HasComponent(components.Duration) {
+			duration := components.Duration.Get(effect_entry)
 			text.WriteString(fmt.Sprintf("Duration = %d \n", *duration))
 		}
 	}
 
-	for selected := range ecs.Selected.Iter(g.World) {
-		if selected.HasComponent(ecs.Stats) {
-			stats := ecs.Stats.Get(selected)
-			text.WriteString(fmt.Sprintf("Attack Power = %f, Entity = %d \n", stats.Base[ecs.StatMelee], selected.Id()))
+	for selected := range components.Selected.Iter(g.World) {
+		if selected.HasComponent(components.Stats) {
+			stats := components.Stats.Get(selected)
+			text.WriteString(fmt.Sprintf("Attack Power = %f, Entity = %d \n", stats.Base[components.StatMelee], selected.Id()))
 			continue
 		}
 		text.WriteString(fmt.Sprintf("Selected = %s \n", selected.Entity()))
 	}
 
-	ecs.RenderEntries(screen, g.World)
+	components.RenderEntries(screen, g.World)
 	g.drawDragRect(screen)
 	ebitenutil.DebugPrint(screen, text.String())
 }

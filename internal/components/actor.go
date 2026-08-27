@@ -1,14 +1,11 @@
-package ecs
+package components
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
+	"rtwp_ebitengine/internal/assets"
+
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
 )
-
-var RedSquareImage *ebiten.Image
-var BlueSquareImage *ebiten.Image
-var GreenSquareImage *ebiten.Image
 
 var ActorTag = donburi.NewTag("Actor")
 
@@ -19,6 +16,6 @@ func MakeActor(world donburi.World, position math.Vec2) *donburi.Entry {
 		StatMelee: 10.0,
 	}))
 
-	WithImage(actor_entry, RedSquareImage, position)
+	WithImage(actor_entry, assets.RedSquareImage, position)
 	return actor_entry
 }

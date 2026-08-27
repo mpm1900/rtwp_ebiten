@@ -3,7 +3,7 @@ package game
 import (
 	"fmt"
 	"math"
-	"rtwp_ebitengine/internal/ecs"
+	"rtwp_ebitengine/internal/components"
 
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
@@ -22,8 +22,8 @@ func NewState() State {
 }
 
 func (g *Game) ClearSelection() {
-	for selected := range ecs.Selected.Iter(g.World) {
-		selected.RemoveComponent(ecs.Selected)
+	for selected := range components.Selected.Iter(g.World) {
+		selected.RemoveComponent(components.Selected)
 	}
 }
 
@@ -36,7 +36,7 @@ func (g *Game) HandleClick(point dmath.Vec2) {
 }
 
 func (g *Game) SelectAt(point dmath.Vec2) bool {
-	for entry := range ecs.ActorTag.Iter(g.World) {
+	for entry := range components.ActorTag.Iter(g.World) {
 		x, y, width, height, ok := actorBounds(entry)
 		if !ok {
 			continue
@@ -44,7 +44,7 @@ func (g *Game) SelectAt(point dmath.Vec2) bool {
 
 		if pointInRect(point, x, y, width, height) {
 			g.ClearSelection()
-			entry.AddComponent(ecs.Selected)
+			entry.AddComponent(components.Selected)
 			return true
 		}
 	}
@@ -60,14 +60,14 @@ func (g *Game) SelectInDragRect() bool {
 	}
 
 	g.ClearSelection()
-	for entry := range ecs.ActorTag.Iter(g.World) {
+	for entry := range components.ActorTag.Iter(g.World) {
 		actorX, actorY, actorWidth, actorHeight, ok := actorBounds(entry)
 		if !ok {
 			continue
 		}
 
 		if rectsOverlap(x, y, width, height, actorX, actorY, actorWidth, actorHeight) {
-			entry.AddComponent(ecs.Selected)
+			entry.AddComponent(components.Selected)
 			valid = true
 		}
 	}
@@ -76,8 +76,8 @@ func (g *Game) SelectInDragRect() bool {
 }
 
 func (g *Game) MoveSelectedTo(point dmath.Vec2) {
-	for selected := range ecs.Selected.Iter(g.World) {
-		ecs.WithMovement(selected, point)
+	for selected := range components.Selected.Iter(g.World) {
+		components.WithMovement(selected, point)
 	}
 }
 
@@ -145,12 +145,12 @@ func (g *Game) DragRect() (x, y, width, height float64, ok bool) {
 }
 
 func actorBounds(entry *donburi.Entry) (x, y, width, height float64, ok bool) {
-	if !entry.HasComponent(transform.Transform) || !entry.HasComponent(ecs.Image) {
+	if !entry.HasComponent(transform.Transform) || !entry.HasComponent(components.Image) {
 		return 0, 0, 0, 0, false
 	}
 
 	trans := transform.Transform.Get(entry)
-	image := *ecs.Image.Get(entry)
+	image := *components.Image.Get(entry)
 	if image == nil {
 		return 0, 0, 0, 0, false
 	}

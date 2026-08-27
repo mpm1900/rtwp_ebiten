@@ -1,12 +1,12 @@
 package effects
 
 import (
-	"rtwp_ebitengine/internal/ecs"
+	"rtwp_ebitengine/internal/components"
 
 	"github.com/google/uuid"
 )
 
-var EffectRegistry = map[uuid.UUID]ecs.Effect{
+var EffectRegistry = map[uuid.UUID]components.Effect{
 	// attack up
 	AttackUp.EffectID: AttackUp,
 }

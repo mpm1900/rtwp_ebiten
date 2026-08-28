@@ -3,10 +3,12 @@ package game
 import (
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/yohamta/donburi"
 )
 
 const (
@@ -42,7 +44,17 @@ func (g *Game) HandleActions() {
 		{
 			if _, has_selection := components.Selected.First(g.World); has_selection {
 				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-					components.MoveSelectedTo(g.World, mousePoint, components.DEFAULT_STOP_DISTANCE)
+					var found *donburi.Entry
+
+					components.EachActorAtPoint(g.World, util.ToPoint(mousePoint), func(e *donburi.Entry) {
+						found = e
+					})
+
+					if found != nil {
+						components.MoveSelectedFollow(g.World, found.Entity(), components.DEFAULT_STOP_DISTANCE)
+					} else {
+						components.MoveSelectedTo(g.World, mousePoint, components.DEFAULT_STOP_DISTANCE)
+					}
 				}
 			}
 		}

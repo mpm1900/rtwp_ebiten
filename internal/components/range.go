@@ -1,8 +1,6 @@
 package components
 
 import (
-	"math"
-
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/transform"
 	"github.com/yohamta/donburi/filter"
@@ -25,10 +23,7 @@ func EachActorsInRange(world donburi.World, entry *donburi.Entry, yield func(*do
 	entry_range := *Range.Get(entry)
 	for actor := range ActorTag.Iter(world) {
 		actor_transform := transform.Transform.Get(actor)
-		distance := math.Hypot(
-			entry_transform.LocalPosition.X-actor_transform.LocalPosition.X,
-			entry_transform.LocalPosition.Y-actor_transform.LocalPosition.Y,
-		)
+		distance := entry_transform.LocalPosition.Distance(actor_transform.LocalPosition)
 		if entry_range >= distance {
 			yield(actor)
 		}

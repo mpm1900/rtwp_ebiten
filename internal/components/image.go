@@ -20,9 +20,16 @@ func WithImage(entry *donburi.Entry, image *ebiten.Image, position math.Vec2) {
 	entry.AddComponent(Image)
 	Image.SetValue(entry, image)
 
+	scale := math.NewVec2(1, 1)
+	if image != nil {
+		bounds := image.Bounds()
+		scale = math.NewVec2(float64(bounds.Dx()), float64(bounds.Dy()))
+	}
+
 	entry.AddComponent(transform.Transform)
 	transform.Transform.SetValue(entry, transform.TransformData{
 		LocalPosition: position,
+		LocalScale:    scale,
 	})
 }
 

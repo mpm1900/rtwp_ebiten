@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 )
 
@@ -45,22 +46,16 @@ func (g *Game) HandleSelection() {
 }
 
 func (g *Game) SelectAt(point dmath.Vec2) bool {
+	found := false
 	mousePoint := util.ToPoint(point)
+
 	g.ClearSelection()
+	components.EachActorAtPoint(g.World, mousePoint, func(entry *donburi.Entry) {
+		entry.AddComponent(components.Selected)
+		found = true
+	})
 
-	for entry := range components.ActorTag.Iter(g.World) {
-		bounds, ok := components.ActorBounds(entry)
-		if !ok {
-			continue
-		}
-
-		if mousePoint.In(bounds) {
-			entry.AddComponent(components.Selected)
-			return true
-		}
-	}
-
-	return false
+	return found
 }
 
 func (g *Game) SelectInDragRect() bool {
@@ -71,8 +66,8 @@ func (g *Game) SelectInDragRect() bool {
 	}
 
 	g.ClearSelection()
-	for entry := range components.ActorTag.Iter(g.World) {
-		actorRect, ok := components.ActorBounds(entry)
+	for entry := range components.ActorQuery.Iter(g.World) {
+		actorRect, ok := components.Rect(entry)
 		if !ok {
 			continue
 		}

@@ -26,15 +26,25 @@ func NewAction() ActionState {
 }
 
 func (g *Game) HandleActionInput() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		g.ClearSelection()
-	}
-
 	if inpututil.IsKeyJustPressed(ebiten.Key1) {
 		_, has_selected := components.Selected.First(g.World)
 		if has_selected {
 			g.Action.Name = ActionMove
 			g.ClearDrag()
+		}
+	}
+}
+
+func (g *Game) HandleActions() {
+	mousePoint := cursorPoint()
+	switch g.Action.Name {
+	case ActionMove:
+		{
+			if _, has_selection := components.Selected.First(g.World); has_selection {
+				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+					components.MoveSelectedTo(g.World, mousePoint, components.DEFAULT_STOP_DISTANCE)
+				}
+			}
 		}
 	}
 }

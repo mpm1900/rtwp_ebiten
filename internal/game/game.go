@@ -31,6 +31,7 @@ type Game struct {
 func (g *Game) Update() error {
 	// pre resolve, mutate things that are modified
 	g.HandleSelection()
+	g.HandleActions()
 	g.HandleActionInput()
 	g.Frame.Restore(g.World)
 

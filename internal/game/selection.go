@@ -2,14 +2,12 @@ package game
 
 import (
 	"image"
-	"math"
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
-	"github.com/yohamta/donburi/features/transform"
 )
 
 const dragClickThreshold = 40
@@ -32,6 +30,9 @@ func (g *Game) ClearSelection() {
 func (g *Game) HandleSelection() {
 	mousePoint := cursorPoint()
 
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		g.ClearSelection()
+	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		g.BeginDrag(mousePoint)
 	}
@@ -41,31 +42,19 @@ func (g *Game) HandleSelection() {
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		g.EndDrag(mousePoint)
 	}
-
-	switch g.Action.Name {
-	case ActionMove:
-		{
-			_, has_selection := components.Selected.First(g.World)
-			if has_selection {
-				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-					g.MoveSelectedTo(mousePoint)
-				}
-			}
-		}
-	}
 }
 
 func (g *Game) SelectAt(point dmath.Vec2) bool {
-	mousePoint := screenPoint(point)
+	mousePoint := util.ToPoint(point)
+	g.ClearSelection()
 
 	for entry := range components.ActorTag.Iter(g.World) {
-		bounds, ok := actorBounds(entry)
+		bounds, ok := components.ActorBounds(entry)
 		if !ok {
 			continue
 		}
 
 		if mousePoint.In(bounds) {
-			g.ClearSelection()
 			entry.AddComponent(components.Selected)
 			return true
 		}
@@ -83,7 +72,7 @@ func (g *Game) SelectInDragRect() bool {
 
 	g.ClearSelection()
 	for entry := range components.ActorTag.Iter(g.World) {
-		actorRect, ok := actorBounds(entry)
+		actorRect, ok := components.ActorBounds(entry)
 		if !ok {
 			continue
 		}
@@ -95,18 +84,6 @@ func (g *Game) SelectInDragRect() bool {
 	}
 
 	return valid
-}
-
-func (g *Game) MoveSelectedTo(point dmath.Vec2) {
-	push := ebiten.IsKeyPressed(ebiten.KeyShift)
-
-	for selected := range components.Selected.Iter(g.World) {
-		if push {
-			components.PushMovement(selected, point)
-			continue
-		}
-		components.WithMovement(selected, point)
-	}
 }
 
 func (g *Game) BeginDrag(point dmath.Vec2) {
@@ -147,55 +124,10 @@ func (g *Game) DragRect() (image.Rectangle, bool) {
 		return image.Rectangle{}, false
 	}
 
-	rect := screenRect(*g.Selection.DragStart, *g.Selection.DragEnd)
+	rect := util.ToRect(*g.Selection.DragStart, *g.Selection.DragEnd)
 	if rect.Dx() < 1 || rect.Dy() < 1 {
 		return image.Rectangle{}, false
 	}
 
 	return rect, true
-}
-
-func actorBounds(entry *donburi.Entry) (image.Rectangle, bool) {
-	if !entry.HasComponent(transform.Transform) || !entry.HasComponent(components.Image) {
-		return image.Rectangle{}, false
-	}
-
-	trans := transform.Transform.Get(entry)
-	sprite := *components.Image.Get(entry)
-	if sprite == nil {
-		return image.Rectangle{}, false
-	}
-
-	bounds := sprite.Bounds()
-	min := screenPoint(trans.LocalPosition)
-	max := image.Pt(
-		int(math.Ceil(trans.LocalPosition.X+float64(bounds.Dx()))),
-		int(math.Ceil(trans.LocalPosition.Y+float64(bounds.Dy()))),
-	)
-	return image.Rectangle{
-		Min: min,
-		Max: max,
-	}, true
-}
-
-func screenPoint(point dmath.Vec2) image.Point {
-	return image.Pt(
-		int(math.Floor(point.X)),
-		int(math.Floor(point.Y)),
-	)
-}
-
-func screenRect(start, end dmath.Vec2) image.Rectangle {
-	min := image.Pt(
-		int(math.Floor(math.Min(start.X, end.X))),
-		int(math.Floor(math.Min(start.Y, end.Y))),
-	)
-	max := image.Pt(
-		int(math.Ceil(math.Max(start.X, end.X))),
-		int(math.Ceil(math.Max(start.Y, end.Y))),
-	)
-	return image.Rectangle{
-		Min: min,
-		Max: max,
-	}
 }

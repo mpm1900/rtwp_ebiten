@@ -30,10 +30,10 @@ func (g *Game) ClearSelection() {
 }
 
 func (g *Game) HandleSelection() {
+	mousePoint := cursorPoint()
 	switch g.Action.Name {
 	case ActionSelect:
 		{
-			mousePoint := cursorPoint()
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				g.BeginDrag(mousePoint)
 			}
@@ -47,7 +47,7 @@ func (g *Game) HandleSelection() {
 		}
 	case ActionMove:
 		{
-			mousePoint := cursorPoint()
+
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				g.HandleClick(mousePoint)
 				g.Action.Name = ActionSelect
@@ -55,6 +55,12 @@ func (g *Game) HandleSelection() {
 		}
 	}
 
+	_, has_selection := components.Selected.First(g.World)
+	if has_selection {
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+			g.MoveSelectedTo(mousePoint)
+		}
+	}
 }
 
 func (g *Game) HandleClick(point dmath.Vec2) {

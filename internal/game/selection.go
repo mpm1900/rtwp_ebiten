@@ -5,6 +5,8 @@ import (
 	"math"
 	"rtwp_ebitengine/internal/components"
 
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
@@ -12,13 +14,13 @@ import (
 
 const dragClickThreshold = 40
 
-type State struct {
+type SelectionState struct {
 	DragStart *dmath.Vec2
 	DragEnd   *dmath.Vec2
 }
 
-func NewState() State {
-	return State{}
+func NewSelection() SelectionState {
+	return SelectionState{}
 }
 
 func (g *Game) ClearSelection() {
@@ -27,12 +29,48 @@ func (g *Game) ClearSelection() {
 	}
 }
 
-func (g *Game) HandleClick(point dmath.Vec2) {
-	if g.SelectAt(point) {
-		return
+func (g *Game) HandleSelection() {
+	switch g.Action.Name {
+	case ActionSelect:
+		{
+			mousePoint := cursorPoint()
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+				g.BeginDrag(mousePoint)
+			}
+			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+				g.UpdateDrag(mousePoint)
+			}
+			if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+				g.EndDrag(mousePoint)
+			}
+			break
+		}
+	case ActionMove:
+		{
+			mousePoint := cursorPoint()
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+				g.HandleClick(mousePoint)
+				g.Action.Name = ActionSelect
+			}
+		}
 	}
 
-	g.MoveSelectedTo(point)
+}
+
+func (g *Game) HandleClick(point dmath.Vec2) {
+	switch g.Action.Name {
+	case ActionSelect:
+		{
+			g.SelectAt(point)
+			break
+		}
+
+	case ActionMove:
+		{
+			g.MoveSelectedTo(point)
+			break
+		}
+	}
 }
 
 func (g *Game) SelectAt(point dmath.Vec2) bool {
@@ -84,45 +122,44 @@ func (g *Game) MoveSelectedTo(point dmath.Vec2) {
 }
 
 func (g *Game) BeginDrag(point dmath.Vec2) {
-	g.State.DragStart = &point
-	g.State.DragEnd = nil
+	g.Selection.DragStart = &point
+	g.Selection.DragEnd = nil
 }
 
 func (g *Game) UpdateDrag(point dmath.Vec2) {
-	if g.State.DragStart == nil {
+	if g.Selection.DragStart == nil {
 		return
 	}
 
-	g.State.DragEnd = &point
+	g.Selection.DragEnd = &point
 }
 
 func (g *Game) EndDrag(point dmath.Vec2) {
-	if g.State.DragStart == nil {
+	if g.Selection.DragStart == nil {
 		return
 	}
 
 	g.UpdateDrag(point)
-	distance := g.State.DragStart.Distance(*g.State.DragEnd)
+	distance := g.Selection.DragStart.Distance(*g.Selection.DragEnd)
 	if distance <= dragClickThreshold {
-		g.HandleClick(*g.State.DragStart)
+		g.HandleClick(*g.Selection.DragStart)
 	} else {
 		g.SelectInDragRect()
 	}
-
 	g.ClearDrag()
 }
 
 func (g *Game) ClearDrag() {
-	g.State.DragStart = nil
-	g.State.DragEnd = nil
+	g.Selection.DragStart = nil
+	g.Selection.DragEnd = nil
 }
 
 func (g *Game) DragRect() (image.Rectangle, bool) {
-	if g.State.DragStart == nil || g.State.DragEnd == nil {
+	if g.Selection.DragStart == nil || g.Selection.DragEnd == nil {
 		return image.Rectangle{}, false
 	}
 
-	rect := screenRect(*g.State.DragStart, *g.State.DragEnd)
+	rect := screenRect(*g.Selection.DragStart, *g.Selection.DragEnd)
 	if rect.Dx() < 1 || rect.Dy() < 1 {
 		return image.Rectangle{}, false
 	}

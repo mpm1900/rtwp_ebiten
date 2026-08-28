@@ -18,5 +18,6 @@ func CreateActor(world donburi.World, position math.Vec2) *donburi.Entry {
 	}))
 
 	WithImage(entry, assets.RedSquareImage, position)
+	WithCollision(entry, math.NewVec2(24, 24))
 	return entry
 }

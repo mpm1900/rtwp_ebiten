@@ -19,12 +19,13 @@ func main() {
 	world := donburi.NewWorld()
 	frame := util.NewFrame()
 
-	ebiten.SetWindowSize(680, 480)
+	ebiten.SetWindowSize(game.SCREEN_WIDTH, game.SCREEN_HEIGHT)
 
 	game := game.Game{
-		Frame: frame,
-		World: world,
-		State: game.NewState(),
+		Frame:     frame,
+		World:     world,
+		Action:    game.NewAction(),
+		Selection: game.NewSelection(),
 	}
 
 	components.CreateActor(world, math.NewVec2(100, 100))

@@ -10,39 +10,38 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 )
 
+const (
+	SCREEN_HEIGHT int = 480
+	SCREEN_WIDTH  int = 640
+)
+
 type Game struct {
-	Frame *util.Frame
-	World donburi.World
-	State State
+	Frame     *util.Frame
+	World     donburi.World
+	Selection SelectionState
+	Action    ActionState
 }
 
 func (g *Game) Update() error {
-	mousePoint := cursorPoint()
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		g.BeginDrag(mousePoint)
-	}
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		g.UpdateDrag(mousePoint)
-	}
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		g.EndDrag(mousePoint)
-	}
-
+	// pre resolve, mutate things that are modified
+	g.HandleSelection()
+	g.HandleActionInput()
 	g.Frame.Restore(g.World)
 
+	// resolve pipeline
 	components.DecrementDelays(g.World)
 	components.DecrementDurations(g.World)
 	components.RemoveCompleted(g.World)
 	components.RemoveCompletedDelays(g.World)
-
 	components.ResolveModifiers(g.World, g.Frame, effects.EffectRegistry)
+
+	// post resolve, modified components will be reset, so only mutate non-modified components
 	components.MoveEntities(g.World)
 
 	return nil
@@ -72,6 +71,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawDragRect(screen)
 
 	ebitenutil.DebugPrint(screen, text.String())
+
+	g.RenderActionText(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -97,10 +98,7 @@ func (g *Game) drawDragRect(screen *ebiten.Image) {
 	vy := float32(rect.Min.Y)
 	vheight := float32(rect.Dy())
 	vwidth := float32(rect.Dx())
-	vector.FillRect(screen, vx, vy, vwidth, 1, borderColor, false)
-	vector.FillRect(screen, vx, vy+vheight-1, vwidth, 1, borderColor, false)
-	vector.FillRect(screen, vx, vy, 1, vheight, borderColor, false)
-	vector.FillRect(screen, vx+vwidth-1, vy, 1, vheight, borderColor, false)
+	vector.StrokeRect(screen, vx, vy, vwidth, vheight, 1, borderColor, false)
 }
 
 func (g *Game) drawRanges(world donburi.World, screen *ebiten.Image) {

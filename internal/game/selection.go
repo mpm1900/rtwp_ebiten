@@ -31,50 +31,26 @@ func (g *Game) ClearSelection() {
 
 func (g *Game) HandleSelection() {
 	mousePoint := cursorPoint()
-	switch g.Action.Name {
-	case ActionSelect:
-		{
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				g.BeginDrag(mousePoint)
-			}
-			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-				g.UpdateDrag(mousePoint)
-			}
-			if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-				g.EndDrag(mousePoint)
-			}
-			break
-		}
-	case ActionMove:
-		{
 
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				g.HandleClick(mousePoint)
-				g.Action.Name = ActionSelect
-			}
-		}
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		g.BeginDrag(mousePoint)
+	}
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		g.UpdateDrag(mousePoint)
+	}
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		g.EndDrag(mousePoint)
 	}
 
-	_, has_selection := components.Selected.First(g.World)
-	if has_selection {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-			g.MoveSelectedTo(mousePoint)
-		}
-	}
-}
-
-func (g *Game) HandleClick(point dmath.Vec2) {
 	switch g.Action.Name {
-	case ActionSelect:
-		{
-			g.SelectAt(point)
-			break
-		}
-
 	case ActionMove:
 		{
-			g.MoveSelectedTo(point)
-			break
+			_, has_selection := components.Selected.First(g.World)
+			if has_selection {
+				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+					g.MoveSelectedTo(mousePoint)
+				}
+			}
 		}
 	}
 }
@@ -122,7 +98,13 @@ func (g *Game) SelectInDragRect() bool {
 }
 
 func (g *Game) MoveSelectedTo(point dmath.Vec2) {
+	push := ebiten.IsKeyPressed(ebiten.KeyShift)
+
 	for selected := range components.Selected.Iter(g.World) {
+		if push {
+			components.PushMovement(selected, point)
+			continue
+		}
 		components.WithMovement(selected, point)
 	}
 }
@@ -148,7 +130,7 @@ func (g *Game) EndDrag(point dmath.Vec2) {
 	g.UpdateDrag(point)
 	distance := g.Selection.DragStart.Distance(*g.Selection.DragEnd)
 	if distance <= dragClickThreshold {
-		g.HandleClick(*g.Selection.DragStart)
+		g.SelectAt(*g.Selection.DragStart)
 	} else {
 		g.SelectInDragRect()
 	}

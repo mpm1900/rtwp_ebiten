@@ -1,8 +1,11 @@
 package components
 
 import (
+	"image/color"
 	"math"
 
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
@@ -14,7 +17,7 @@ const (
 )
 
 type MovementData struct {
-	Target       dmath.Vec2
+	Targets      []dmath.Vec2
 	StopDistance float64
 }
 
@@ -24,13 +27,27 @@ var MovementQuery = donburi.NewQuery(
 )
 
 func WithMovement(entry *donburi.Entry, target dmath.Vec2) {
-	WithMovementSpeed(entry, target, DEFAULT_STOP_DISTANCE)
+	WithMovementList(entry, []dmath.Vec2{target}, DEFAULT_STOP_DISTANCE)
 }
 
-func WithMovementSpeed(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	entry.AddComponent(Movement)
+func PushMovement(entry *donburi.Entry, target dmath.Vec2) {
+	if !entry.HasComponent(Movement) {
+		WithMovement(entry, target)
+		return
+	}
+
+	movement := Movement.Get(entry)
+	movement.Targets = append(movement.Targets, target)
+	WithMovementList(entry, append(movement.Targets, target), movement.StopDistance)
+}
+
+func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64) {
+	if !entry.HasComponent(Movement) {
+		entry.AddComponent(Movement)
+	}
+
 	Movement.SetValue(entry, MovementData{
-		Target:       target,
+		Targets:      targets,
 		StopDistance: stopDistance,
 	})
 }
@@ -46,32 +63,43 @@ func GetSpeed(entry *donburi.Entry) float64 {
 	return speed
 }
 
+func advanceMovementTarget(movement *MovementData) bool {
+	movement.Targets = movement.Targets[1:]
+	return len(movement.Targets) == 0
+}
+
 func MoveEntities(world donburi.World) {
 	completed := []donburi.Entity{}
 
 	for entry := range MovementQuery.Iter(world) {
 		trans := transform.Transform.Get(entry)
 		movement := Movement.Get(entry)
+		if len(movement.Targets) == 0 {
+			completed = append(completed, entry.Entity())
+			continue
+		}
 
-		dx := movement.Target.X - trans.LocalPosition.X
-		dy := movement.Target.Y - trans.LocalPosition.Y
+		target := movement.Targets[0]
+		dx := target.X - trans.LocalPosition.X
+		dy := target.Y - trans.LocalPosition.Y
 		distance := math.Hypot(dx, dy)
 		stopDistance := movement.StopDistance
 		if stopDistance <= 0 {
 			stopDistance = DEFAULT_STOP_DISTANCE
 		}
 
-		if distance <= stopDistance {
-			completed = append(completed, entry.Entity())
-			continue
+		remainingDistance := distance
+		if distance > stopDistance {
+			step := math.Min(GetSpeed(entry), distance)
+			trans.LocalPosition.X += dx / distance * step
+			trans.LocalPosition.Y += dy / distance * step
+			remainingDistance -= step
 		}
 
-		step := math.Min(GetSpeed(entry), distance)
-		trans.LocalPosition.X += dx / distance * step
-		trans.LocalPosition.Y += dy / distance * step
-
-		if distance-step <= stopDistance {
-			completed = append(completed, entry.Entity())
+		if remainingDistance <= stopDistance {
+			if advanceMovementTarget(movement) {
+				completed = append(completed, entry.Entity())
+			}
 		}
 	}
 
@@ -83,6 +111,33 @@ func MoveEntities(world donburi.World) {
 		entry := world.Entry(entity)
 		if entry.HasComponent(Movement) {
 			entry.RemoveComponent(Movement)
+		}
+	}
+}
+
+func DrawMovement(screen *ebiten.Image, world donburi.World) {
+	lineColor := color.RGBA{0xff, 0xff, 0xff, 0xff}
+
+	for entry := range MovementQuery.Iter(world) {
+		movement := Movement.Get(entry)
+		if len(movement.Targets) == 0 {
+			continue
+		}
+
+		from := transform.GetTransform(entry).LocalPosition
+		for _, to := range movement.Targets {
+			vector.StrokeLine(
+				screen,
+				float32(from.X),
+				float32(from.Y),
+				float32(to.X),
+				float32(to.Y),
+				1,
+				lineColor,
+				false,
+			)
+
+			from = to
 		}
 	}
 }

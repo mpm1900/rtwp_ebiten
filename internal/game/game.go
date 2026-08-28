@@ -50,6 +50,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	var text strings.Builder
 	g.drawRanges(g.World, screen)
+	components.DrawMovement(screen, g.World)
 	effect_entry, ok := components.Duration.First(g.World)
 	if ok {
 		if effect_entry.HasComponent(components.Duration) {
@@ -76,7 +77,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 680, 480
+	return SCREEN_WIDTH, SCREEN_HEIGHT
 }
 
 func cursorPoint() dmath.Vec2 {

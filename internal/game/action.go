@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	ActionSelect string = "Select"
-	ActionMove   string = "Move"
+	ActionMove string = "Move"
 )
 
 const ActionTextSize = 24
@@ -22,16 +21,13 @@ type ActionState struct {
 
 func NewAction() ActionState {
 	return ActionState{
-		Name: ActionSelect,
+		Name: ActionMove,
 	}
 }
 
 func (g *Game) HandleActionInput() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		if g.Action.Name == ActionSelect {
-			g.ClearSelection()
-		}
-		g.Action.Name = ActionSelect
+		g.ClearSelection()
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.Key1) {

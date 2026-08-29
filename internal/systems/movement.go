@@ -36,7 +36,7 @@ func MoveEntities(ecs *ecs.ECS) {
 			moveResult := MoveWithCollision(ecs.World, entry, direction.Normalized().MulScalar(step))
 			remainingDistance = components.Center(entry).Distance(target)
 			if moveResult.Collided && remainingDistance <= components.CollisionStopDistance(entry, stopDistance) {
-				if components.NextTarget(movement) {
+				if movement.NextTarget() {
 					completed = append(completed, entry.Entity())
 				}
 				continue
@@ -44,7 +44,7 @@ func MoveEntities(ecs *ecs.ECS) {
 		}
 
 		if remainingDistance <= stopDistance {
-			if components.NextTarget(movement) {
+			if movement.NextTarget() {
 				completed = append(completed, entry.Entity())
 			}
 		}

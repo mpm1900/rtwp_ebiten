@@ -22,16 +22,14 @@ import (
 func main() {
 	world := donburi.NewWorld()
 	g := game.Game{
-		Frame:  util.NewFrame(),
-		ECS:    ecslib.NewECS(world),
-		Action: game.NewAction(),
+		Frame: util.NewFrame(),
+		ECS:   ecslib.NewECS(world),
 	}
 
 	assets.MustLoadAssets()
 	events.Load(g.ECS.World)
 	systems.Load(g.ECS, g.Frame)
-	g.ECS.AddRenderer(entities.ActorLayer, renderers.RenderActors)
-	g.ECS.AddRenderer(entities.EffectLayer, renderers.RenderEffect)
+	renderers.Load(g.ECS)
 
 	entities.CreatePlayer(g.ECS)
 	entities.CreateActor(g.ECS, math.NewVec2(100, 100))
@@ -39,15 +37,14 @@ func main() {
 
 	attack_up := entities.CreateEffect(g.ECS, effects.SpeedUp)
 	attack_down := entities.CreateEffect(g.ECS, effects.SpeedDown)
-	// components.WithDuration(attack_up, 60)
+	components.WithDuration(attack_up, 60)
 	components.WithDelay(attack_up, 60)
-	// components.WithTargets(attack_up, one.Entity())
 	components.WithRange(attack_up, 120)
 	components.WithRange(attack_down, 100)
 	components.WithImage(attack_up, assets.YellowSquareImage, math.NewVec2(200, 200))
 	components.WithImage(attack_down, assets.YellowSquareImage, math.NewVec2(300, 250))
 
-	ebiten.SetWindowSize(game.SCREEN_WIDTH, game.SCREEN_HEIGHT)
+	ebiten.SetWindowSize(renderers.SCREEN_WIDTH, renderers.SCREEN_HEIGHT)
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}

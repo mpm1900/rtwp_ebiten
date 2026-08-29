@@ -1,10 +1,6 @@
 package components
 
 import (
-	"image/color"
-	"rtwp_ebitengine/internal/util"
-
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
@@ -15,6 +11,15 @@ type MovementData struct {
 	Targets      []dmath.Vec2
 	Follow       donburi.Entity
 	StopDistance float64
+}
+
+func (m *MovementData) NextTarget() bool {
+	if m.Follow != donburi.Null {
+		return false
+	}
+
+	m.Targets = m.Targets[1:]
+	return len(m.Targets) == 0
 }
 
 var Movement = donburi.NewComponentType[MovementData]()
@@ -60,29 +65,6 @@ func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance f
 	})
 }
 
-func MoveSelectedTo(world donburi.World, point dmath.Vec2, stopDistance float64) {
-	push := ebiten.IsKeyPressed(ebiten.KeyShift)
-
-	for selected := range Selected.Iter(world) {
-		if push {
-			PushMovement(selected, point, stopDistance)
-			continue
-		}
-
-		WithMovementTo(selected, point, stopDistance)
-	}
-}
-
-func MoveSelectedFollow(world donburi.World, follow donburi.Entity, stopDistance float64) {
-	for selected := range Selected.Iter(world) {
-		if selected.Entity() == follow {
-			continue
-		}
-
-		WithMovementFollow(selected, follow, stopDistance)
-	}
-}
-
 func GetSpeed(entry *donburi.Entry) float64 {
 	speed := 0.0
 
@@ -115,15 +97,6 @@ func MovementTarget(world donburi.World, movement *MovementData) (dmath.Vec2, bo
 	return movement.Targets[0], true
 }
 
-func NextTarget(movement *MovementData) bool {
-	if movement.Follow != donburi.Null {
-		return false
-	}
-
-	movement.Targets = movement.Targets[1:]
-	return len(movement.Targets) == 0
-}
-
 func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 	if !entry.HasComponent(Collision) || !entry.HasComponent(transform.Transform) {
 		return stopDistance
@@ -135,27 +108,4 @@ func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 	}
 
 	return max(stopDistance, scale.Magnitude())
-}
-
-func DrawMovement(screen *ebiten.Image, world donburi.World) {
-	lineColor := color.RGBA{0xff, 0xff, 0xff, 0xff}
-
-	for entry := range MovementQuery.Iter(world) {
-		movement := Movement.Get(entry)
-		from := Center(entry)
-		if movement.Follow != donburi.Null {
-			to, ok := MovementTarget(world, movement)
-			if !ok {
-				continue
-			}
-
-			util.DrawPoints(screen, from, to, 1, lineColor)
-			continue
-		}
-
-		for _, to := range movement.Targets {
-			util.DrawPoints(screen, from, to, 1, lineColor)
-			from = to
-		}
-	}
 }

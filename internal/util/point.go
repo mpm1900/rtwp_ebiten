@@ -10,6 +10,10 @@ import (
 	dmath "github.com/yohamta/donburi/features/math"
 )
 
+func NewVec2(x int, y int) dmath.Vec2 {
+	return dmath.NewVec2(float64(x), float64(y))
+}
+
 func ToPoint(v dmath.Vec2) image.Point {
 	return image.Pt(
 		int(math.Floor(v.X)),

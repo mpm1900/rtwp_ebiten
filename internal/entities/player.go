@@ -9,5 +9,7 @@ import (
 
 func CreatePlayer(esc *ecs.ECS) donburi.Entity {
 	entity := esc.World.Create(components.Player)
+	entry := esc.World.Entry(entity)
+	components.Player.SetValue(entry, components.NewPlayerData())
 	return entity
 }

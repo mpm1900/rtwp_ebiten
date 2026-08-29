@@ -1,0 +1,33 @@
+package events
+
+import (
+	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/util"
+
+	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/events"
+	"github.com/yohamta/donburi/features/math"
+)
+
+var SelectAt = events.NewEventType[math.Vec2]()
+
+func InitSelectAt(world donburi.World) {
+	SelectAt.Subscribe(world, selectAt)
+}
+
+func selectActor(world donburi.World, entity donburi.Entity) {
+	if !world.Valid(entity) {
+		return
+	}
+
+	entry := world.Entry(entity)
+	entry.AddComponent(components.Selected)
+}
+
+func selectAt(world donburi.World, at math.Vec2) {
+	mousePoint := util.ToPoint(at)
+	clearSelected(world, struct{}{})
+	components.EachActorAtPoint(world, mousePoint, func(entry *donburi.Entry) {
+		selectActor(world, entry.Entity())
+	})
+}

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
+	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/game"
 	"rtwp_ebitengine/internal/systems"
 	"rtwp_ebitengine/internal/util"
@@ -17,10 +17,6 @@ import (
 	ecslib "github.com/yohamta/donburi/ecs"
 	"github.com/yohamta/donburi/features/math"
 )
-
-func System(ecs *ecslib.ECS) {
-	fmt.Println("test")
-}
 
 var effectLayer ecslib.LayerID = 0
 var actorLayer ecslib.LayerID = 1
@@ -41,7 +37,8 @@ func main() {
 		Selection: game.NewSelection(),
 	}
 
-	systems.LoadSystems(ecs, game.Frame)
+	events.Load(ecs.World)
+	systems.Load(ecs, game.Frame)
 
 	entities.CreateActor(ecs, actorLayer, math.NewVec2(100, 100))
 	entities.CreateActor(ecs, actorLayer, math.NewVec2(50, 200))

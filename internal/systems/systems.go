@@ -6,7 +6,7 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func LoadSystems(ecs *ecs.ECS, frame *util.Frame) {
+func Load(ecs *ecs.ECS, frame *util.Frame) {
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)

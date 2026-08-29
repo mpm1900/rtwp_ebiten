@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/util"
 	"strings"
 
@@ -29,14 +30,14 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
-	// pre resolve, mutate things that are modified
+	// non world changes
 	g.HandleSelection()
 	g.HandleActions()
 	g.HandleActionInput()
-	g.Frame.Restore(g.ECS.World)
 
-	// resolve pipeline
+	g.Frame.Restore(g.ECS.World)
 	g.ECS.Update()
+	events.ProcessEvents(g.ECS.World)
 
 	return nil
 }

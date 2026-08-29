@@ -2,12 +2,11 @@ package game
 
 import (
 	"image"
-	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 )
 
@@ -22,17 +21,11 @@ func NewSelection() SelectionState {
 	return SelectionState{}
 }
 
-func (g *Game) ClearSelection() {
-	for selected := range components.Selected.Iter(g.ECS.World) {
-		selected.RemoveComponent(components.Selected)
-	}
-}
-
 func (g *Game) HandleSelection() {
 	mousePoint := cursorPoint()
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		g.ClearSelection()
+		events.ClearSelected.Publish(g.ECS.World, struct{}{})
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		g.BeginDrag(mousePoint)
@@ -43,42 +36,6 @@ func (g *Game) HandleSelection() {
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		g.EndDrag(mousePoint)
 	}
-}
-
-func (g *Game) SelectAt(point dmath.Vec2) bool {
-	found := false
-	mousePoint := util.ToPoint(point)
-
-	g.ClearSelection()
-	components.EachActorAtPoint(g.ECS.World, mousePoint, func(entry *donburi.Entry) {
-		entry.AddComponent(components.Selected)
-		found = true
-	})
-
-	return found
-}
-
-func (g *Game) SelectInDragRect() bool {
-	valid := false
-	dragRect, ok := g.DragRect()
-	if !ok {
-		return false
-	}
-
-	g.ClearSelection()
-	for entry := range components.ActorQuery.Iter(g.ECS.World) {
-		actorRect, ok := components.Rect(entry)
-		if !ok {
-			continue
-		}
-
-		if dragRect.Overlaps(actorRect) {
-			entry.AddComponent(components.Selected)
-			valid = true
-		}
-	}
-
-	return valid
 }
 
 func (g *Game) BeginDrag(point dmath.Vec2) {
@@ -102,9 +59,12 @@ func (g *Game) EndDrag(point dmath.Vec2) {
 	g.UpdateDrag(point)
 	distance := g.Selection.DragStart.Distance(*g.Selection.DragEnd)
 	if distance <= dragClickThreshold {
-		g.SelectAt(*g.Selection.DragStart)
+		events.SelectAt.Publish(g.ECS.World, point)
 	} else {
-		g.SelectInDragRect()
+		dragRect, ok := g.DragRect()
+		if ok {
+			events.SelectInRect.Publish(g.ECS.World, dragRect)
+		}
 	}
 	g.ClearDrag()
 }

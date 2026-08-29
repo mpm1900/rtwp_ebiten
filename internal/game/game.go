@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/data/effects"
 	"rtwp_ebitengine/internal/util"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/ecs"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 )
@@ -23,7 +23,7 @@ const (
 
 type Game struct {
 	Frame     *util.Frame
-	World     donburi.World
+	ECS       *ecs.ECS
 	Selection SelectionState
 	Action    ActionState
 }
@@ -33,26 +33,19 @@ func (g *Game) Update() error {
 	g.HandleSelection()
 	g.HandleActions()
 	g.HandleActionInput()
-	g.Frame.Restore(g.World)
+	g.Frame.Restore(g.ECS.World)
 
 	// resolve pipeline
-	components.DecrementDelays(g.World)
-	components.DecrementDurations(g.World)
-	components.RemoveCompleted(g.World)
-	components.RemoveCompletedDelays(g.World)
-	components.ResolveModifiers(g.World, g.Frame, effects.EffectRegistry)
-
-	// post resolve, modified components will be reset, so only mutate non-modified components
-	components.MoveEntities(g.World)
+	g.ECS.Update()
 
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	var text strings.Builder
-	g.drawRanges(g.World, screen)
-	components.DrawMovement(screen, g.World)
-	effect_entry, ok := components.Duration.First(g.World)
+	g.drawRanges(g.ECS.World, screen)
+	components.DrawMovement(screen, g.ECS.World)
+	effect_entry, ok := components.Duration.First(g.ECS.World)
 	if ok {
 		if effect_entry.HasComponent(components.Duration) {
 			duration := components.Duration.Get(effect_entry)
@@ -60,7 +53,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	for selected := range components.Selected.Iter(g.World) {
+	for selected := range components.Selected.Iter(g.ECS.World) {
 		if selected.HasComponent(components.Stats) {
 			stats := components.Stats.Get(selected)
 			text.WriteString(fmt.Sprintf("Speed = %f, Entity = %d \n", stats.Base[components.StatSpeed], selected.Id()))
@@ -69,7 +62,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		text.WriteString(fmt.Sprintf("Selected = %s \n", selected.Entity()))
 	}
 
-	components.RenderEntries(screen, g.World)
+	components.RenderEntries(screen, g.ECS.World)
 	g.drawDragRect(screen)
 
 	ebitenutil.DebugPrint(screen, text.String())

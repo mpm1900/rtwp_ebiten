@@ -7,11 +7,6 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-type CollisionMoveResult struct {
-	Moved    bool
-	Collided bool
-}
-
 var Collision = donburi.NewTag("Collision")
 var CollisionQuery = donburi.NewQuery(filter.Contains(Collision, transform.Transform))
 
@@ -44,37 +39,6 @@ func DetectCollisions(world donburi.World, yield func(a, b *donburi.Entry)) {
 			}
 		}
 	}
-}
-
-func MoveWithCollision(world donburi.World, entry *donburi.Entry, delta dmath.Vec2) CollisionMoveResult {
-	trans := transform.Transform.Get(entry)
-	position := trans.LocalPosition
-	nextPosition := position.Add(delta)
-	_, colliding := CollidesAt(world, entry, nextPosition)
-	if !colliding {
-		trans.LocalPosition = nextPosition
-		return CollisionMoveResult{
-			Moved: !delta.IsZero(),
-		}
-	}
-
-	result := CollisionMoveResult{Collided: true}
-	nextPosition = position.Add(dmath.NewVec2(delta.X, 0))
-	_, colliding = CollidesAt(world, entry, nextPosition)
-	if delta.X != 0 && !colliding {
-		position = nextPosition
-		result.Moved = true
-	}
-
-	nextPosition = position.Add(dmath.NewVec2(0, delta.Y))
-	_, colliding = CollidesAt(world, entry, nextPosition)
-	if delta.Y != 0 && !colliding {
-		position = nextPosition
-		result.Moved = true
-	}
-
-	trans.LocalPosition = position
-	return result
 }
 
 func CollidesAt(world donburi.World, entry *donburi.Entry, position dmath.Vec2) (*donburi.Entry, bool) {

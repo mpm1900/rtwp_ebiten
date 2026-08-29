@@ -11,10 +11,6 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-const (
-	DEFAULT_STOP_DISTANCE = 1.0
-)
-
 type MovementData struct {
 	Targets      []dmath.Vec2
 	Follow       donburi.Entity
@@ -50,9 +46,6 @@ func PushMovement(entry *donburi.Entry, target dmath.Vec2, stopDistance float64)
 
 	movement := Movement.Get(entry)
 	movement.Targets = append(movement.Targets, target)
-	if movement.StopDistance <= 0 {
-		movement.StopDistance = DEFAULT_STOP_DISTANCE
-	}
 }
 
 func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64) {
@@ -101,12 +94,7 @@ func GetSpeed(entry *donburi.Entry) float64 {
 	return speed
 }
 
-func nextTarget(movement *MovementData) bool {
-	movement.Targets = movement.Targets[1:]
-	return len(movement.Targets) == 0
-}
-
-func movementTarget(world donburi.World, movement *MovementData) (dmath.Vec2, bool) {
+func MovementTarget(world donburi.World, movement *MovementData) (dmath.Vec2, bool) {
 	if movement.Follow != donburi.Null {
 		if !world.Valid(movement.Follow) {
 			return dmath.Vec2{}, false
@@ -127,15 +115,16 @@ func movementTarget(world donburi.World, movement *MovementData) (dmath.Vec2, bo
 	return movement.Targets[0], true
 }
 
-func finishMovementTarget(movement *MovementData) bool {
+func NextTarget(movement *MovementData) bool {
 	if movement.Follow != donburi.Null {
 		return false
 	}
 
-	return nextTarget(movement)
+	movement.Targets = movement.Targets[1:]
+	return len(movement.Targets) == 0
 }
 
-func collisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
+func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 	if !entry.HasComponent(Collision) || !entry.HasComponent(transform.Transform) {
 		return stopDistance
 	}
@@ -148,57 +137,6 @@ func collisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 	return max(stopDistance, scale.Magnitude())
 }
 
-func MoveEntities(world donburi.World) {
-	completed := []donburi.Entity{}
-
-	for entry := range MovementQuery.Iter(world) {
-		movement := Movement.Get(entry)
-		target, ok := movementTarget(world, movement)
-		if !ok {
-			completed = append(completed, entry.Entity())
-			continue
-		}
-
-		position := Center(entry)
-		direction := target.Sub(position)
-		distance := direction.Magnitude()
-		stopDistance := movement.StopDistance
-		if stopDistance <= 0 {
-			stopDistance = DEFAULT_STOP_DISTANCE
-		}
-
-		remainingDistance := distance
-		if distance > stopDistance {
-			step := min(GetSpeed(entry), distance)
-			moveResult := MoveWithCollision(world, entry, direction.Normalized().MulScalar(step))
-			remainingDistance = Center(entry).Distance(target)
-			if moveResult.Collided && remainingDistance <= collisionStopDistance(entry, stopDistance) {
-				if finishMovementTarget(movement) {
-					completed = append(completed, entry.Entity())
-				}
-				continue
-			}
-		}
-
-		if remainingDistance <= stopDistance {
-			if finishMovementTarget(movement) {
-				completed = append(completed, entry.Entity())
-			}
-		}
-	}
-
-	for _, entity := range completed {
-		if !world.Valid(entity) {
-			continue
-		}
-
-		entry := world.Entry(entity)
-		if entry.HasComponent(Movement) {
-			entry.RemoveComponent(Movement)
-		}
-	}
-}
-
 func DrawMovement(screen *ebiten.Image, world donburi.World) {
 	lineColor := color.RGBA{0xff, 0xff, 0xff, 0xff}
 
@@ -206,7 +144,7 @@ func DrawMovement(screen *ebiten.Image, world donburi.World) {
 		movement := Movement.Get(entry)
 		from := Center(entry)
 		if movement.Follow != donburi.Null {
-			to, ok := movementTarget(world, movement)
+			to, ok := MovementTarget(world, movement)
 			if !ok {
 				continue
 			}

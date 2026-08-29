@@ -3,12 +3,12 @@ package game
 import (
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/systems"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/yohamta/donburi"
 )
 
 const (
@@ -29,7 +29,7 @@ func NewAction() ActionState {
 
 func (g *Game) HandleActionInput() {
 	if inpututil.IsKeyJustPressed(ebiten.Key1) {
-		_, has_selected := components.Selected.First(g.World)
+		_, has_selected := components.Selected.First(g.ECS.World)
 		if has_selected {
 			g.Action.Name = ActionMove
 			g.ClearDrag()
@@ -42,18 +42,13 @@ func (g *Game) HandleActions() {
 	switch g.Action.Name {
 	case ActionMove:
 		{
-			if _, has_selection := components.Selected.First(g.World); has_selection {
+			if _, has_selection := components.Selected.First(g.ECS.World); has_selection {
 				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-					var found *donburi.Entry
-
-					components.EachActorAtPoint(g.World, util.ToPoint(mousePoint), func(e *donburi.Entry) {
-						found = e
-					})
-
-					if found != nil {
-						components.MoveSelectedFollow(g.World, found.Entity(), components.DEFAULT_STOP_DISTANCE)
+					first, ok := components.FirstActorAtPoint(g.ECS.World, util.ToPoint(mousePoint))
+					if ok {
+						components.MoveSelectedFollow(g.ECS.World, first.Entity(), systems.DEFAULT_STOP_DISTANCE)
 					} else {
-						components.MoveSelectedTo(g.World, mousePoint, components.DEFAULT_STOP_DISTANCE)
+						components.MoveSelectedTo(g.ECS.World, mousePoint, systems.DEFAULT_STOP_DISTANCE)
 					}
 				}
 			}

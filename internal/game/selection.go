@@ -23,7 +23,7 @@ func NewSelection() SelectionState {
 }
 
 func (g *Game) ClearSelection() {
-	for selected := range components.Selected.Iter(g.World) {
+	for selected := range components.Selected.Iter(g.ECS.World) {
 		selected.RemoveComponent(components.Selected)
 	}
 }
@@ -50,7 +50,7 @@ func (g *Game) SelectAt(point dmath.Vec2) bool {
 	mousePoint := util.ToPoint(point)
 
 	g.ClearSelection()
-	components.EachActorAtPoint(g.World, mousePoint, func(entry *donburi.Entry) {
+	components.EachActorAtPoint(g.ECS.World, mousePoint, func(entry *donburi.Entry) {
 		entry.AddComponent(components.Selected)
 		found = true
 	})
@@ -66,7 +66,7 @@ func (g *Game) SelectInDragRect() bool {
 	}
 
 	g.ClearSelection()
-	for entry := range components.ActorQuery.Iter(g.World) {
+	for entry := range components.ActorQuery.Iter(g.ECS.World) {
 		actorRect, ok := components.Rect(entry)
 		if !ok {
 			continue

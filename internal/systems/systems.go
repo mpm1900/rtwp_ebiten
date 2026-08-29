@@ -7,6 +7,8 @@ import (
 )
 
 func Load(ecs *ecs.ECS, frame *util.Frame) {
+	ecs.AddSystem(HandleSelection)
+
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)

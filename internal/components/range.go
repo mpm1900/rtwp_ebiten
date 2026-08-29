@@ -21,7 +21,7 @@ func EachActorsInRange(world donburi.World, entry *donburi.Entry, yield func(*do
 
 	entry_transform := transform.Transform.Get(entry)
 	entry_range := *Range.Get(entry)
-	for actor := range ActorTag.Iter(world) {
+	for actor := range Actor.Iter(world) {
 		actor_transform := transform.Transform.Get(actor)
 		distance := entry_transform.LocalPosition.Distance(actor_transform.LocalPosition)
 		if entry_range >= distance {

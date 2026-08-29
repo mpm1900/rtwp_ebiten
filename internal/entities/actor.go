@@ -9,8 +9,8 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-func CreateActor(ecs *ecs.ECS, layer ecs.LayerID, position math.Vec2) *donburi.Entry {
-	entity := ecs.Create(layer, components.ActorTag, components.Stats)
+func CreateActor(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
+	entity := ecs.Create(ActorLayer, components.Actor, components.Stats)
 	entry := ecs.World.Entry(entity)
 	components.Stats.SetValue(entry, *components.NewStatsData(components.StatsValue{
 		components.StatMelee: 10.0,
@@ -19,5 +19,5 @@ func CreateActor(ecs *ecs.ECS, layer ecs.LayerID, position math.Vec2) *donburi.E
 
 	components.WithImage(entry, assets.RedSquareImage, position)
 	components.WithCollision(entry)
-	return entry
+	return entity
 }

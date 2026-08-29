@@ -1,8 +1,6 @@
 package components
 
 import (
-	"rtwp_ebitengine/internal/assets"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
@@ -26,23 +24,8 @@ func WithImage(entry *donburi.Entry, image *ebiten.Image, position math.Vec2) {
 		scale = math.NewVec2(float64(bounds.Dx()), float64(bounds.Dy()))
 	}
 
-	entry.AddComponent(transform.Transform)
-	transform.Transform.SetValue(entry, transform.TransformData{
+	WithTransform(entry, transform.TransformData{
 		LocalPosition: position,
 		LocalScale:    scale,
 	})
-}
-
-func RenderEntries(screen *ebiten.Image, world donburi.World) {
-	for entry := range ImageQuery.Iter(world) {
-		transform := transform.Transform.Get(entry)
-		image := *Image.Get(entry)
-		if entry.HasComponent(Selected) {
-			image = assets.GreenSquareImage
-		}
-
-		options := &ebiten.DrawImageOptions{}
-		options.GeoM.Translate(transform.LocalPosition.X, transform.LocalPosition.Y)
-		screen.DrawImage(image, options)
-	}
 }

@@ -23,15 +23,13 @@ const (
 )
 
 type Game struct {
-	Frame     *util.Frame
-	ECS       *ecs.ECS
-	Selection SelectionState
-	Action    ActionState
+	Frame  *util.Frame
+	ECS    *ecs.ECS
+	Action ActionState
 }
 
 func (g *Game) Update() error {
 	// non world changes
-	g.HandleSelection()
 	g.HandleActions()
 	g.HandleActionInput()
 
@@ -63,7 +61,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		text.WriteString(fmt.Sprintf("Selected = %s \n", selected.Entity()))
 	}
 
-	components.RenderEntries(screen, g.ECS.World)
+	g.ECS.Draw(screen)
 	g.drawDragRect(screen)
 
 	ebitenutil.DebugPrint(screen, text.String())
@@ -77,18 +75,15 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func cursorPoint() dmath.Vec2 {
 	x, y := ebiten.CursorPosition()
-	return dmath.Vec2{
-		X: float64(x),
-		Y: float64(y),
-	}
+	return util.NewVec2(x, y)
 }
 
 func (g *Game) drawDragRect(screen *ebiten.Image) {
-	rect, ok := g.DragRect()
-	if !ok {
+	player := components.GetPlayer(g.ECS.World)
+	if player.DragStart == nil || player.DragEnd == nil {
 		return
 	}
-
+	rect := util.ToRect(*player.DragStart, *player.DragEnd)
 	borderColor := color.RGBA{0, 0xff, 0, 0xff}
 	vx := float32(rect.Min.X)
 	vy := float32(rect.Min.Y)

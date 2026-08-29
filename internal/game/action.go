@@ -32,7 +32,6 @@ func (g *Game) HandleActionInput() {
 		_, has_selected := components.Selected.First(g.ECS.World)
 		if has_selected {
 			g.Action.Name = ActionMove
-			g.ClearDrag()
 		}
 	}
 }

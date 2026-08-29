@@ -14,8 +14,8 @@ type Effect interface {
 	Apply(world donburi.World, frame *util.Frame, modifier *donburi.Entry)
 }
 
-func CreateEffect(ecs *ecs.ECS, effect Effect, layer ecs.LayerID) *donburi.Entry {
-	return CreateModifier(ecs, effect.Modifier(), layer)
+func CreateEffect(ecs *ecs.ECS, effect Effect) *donburi.Entry {
+	return CreateModifier(ecs, effect.Modifier(), EffectLayer)
 }
 
 func CreateModifier(ecs *ecs.ECS, mod components.ModifierData, layer ecs.LayerID) *donburi.Entry {

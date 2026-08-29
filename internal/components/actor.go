@@ -8,8 +8,8 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-var ActorTag = donburi.NewTag("Actor")
-var ActorQuery = donburi.NewQuery(filter.Contains(ActorTag, transform.Transform))
+var Actor = donburi.NewTag("Actor")
+var ActorQuery = donburi.NewQuery(filter.Contains(Actor, transform.Transform))
 
 func EachActorAtPoint(world donburi.World, point image.Point, yield func(*donburi.Entry)) {
 	for entry := range ActorQuery.Iter(world) {

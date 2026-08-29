@@ -9,6 +9,11 @@ import (
 	"github.com/yohamta/donburi/features/transform"
 )
 
+func WithTransform(entry *donburi.Entry, trans transform.TransformData) {
+	entry.AddComponent(transform.Transform)
+	transform.Transform.SetValue(entry, trans)
+}
+
 func Rect(entry *donburi.Entry) (image.Rectangle, bool) {
 	trans := transform.Transform.Get(entry)
 	return RectAt(entry, trans.LocalPosition)

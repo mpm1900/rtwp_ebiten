@@ -6,30 +6,16 @@ import (
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
-	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/game"
 	"rtwp_ebitengine/internal/renderers"
-	"rtwp_ebitengine/internal/systems"
-	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
-	"github.com/yohamta/donburi"
-	ecslib "github.com/yohamta/donburi/ecs"
 	"github.com/yohamta/donburi/features/math"
 )
 
 func main() {
-	world := donburi.NewWorld()
-	g := game.Game{
-		Frame: util.NewFrame(),
-		ECS:   ecslib.NewECS(world),
-	}
-
-	assets.MustLoadAssets()
-	events.Load(g.ECS.World)
-	systems.Load(g.ECS, g.Frame)
-	renderers.Load(g.ECS)
+	g := game.NewGame()
 
 	entities.CreatePlayer(g.ECS)
 	entities.CreateActor(g.ECS, math.NewVec2(100, 100))

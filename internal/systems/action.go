@@ -11,7 +11,7 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-func HandleActions(ecs *ecs.ECS) {
+func HandleMoveAction(ecs *ecs.ECS) {
 	mousePoint := cursorPoint()
 	player := components.GetPlayer(ecs.World)
 
@@ -22,20 +22,23 @@ func HandleActions(ecs *ecs.ECS) {
 		}
 	}
 
-	switch player.ActionName {
-	case "Move":
-		{
-			if _, has_selection := components.Selected.First(ecs.World); has_selection {
-				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-					first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(mousePoint))
-					if ok {
-						moveSelectedFollow(ecs.World, first.Entity(), DEFAULT_STOP_DISTANCE)
-					} else {
-						moveSelectedTo(ecs.World, mousePoint, DEFAULT_STOP_DISTANCE)
-					}
-				}
-			}
-		}
+	if player.ActionName != "Move" {
+		return
+	}
+
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+		return
+	}
+
+	if _, has_selection := components.Selected.First(ecs.World); !has_selection {
+		return
+	}
+
+	first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(mousePoint))
+	if ok {
+		moveSelectedFollow(ecs.World, first.Entity(), DEFAULT_STOP_DISTANCE)
+	} else {
+		moveSelectedTo(ecs.World, mousePoint, DEFAULT_STOP_DISTANCE)
 	}
 }
 

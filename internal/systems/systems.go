@@ -7,14 +7,13 @@ import (
 )
 
 func Load(ecs *ecs.ECS, frame *util.Frame) {
-	ecs.AddSystem(HandleSelection)
-	ecs.AddSystem(HandleActions)
-
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)
 	ecs.AddSystem(RemoveCompleted)
 	ecs.AddSystem(ResolveModifiers(frame))
 
+	ecs.AddSystem(HandleSelection)
+	ecs.AddSystem(HandleMoveAction)
 	ecs.AddSystem(MoveEntities)
 }

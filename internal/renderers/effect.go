@@ -10,7 +10,10 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-var renderEffectsQuery = donburi.NewQuery(filter.Contains(components.Modifier, components.Image))
+var renderEffectsQuery = donburi.NewQuery(filter.And(
+	filter.Contains(components.Modifier, components.Image),
+	filter.Not(filter.Contains(components.Delay)),
+))
 
 func RenderEffect(ecs *ecs.ECS, screen *ebiten.Image) {
 	for entry := range renderEffectsQuery.Iter(ecs.World) {

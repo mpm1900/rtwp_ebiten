@@ -21,7 +21,10 @@ func (mod ModifierData) Modifier() ModifierData {
 
 var Modifier = donburi.NewComponentType[ModifierData]()
 var ModifierQuery = donburi.NewOrderedQuery[ModifierData](
-	filter.And(filter.Contains(Modifier), filter.Not(filter.Contains(Delay))),
+	filter.And(
+		filter.Contains(Modifier),
+		filter.Not(filter.Contains(Delay)),
+	),
 )
 
 func EachDependent(world donburi.World, modifier *donburi.Entry, yield func(*donburi.Entry)) {

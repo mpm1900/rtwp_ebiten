@@ -34,10 +34,9 @@ func main() {
 	entities.CreatePlayer(g.ECS)
 	entities.CreateActor(g.ECS, math.NewVec2(100, 100))
 	entities.CreateActor(g.ECS, math.NewVec2(50, 200))
-
 	attack_up := entities.CreateEffect(g.ECS, effects.SpeedUp)
 	attack_down := entities.CreateEffect(g.ECS, effects.SpeedDown)
-	components.WithDuration(attack_up, 60)
+
 	components.WithDelay(attack_up, 60)
 	components.WithRange(attack_up, 120)
 	components.WithRange(attack_down, 100)

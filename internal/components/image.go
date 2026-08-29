@@ -12,6 +12,7 @@ var Image = donburi.NewComponentType[*ebiten.Image]()
 var ImageQuery = donburi.NewQuery(filter.And(
 	filter.Contains(Image),
 	filter.Contains(transform.Transform),
+	filter.Not(filter.Contains(Delay)),
 ))
 
 func WithImage(entry *donburi.Entry, image *ebiten.Image, position math.Vec2) {

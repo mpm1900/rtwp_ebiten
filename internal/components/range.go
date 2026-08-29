@@ -7,7 +7,10 @@ import (
 )
 
 var Range = donburi.NewComponentType[float64]()
-var RangeQuery = donburi.NewQuery(filter.Contains(Range, transform.Transform))
+var RangeQuery = donburi.NewQuery(filter.And(
+	filter.Contains(Range, transform.Transform),
+	filter.Not(filter.Contains(Delay))),
+)
 
 func WithRange(entry *donburi.Entry, r float64) {
 	entry.AddComponent(Range)

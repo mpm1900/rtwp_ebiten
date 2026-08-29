@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
@@ -20,14 +19,11 @@ func main() {
 	entities.CreatePlayer(g.ECS)
 	entities.CreateActor(g.ECS, math.NewVec2(100, 100))
 	entities.CreateActor(g.ECS, math.NewVec2(50, 200))
-	attack_up := entities.CreateEffect(g.ECS, effects.SpeedUp)
-	attack_down := entities.CreateEffect(g.ECS, effects.SpeedDown)
+	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(200, 200))
+	effects.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))
 
-	components.WithDelay(attack_up, 60)
-	components.WithRange(attack_up, 120)
-	components.WithRange(attack_down, 100)
-	components.WithImage(attack_up, assets.YellowSquareImage, math.NewVec2(200, 200))
-	components.WithImage(attack_down, assets.YellowSquareImage, math.NewVec2(300, 250))
+	components.WithDelay(g.ECS.World.Entry(speed_up), 60)
+	components.WithRange(g.ECS.World.Entry(speed_up), 120)
 
 	ebiten.SetWindowSize(renderers.SCREEN_WIDTH, renderers.SCREEN_HEIGHT)
 	if err := ebiten.RunGame(&g); err != nil {

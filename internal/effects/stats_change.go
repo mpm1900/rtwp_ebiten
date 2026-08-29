@@ -3,11 +3,14 @@ package effects
 import (
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/ecs"
+	"github.com/yohamta/donburi/features/math"
 )
 
 type StatsChange struct {
@@ -31,6 +34,14 @@ func (e StatsChange) Apply(world donburi.World, frame *util.Frame, modifier *don
 			})
 		}
 	})
+}
+
+func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
+	entity := entities.CreateEffect(ecs, e)
+	entry := ecs.World.Entry(entity)
+	components.WithImage(entry, assets.YellowSquareImage, position)
+	components.WithRange(entry, 100)
+	return entity
 }
 
 var SpeedUp StatsChange = StatsChange{

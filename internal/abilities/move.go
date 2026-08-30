@@ -18,7 +18,12 @@ var Move = components.Ability{
 	Key:       ebiten.Key1,
 	Name:      "Move",
 	Handle: func(ecs *ecs.ECS) {
-		mousePoint := util.CursorPoint()
+		screenPoint := util.CursorPoint()
+		player := components.GetPlayer(ecs.World)
+		if player == nil {
+			return
+		}
+		worldPoint := player.ScreenToWorld(screenPoint)
 
 		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 			return
@@ -28,11 +33,11 @@ var Move = components.Ability{
 			return
 		}
 
-		first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(mousePoint))
+		first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(worldPoint))
 		if ok {
 			moveSelectedFollow(ecs.World, first.Entity(), systems.DEFAULT_STOP_DISTANCE)
 		} else {
-			moveSelectedTo(ecs.World, mousePoint, systems.DEFAULT_STOP_DISTANCE)
+			moveSelectedTo(ecs.World, worldPoint, systems.DEFAULT_STOP_DISTANCE)
 		}
 	},
 }

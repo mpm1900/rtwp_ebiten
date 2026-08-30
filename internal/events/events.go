@@ -7,6 +7,7 @@ func Load(world donburi.World) {
 	InitClearSelected(world)
 	InitSelectAt(world)
 	InitSelectInRect(world)
+	InitCamera(world)
 }
 
 func ProcessEvents(world donburi.World) {
@@ -16,4 +17,5 @@ func ProcessEvents(world donburi.World) {
 	ClearSelected.ProcessEvents(world)
 	SelectInRect.ProcessEvents(world)
 	SelectAt.ProcessEvents(world)
+	UpdateCamera.ProcessEvents(world)
 }

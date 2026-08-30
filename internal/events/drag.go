@@ -2,6 +2,7 @@ package events
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/events"
@@ -22,24 +23,34 @@ func InitDrag(world donburi.World) {
 
 func startDrag(world donburi.World, point math.Vec2) {
 	player := components.GetPlayer(world)
+	if player == nil {
+		return
+	}
+
 	player.StartDrag(point)
 }
 
 func updateDrag(world donburi.World, point math.Vec2) {
 	player := components.GetPlayer(world)
+	if player == nil {
+		return
+	}
+
 	player.UpdateDrag(point)
 }
 
 func endDrag(world donburi.World, point math.Vec2) {
 	player := components.GetPlayer(world)
-	if player.DragStart == nil {
+	if player == nil || player.DragStart == nil {
 		return
 	}
 
-	if player.DragDistance() <= dragClickThreshold {
-		selectAt(world, *player.DragStart)
+	if player.DragStart.Distance(point) <= dragClickThreshold {
+		selectAt(world, player.ScreenToWorld(*player.DragStart))
 	} else {
-		selectInRect(world, player.DragRect())
+		start := player.ScreenToWorld(*player.DragStart)
+		end := player.ScreenToWorld(point)
+		selectInRect(world, util.ToRect(start, end))
 	}
 
 	player.ClearDrag()

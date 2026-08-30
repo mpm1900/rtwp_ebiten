@@ -16,11 +16,13 @@ var renderEffectsQuery = donburi.NewQuery(filter.And(
 ))
 
 func RenderEffect(ecs *ecs.ECS, screen *ebiten.Image) {
+	view := newCameraView(ecs)
+
 	for entry := range renderEffectsQuery.Iter(ecs.World) {
 		transform := transform.Transform.Get(entry)
 		image := *components.Image.Get(entry)
 		options := &ebiten.DrawImageOptions{}
-		options.GeoM.Translate(transform.LocalPosition.X, transform.LocalPosition.Y)
+		view.Translate(options, transform.LocalPosition)
 		screen.DrawImage(image, options)
 	}
 }

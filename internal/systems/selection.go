@@ -1,6 +1,7 @@
 package systems
 
 import (
+	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/util"
 
@@ -15,6 +16,7 @@ func HandleSelection(ecs *ecs.ECS) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		events.ClearSelected.Publish(ecs.World, struct{}{})
 	}
+
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		events.StartDrag.Publish(ecs.World, mousePoint)
 	}
@@ -23,5 +25,23 @@ func HandleSelection(ecs *ecs.ECS) {
 	}
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		events.EndDrag.Publish(ecs.World, mousePoint)
+	}
+
+	player := components.GetPlayer(ecs.World)
+	if player == nil {
+		return
+	}
+
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonMiddle) {
+		player.StartCameraDrag(mousePoint)
+	}
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) {
+		delta, ok := player.UpdateCameraDrag(mousePoint)
+		if ok {
+			events.UpdateCamera.Publish(ecs.World, delta)
+		}
+	}
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonMiddle) {
+		player.ClearCameraDrag()
 	}
 }

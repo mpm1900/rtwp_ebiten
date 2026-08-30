@@ -14,6 +14,8 @@ import (
 var renderActorsQuery = donburi.NewQuery(filter.Contains(components.Actor, components.Image))
 
 func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
+	view := newCameraView(ecs)
+
 	for entry := range renderActorsQuery.Iter(ecs.World) {
 		transform := transform.Transform.Get(entry)
 		image := *components.Image.Get(entry)
@@ -22,7 +24,7 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		options := &ebiten.DrawImageOptions{}
-		options.GeoM.Translate(transform.LocalPosition.X, transform.LocalPosition.Y)
+		view.Translate(options, transform.LocalPosition)
 		screen.DrawImage(image, options)
 	}
 }

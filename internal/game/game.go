@@ -3,6 +3,7 @@ package game
 import (
 	"rtwp_ebitengine/internal/abilities"
 	"rtwp_ebitengine/internal/assets"
+	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/renderers"
@@ -43,7 +44,21 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.ECS.Draw(screen)
+	player := components.GetPlayer(g.ECS.World)
+	if player == nil {
+		return
+	}
+
+	camera_surface := player.Camera.Surface
+	camera_surface.Clear()
+
+	g.ECS.DrawLayer(renderers.RenderLayerBackground, camera_surface)
+	g.ECS.DrawLayer(renderers.RenderLayerEffects, camera_surface)
+	g.ECS.DrawLayer(renderers.RenderLayerActors, camera_surface)
+	player.Camera.Blit(screen)
+
+	g.ECS.DrawLayer(renderers.RenderLayerSelection, screen)
+	g.ECS.DrawLayer(renderers.RenderLayerUI, screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

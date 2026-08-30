@@ -11,13 +11,16 @@ import (
 )
 
 func RenderRanges(ecs *ecs.ECS, screen *ebiten.Image) {
+	view := newCameraView(ecs)
+
 	for entry := range components.RangeQuery.Iter(ecs.World) {
 		t := transform.GetTransform(entry)
 		r := components.Range.Get(entry)
+		center := view.Point(t.LocalPosition)
 		vector.StrokeCircle(
 			screen,
-			float32(t.LocalPosition.X),
-			float32(t.LocalPosition.Y),
+			float32(center.X),
+			float32(center.Y),
 			float32(*r),
 			2,
 			color.RGBA{0xff, 0xff, 0, 0xff},

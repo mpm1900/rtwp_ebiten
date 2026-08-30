@@ -8,7 +8,7 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func Load(ecs *ecs.ECS, frame *util.Frame, abilityRegistry map[uuid.UUID]components.Ability) {
+func Load(ecs *ecs.ECS, frame *util.Frame, abilityRegistry map[uuid.UUID]*components.Ability) {
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)

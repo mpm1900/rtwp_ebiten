@@ -12,6 +12,7 @@ import (
 
 func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
 	lineColor := color.RGBA{0xff, 0xff, 0xff, 0xff}
+	view := newCameraView(ecs)
 
 	for entry := range components.MovementQuery.Iter(ecs.World) {
 		movement := components.Movement.Get(entry)
@@ -22,12 +23,12 @@ func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
 				continue
 			}
 
-			util.DrawPoints(screen, from, to, 1, lineColor)
+			util.DrawPoints(screen, view.Point(from), view.Point(to), 1, lineColor)
 			continue
 		}
 
 		for _, to := range movement.Targets {
-			util.DrawPoints(screen, from, to, 1, lineColor)
+			util.DrawPoints(screen, view.Point(from), view.Point(to), 1, lineColor)
 			from = to
 		}
 	}

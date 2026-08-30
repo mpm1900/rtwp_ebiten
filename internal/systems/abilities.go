@@ -8,22 +8,21 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func HandleAbilities(registry map[uuid.UUID]components.Ability) ecs.System {
+func HandleAbilities(registry map[uuid.UUID]*components.Ability) ecs.System {
 	return func(ecs *ecs.ECS) {
-		_, has_selected := components.Selected.First(ecs.World)
-		if !has_selected {
+		player := components.GetPlayer(ecs.World)
+		if player == nil {
 			return
 		}
 
-		player := components.GetPlayer(ecs.World)
 		for _, ability := range registry {
 			if inpututil.IsKeyJustPressed(ability.Key) {
-				player.Ability.AbilityID = ability.AbilityID
+				player.Ability = ability
 			}
+		}
 
-			if player.Ability.AbilityID == ability.AbilityID {
-				ability.Handle(ecs)
-			}
+		if player.Ability != nil {
+			player.Ability.Handle(ecs)
 		}
 	}
 }

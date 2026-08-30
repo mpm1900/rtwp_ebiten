@@ -5,6 +5,7 @@ go 1.27
 require (
 	github.com/google/uuid v1.6.0
 	github.com/hajimehoshi/ebiten/v2 v2.9.10
+	github.com/melonfunction/ebiten-camera v0.0.0-20220812153034-695003d18a6d
 	github.com/yohamta/donburi v1.15.8
 )
 

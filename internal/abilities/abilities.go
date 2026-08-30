@@ -6,6 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var AbilityRegistry = map[uuid.UUID]components.Ability{
-	Move.AbilityID: Move,
+var AbilityRegistry = map[uuid.UUID]*components.Ability{
+	Move.AbilityID: &Move,
 }

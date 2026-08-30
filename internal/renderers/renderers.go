@@ -15,4 +15,5 @@ func Load(ecs *ecs.ECS) {
 	ecs.AddRenderer(RenderLayerSelection, RenderDragRect)
 	ecs.AddRenderer(RenderLayerUI, RenderActionText)
 	ecs.AddRenderer(RenderLayerUI, RenderPausedText)
+	ecs.AddRenderer(RenderLayerCursor, RenderCursor)
 }

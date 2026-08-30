@@ -24,6 +24,7 @@ func main() {
 	components.WithRange(g.ECS.World.Entry(speed_up), 120)
 
 	ebiten.SetWindowSize(renderers.SCREEN_WIDTH, renderers.SCREEN_HEIGHT)
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}

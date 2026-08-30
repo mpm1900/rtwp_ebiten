@@ -7,8 +7,12 @@ import (
 	"rtwp_ebitengine/assets/fonts"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
+
+var CursorPointerImage *ebiten.Image
+var CursorMoveImage *ebiten.Image
 
 var RedSquareImage *ebiten.Image
 var BlueSquareImage *ebiten.Image
@@ -18,6 +22,9 @@ var YellowSquareImage *ebiten.Image
 var YolkFontSource *text.GoTextFaceSource
 
 func MustLoadAssets() {
+	var err error
+	CursorPointerImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-pointer.png")
+	CursorMoveImage, _, err = ebitenutil.NewImageFromFile("assets/images/cursor-move.png")
 	RedSquareImage = ebiten.NewImage(24, 24)
 	RedSquareImage.Fill(color.RGBA{0xff, 0, 0, 0xff})
 	BlueSquareImage = ebiten.NewImage(24, 24)

@@ -61,6 +61,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.ECS.DrawLayer(renderers.RenderLayerSelection, screen)
 	g.ECS.DrawLayer(renderers.RenderLayerUI, screen)
+	g.ECS.DrawLayer(renderers.RenderLayerCursor, screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

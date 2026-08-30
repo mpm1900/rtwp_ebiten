@@ -6,4 +6,5 @@ const (
 	RenderLayerActors
 	RenderLayerSelection
 	RenderLayerUI
+	RenderLayerCursor
 )

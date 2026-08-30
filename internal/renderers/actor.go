@@ -23,8 +23,8 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 			image = assets.GreenSquareImage
 		}
 
-		options := &ebiten.DrawImageOptions{}
-		view.Translate(options, transform.LocalPosition)
-		screen.DrawImage(image, options)
+		options := ebiten.DrawImageOptions{}
+		view.Translate(&options, transform.LocalPosition)
+		screen.DrawImage(image, &options)
 	}
 }

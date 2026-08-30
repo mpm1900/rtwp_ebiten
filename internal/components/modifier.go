@@ -51,6 +51,15 @@ func EachDependent(world donburi.World, modifier *donburi.Entry, yield func(*don
 		}
 	}
 
+	if modifier.HasComponent(TargetsWhere) {
+		where := *TargetsWhere.Get(modifier)
+		for actor := range Actor.Iter(world) {
+			if where(actor.Entity()) {
+				yield(actor)
+			}
+		}
+	}
+
 	if modifier.HasComponent(Range) {
 		EachActorsInRange(world, modifier, yield)
 	}

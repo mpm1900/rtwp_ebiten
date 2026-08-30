@@ -7,6 +7,8 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
+var systemEffects = []components.ModifierData{}
+
 func ResolveModifiers(ecs *ecs.ECS, frame *util.Frame) {
 	for modifier := range components.ModifierQuery.IterOrdered(ecs.World, components.Modifier) {
 		instance := components.Modifier.Get(modifier)

@@ -70,7 +70,7 @@ func GetSpeed(entry *donburi.Entry) float64 {
 
 	if entry.HasComponent(Stats) {
 		stats := Stats.Get(entry)
-		speed = stats.Base[StatSpeed]
+		speed = stats.Stats[StatSpeed]
 	}
 
 	return speed

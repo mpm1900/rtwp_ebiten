@@ -52,10 +52,13 @@ func (s *StatsData) MapStages() {
 	for stat := range stats {
 		stats[stat] = stats[stat] * getStageMult(s.Stages[stat], 2)
 	}
+	s.Stats = stats
 }
 
 func (stats StatsData) Clone() StatsData {
 	stats.Base = maps.Clone(stats.Base)
+	stats.Stages = maps.Clone(stats.Stages)
+	stats.Stats = maps.Clone(stats.Stats)
 	return stats
 }
 

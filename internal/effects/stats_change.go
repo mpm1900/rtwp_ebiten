@@ -46,13 +46,13 @@ func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
 var SpeedUp StatsChange = StatsChange{
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
-		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] * 2
+		stats.Stats[components.StatSpeed] = stats.Stats[components.StatSpeed] * 2
 	},
 }
 
 var SpeedDown StatsChange = StatsChange{
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
-		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] / 2
+		stats.Stats[components.StatSpeed] = stats.Stats[components.StatSpeed] / 2
 	},
 }

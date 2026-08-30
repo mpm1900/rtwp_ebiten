@@ -28,7 +28,15 @@ func RectAt(entry *donburi.Entry, position dmath.Vec2) (image.Rectangle, bool) {
 	return util.ToRect(position, position.Add(trans.LocalScale)), true
 }
 
+func CenterTrans(trans transform.TransformData) dmath.Vec2 {
+	return trans.LocalPosition.Add(trans.LocalScale.DivScalar(2))
+}
+
+func CenterScale(trans transform.TransformData) dmath.Vec2 {
+	return dmath.NewVec2(-trans.LocalScale.X/2, -trans.LocalScale.Y/2)
+}
+
 func Center(entry *donburi.Entry) dmath.Vec2 {
 	trans := transform.Transform.Get(entry)
-	return trans.LocalPosition.Add(trans.LocalScale.DivScalar(2))
+	return CenterTrans(*trans)
 }

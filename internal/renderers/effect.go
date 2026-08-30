@@ -22,7 +22,8 @@ func RenderEffect(ecs *ecs.ECS, screen *ebiten.Image) {
 		transform := transform.Transform.Get(entry)
 		image := *components.Image.Get(entry)
 		options := ebiten.DrawImageOptions{}
-		view.Translate(&options, transform.LocalPosition)
+		viewpoint := view.Point(transform.LocalPosition)
+		options.GeoM.Translate(viewpoint.X, viewpoint.Y)
 		screen.DrawImage(image, &options)
 	}
 }

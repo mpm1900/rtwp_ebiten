@@ -3,7 +3,6 @@ package renderers
 import (
 	"rtwp_ebitengine/internal/components"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi/ecs"
 	"github.com/yohamta/donburi/features/math"
 )
@@ -29,9 +28,4 @@ func newCameraView(ecs *ecs.ECS) cameraView {
 
 func (view cameraView) Point(point math.Vec2) math.Vec2 {
 	return point.Add(view.offset)
-}
-
-func (view cameraView) Translate(options *ebiten.DrawImageOptions, position math.Vec2) {
-	point := view.Point(position)
-	options.GeoM.Translate(point.X, point.Y)
 }

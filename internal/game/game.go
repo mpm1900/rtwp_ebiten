@@ -1,7 +1,9 @@
 package game
 
 import (
+	"rtwp_ebitengine/internal/abilities"
 	"rtwp_ebitengine/internal/assets"
+	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/renderers"
 	"rtwp_ebitengine/internal/systems"
@@ -25,8 +27,9 @@ func NewGame() Game {
 
 	assets.MustLoadAssets()
 	events.Load(g.ECS.World)
-	systems.Load(g.ECS, g.Frame)
+	systems.Load(g.ECS, g.Frame, abilities.AbilityRegistry)
 	renderers.Load(g.ECS)
+	entities.CreatePlayer(g.ECS)
 
 	return g
 }

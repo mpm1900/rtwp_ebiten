@@ -48,3 +48,8 @@ func DrawPoints(screen *ebiten.Image, start, end dmath.Vec2, strokeWidth float32
 		false,
 	)
 }
+
+func CursorPoint() dmath.Vec2 {
+	x, y := ebiten.CursorPosition()
+	return NewVec2(x, y)
+}

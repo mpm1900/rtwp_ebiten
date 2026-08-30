@@ -15,8 +15,6 @@ import (
 
 func main() {
 	g := game.NewGame()
-
-	entities.CreatePlayer(g.ECS)
 	entities.CreateActor(g.ECS, math.NewVec2(100, 100))
 	entities.CreateActor(g.ECS, math.NewVec2(50, 200))
 	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(200, 200))

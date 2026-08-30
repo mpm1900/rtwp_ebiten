@@ -16,7 +16,7 @@ func MoveEntities(ecs *ecs.ECS) {
 
 	for entry := range components.MovementQuery.Iter(ecs.World) {
 		movement := components.Movement.Get(entry)
-		target, ok := components.MovementTarget(ecs.World, movement)
+		target, ok := components.MovementPosition(ecs.World, movement)
 		if !ok {
 			completed = append(completed, entry.Entity())
 			continue

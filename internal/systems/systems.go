@@ -2,11 +2,12 @@ package systems
 
 import (
 	"rtwp_ebitengine/internal/util"
+	"uuid"
 
 	"github.com/yohamta/donburi/ecs"
 )
 
-func Load(ecs *ecs.ECS, frame *util.Frame) {
+func Load(ecs *ecs.ECS, frame *util.Frame, abilityRegistry map[uuid.UUID]Ability) {
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)
@@ -14,6 +15,6 @@ func Load(ecs *ecs.ECS, frame *util.Frame) {
 	ecs.AddSystem(ResolveModifiers(frame))
 
 	ecs.AddSystem(HandleSelection)
-	ecs.AddSystem(HandleMoveAction)
+	ecs.AddSystem(HandleAbilities(abilityRegistry))
 	ecs.AddSystem(MoveEntities)
 }

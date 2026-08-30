@@ -17,7 +17,7 @@ func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
 		movement := components.Movement.Get(entry)
 		from := components.Center(entry)
 		if movement.Follow != donburi.Null {
-			to, ok := components.MovementTarget(ecs.World, movement)
+			to, ok := components.MovementPosition(ecs.World, movement)
 			if !ok {
 				continue
 			}

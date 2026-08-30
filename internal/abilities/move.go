@@ -1,8 +1,10 @@
-package systems
+package abilities
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/systems"
 	"rtwp_ebitengine/internal/util"
+	"uuid"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -11,35 +13,33 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-func HandleMoveAction(ecs *ecs.ECS) {
-	mousePoint := cursorPoint()
-	player := components.GetPlayer(ecs.World)
+var Move = systems.Ability{
+	AbilityID: uuid.New(),
+	Key:       ebiten.Key1,
+	Name:      "Move",
+	Handle: func(ecs *ecs.ECS) {
+		mousePoint := util.CursorPoint()
+		player := components.GetPlayer(ecs.World)
 
-	if inpututil.IsKeyJustPressed(ebiten.Key1) {
-		_, has_selected := components.Selected.First(ecs.World)
-		if has_selected {
-			player.ActionName = "Move"
+		if player.ActionName != "Move" {
+			return
 		}
-	}
 
-	if player.ActionName != "Move" {
-		return
-	}
+		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+			return
+		}
 
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-		return
-	}
+		if _, has_selection := components.Selected.First(ecs.World); !has_selection {
+			return
+		}
 
-	if _, has_selection := components.Selected.First(ecs.World); !has_selection {
-		return
-	}
-
-	first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(mousePoint))
-	if ok {
-		moveSelectedFollow(ecs.World, first.Entity(), DEFAULT_STOP_DISTANCE)
-	} else {
-		moveSelectedTo(ecs.World, mousePoint, DEFAULT_STOP_DISTANCE)
-	}
+		first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(mousePoint))
+		if ok {
+			moveSelectedFollow(ecs.World, first.Entity(), systems.DEFAULT_STOP_DISTANCE)
+		} else {
+			moveSelectedTo(ecs.World, mousePoint, systems.DEFAULT_STOP_DISTANCE)
+		}
+	},
 }
 
 func moveSelectedTo(world donburi.World, point math.Vec2, stopDistance float64) {

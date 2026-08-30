@@ -11,34 +11,7 @@ var Collision = donburi.NewTag("Collision")
 var CollisionQuery = donburi.NewQuery(filter.Contains(Collision, transform.Transform))
 
 func WithCollision(entry *donburi.Entry) {
-	if !entry.HasComponent(Collision) {
-		entry.AddComponent(Collision)
-	}
-}
-
-func DetectCollisions(world donburi.World, yield func(a, b *donburi.Entry)) {
-	colliders := []*donburi.Entry{}
-	for entry := range CollisionQuery.Iter(world) {
-		colliders = append(colliders, entry)
-	}
-
-	for i, a := range colliders {
-		aBounds, ok := Rect(a)
-		if !ok {
-			continue
-		}
-
-		for _, b := range colliders[i+1:] {
-			bBounds, ok := Rect(b)
-			if !ok {
-				continue
-			}
-
-			if aBounds.Overlaps(bBounds) {
-				yield(a, b)
-			}
-		}
-	}
+	entry.AddComponent(Collision)
 }
 
 func CollidesAt(world donburi.World, entry *donburi.Entry, position dmath.Vec2) (*donburi.Entry, bool) {
@@ -59,4 +32,17 @@ func CollidesAt(world donburi.World, entry *donburi.Entry, position dmath.Vec2) 
 	}
 
 	return nil, false
+}
+
+func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
+	if !entry.HasComponent(Collision) || !entry.HasComponent(transform.Transform) {
+		return stopDistance
+	}
+
+	scale := transform.Transform.Get(entry).LocalScale
+	if scale.X <= 0 || scale.Y <= 0 {
+		return stopDistance
+	}
+
+	return max(stopDistance, scale.Magnitude())
 }

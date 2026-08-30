@@ -76,7 +76,7 @@ func GetSpeed(entry *donburi.Entry) float64 {
 	return speed
 }
 
-func MovementTarget(world donburi.World, movement *MovementData) (dmath.Vec2, bool) {
+func MovementPosition(world donburi.World, movement *MovementData) (dmath.Vec2, bool) {
 	if movement.Follow != donburi.Null {
 		if !world.Valid(movement.Follow) {
 			return dmath.Vec2{}, false
@@ -95,17 +95,4 @@ func MovementTarget(world donburi.World, movement *MovementData) (dmath.Vec2, bo
 	}
 
 	return movement.Targets[0], true
-}
-
-func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
-	if !entry.HasComponent(Collision) || !entry.HasComponent(transform.Transform) {
-		return stopDistance
-	}
-
-	scale := transform.Transform.Get(entry).LocalScale
-	if scale.X <= 0 || scale.Y <= 0 {
-		return stopDistance
-	}
-
-	return max(stopDistance, scale.Magnitude())
 }

@@ -1,6 +1,7 @@
 package events
 
 import (
+	"rtwp_ebitengine/internal/abilities"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/util"
 
@@ -31,5 +32,6 @@ func selectAt(world donburi.World, at math.Vec2) {
 
 	components.EachActorAtPoint(world, util.ToPoint(at), func(entry *donburi.Entry) {
 		selectActor(world, entry.Entity())
+		player.Ability = &abilities.Move
 	})
 }

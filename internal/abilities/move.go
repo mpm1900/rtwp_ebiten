@@ -2,7 +2,6 @@ package abilities
 
 import (
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/systems"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/google/uuid"
@@ -35,9 +34,9 @@ var Move = components.Ability{
 
 		first, ok := components.FirstActorAtPoint(ecs.World, util.ToPoint(worldPoint))
 		if ok {
-			moveSelectedFollow(ecs.World, first.Entity(), systems.DEFAULT_STOP_DISTANCE)
+			moveSelectedFollow(ecs.World, first.Entity(), components.DEFAULT_STOP_DISTANCE)
 		} else {
-			moveSelectedTo(ecs.World, worldPoint, systems.DEFAULT_STOP_DISTANCE)
+			moveSelectedTo(ecs.World, worldPoint, components.DEFAULT_STOP_DISTANCE)
 		}
 	},
 }

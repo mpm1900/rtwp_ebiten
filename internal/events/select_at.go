@@ -27,6 +27,9 @@ func selectActor(world donburi.World, entity donburi.Entity) {
 func selectAt(world donburi.World, at math.Vec2) {
 	mousePoint := util.ToPoint(at)
 	clearSelected(world, struct{}{})
+	player := components.GetPlayer(world)
+	player.Ability = nil
+
 	components.EachActorAtPoint(world, mousePoint, func(entry *donburi.Entry) {
 		selectActor(world, entry.Entity())
 	})

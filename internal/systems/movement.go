@@ -7,10 +7,6 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-const (
-	DEFAULT_STOP_DISTANCE = 1.0
-)
-
 func MoveEntities(ecs *ecs.ECS) {
 	completed := []donburi.Entity{}
 	if ecs.IsPaused() {
@@ -30,7 +26,7 @@ func MoveEntities(ecs *ecs.ECS) {
 		distance := direction.Magnitude()
 		stopDistance := movement.StopDistance
 		if stopDistance <= 0 {
-			stopDistance = DEFAULT_STOP_DISTANCE
+			stopDistance = components.DEFAULT_STOP_DISTANCE
 		}
 
 		remainingDistance := distance

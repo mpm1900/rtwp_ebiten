@@ -28,9 +28,9 @@ type PlayerData struct {
 	DragEnd    *math.Vec2
 }
 
-func NewPlayerData(ability *Ability) PlayerData {
+func NewPlayerData() PlayerData {
 	return PlayerData{
-		Ability:    ability,
+		Ability:    nil,
 		Camera:     camera.NewCamera(640, 480, 320, 240, 0, 1),
 		CameraDrag: nil,
 		DragStart:  nil,

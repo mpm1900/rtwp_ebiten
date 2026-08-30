@@ -11,6 +11,10 @@ import (
 
 func RenderActionText(ecs *ecs.ECS, screen *ebiten.Image) {
 	player := components.GetPlayer(ecs.World)
+	if player.Ability == nil {
+		return
+	}
+
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(0, float64(SCREEN_HEIGHT)-24)
 	text.Draw(screen, player.Ability.Name, &text.GoTextFace{

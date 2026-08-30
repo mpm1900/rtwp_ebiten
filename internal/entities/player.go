@@ -7,9 +7,9 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func CreatePlayer(esc *ecs.ECS, startingAbility *components.Ability) donburi.Entity {
+func CreatePlayer(esc *ecs.ECS) donburi.Entity {
 	entity := esc.World.Create(components.Player)
 	entry := esc.World.Entry(entity)
-	components.Player.SetValue(entry, components.NewPlayerData(startingAbility))
+	components.Player.SetValue(entry, components.NewPlayerData())
 	return entity
 }

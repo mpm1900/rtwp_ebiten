@@ -7,6 +7,10 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
+const (
+	DEFAULT_STOP_DISTANCE = 1.0
+)
+
 type MovementData struct {
 	Targets      []dmath.Vec2
 	Follow       donburi.Entity

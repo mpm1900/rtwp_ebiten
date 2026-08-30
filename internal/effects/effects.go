@@ -5,9 +5,16 @@ import (
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/yohamta/donburi/ecs"
+	"github.com/yohamta/donburi/features/math"
 )
 
-var systemEffects = []components.ModifierData{}
+var systemModifiers = []components.ModifierData{}
+
+func LoadSystemModifiers(ecs *ecs.ECS) {
+	for _, mod := range systemModifiers {
+		mod.Effect.Spawn(ecs, math.NewVec2(0, 0))
+	}
+}
 
 func ResolveModifiers(ecs *ecs.ECS, frame *util.Frame) {
 	for modifier := range components.ModifierQuery.IterOrdered(ecs.World, components.Modifier) {

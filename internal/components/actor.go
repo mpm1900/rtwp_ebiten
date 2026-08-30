@@ -8,7 +8,11 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-var Actor = donburi.NewTag("Actor")
+type ActorData struct {
+	Abilities []*Ability
+}
+
+var Actor = donburi.NewComponentType[ActorData]()
 var ActorQuery = donburi.NewQuery(filter.Contains(Actor, transform.Transform))
 
 func EachActorAtPoint(world donburi.World, point image.Point, yield func(*donburi.Entry)) {

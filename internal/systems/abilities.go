@@ -3,23 +3,28 @@ package systems
 import (
 	"rtwp_ebitengine/internal/components"
 
-	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi/ecs"
 )
 
-func HandleAbilities(registry map[uuid.UUID]*components.Ability) ecs.System {
-	return func(ecs *ecs.ECS) {
-		player := components.GetPlayer(ecs.World)
+func HandleAbilities(ecs *ecs.ECS) {
+	player := components.GetPlayer(ecs.World)
+	actions := map[*components.Ability]struct{}{}
 
-		for _, ability := range registry {
-			if inpututil.IsKeyJustPressed(ability.Key) {
-				player.Ability = ability
-			}
+	for selected := range components.SelectedActorsQuery.Iter(ecs.World) {
+		actor := components.Actor.Get(selected)
+		for _, action := range actor.Abilities {
+			actions[action] = struct{}{}
 		}
+	}
 
-		if player.Ability != nil {
-			player.Ability.Handle(ecs)
+	for ability := range actions {
+		if inpututil.IsKeyJustPressed(ability.Key) {
+			player.Ability = ability
 		}
+	}
+
+	if player.Ability != nil {
+		player.Ability.Handle(ecs)
 	}
 }

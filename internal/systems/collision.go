@@ -1,10 +1,11 @@
 package systems
 
 import (
+	"math"
 	"rtwp_ebitengine/internal/components"
 
 	"github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/features/math"
+	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 )
 
@@ -13,10 +14,15 @@ type CollisionMoveResult struct {
 	Collided bool
 }
 
-func MoveWithCollision(world donburi.World, entry *donburi.Entry, delta math.Vec2) CollisionMoveResult {
+func MoveWithCollision(world donburi.World, entry *donburi.Entry, delta dmath.Vec2) CollisionMoveResult {
 	trans := transform.Transform.Get(entry)
-	position := trans.LocalPosition
-	nextPosition := position.Add(delta)
+
+	if !delta.IsZero() {
+		trans.LocalRotation = math.Atan2(delta.Y, delta.X)
+	}
+
+	startPos := trans.LocalPosition
+	nextPosition := startPos.Add(delta)
 	_, colliding := components.CollidesAt(world, entry, nextPosition)
 	if !colliding {
 		trans.LocalPosition = nextPosition
@@ -26,20 +32,22 @@ func MoveWithCollision(world donburi.World, entry *donburi.Entry, delta math.Vec
 	}
 
 	result := CollisionMoveResult{Collided: true}
-	nextPosition = position.Add(math.NewVec2(delta.X, 0))
+	currentPos := startPos
+
+	nextPosition = currentPos.Add(dmath.NewVec2(delta.X, 0))
 	_, colliding = components.CollidesAt(world, entry, nextPosition)
 	if delta.X != 0 && !colliding {
-		position = nextPosition
+		currentPos = nextPosition
 		result.Moved = true
 	}
 
-	nextPosition = position.Add(math.NewVec2(0, delta.Y))
+	nextPosition = currentPos.Add(dmath.NewVec2(0, delta.Y))
 	_, colliding = components.CollidesAt(world, entry, nextPosition)
 	if delta.Y != 0 && !colliding {
-		position = nextPosition
+		currentPos = nextPosition
 		result.Moved = true
 	}
 
-	trans.LocalPosition = position
+	trans.LocalPosition = currentPos
 	return result
 }

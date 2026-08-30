@@ -1,7 +1,6 @@
 package game
 
 import (
-	"rtwp_ebitengine/internal/abilities"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
@@ -29,7 +28,7 @@ func NewGame() Game {
 
 	assets.MustLoadAssets()
 	events.Load(g.ECS.World)
-	systems.Load(g.ECS, g.Frame, abilities.AbilityRegistry)
+	systems.Load(g.ECS, g.Frame)
 	renderers.Load(g.ECS)
 
 	effects.LoadSystemModifiers(g.ECS)
@@ -47,10 +46,6 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	player := components.GetPlayer(g.ECS.World)
-	if player == nil {
-		return
-	}
-
 	camera_surface := player.Camera.Surface
 	camera_surface.Clear()
 

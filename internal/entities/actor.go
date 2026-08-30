@@ -9,9 +9,12 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-func CreateActor(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
+func CreateActor(ecs *ecs.ECS, position math.Vec2, abilities []*components.Ability) donburi.Entity {
 	entity := ecs.Create(ActorLayer, components.Actor, components.Stats)
 	entry := ecs.World.Entry(entity)
+	components.Actor.SetValue(entry, components.ActorData{
+		Abilities: abilities,
+	})
 	components.Stats.SetValue(entry, *components.NewStatsData(map[components.Stat]float64{
 		components.StatHealth: 100.0,
 		components.StatMelee:  10.0,

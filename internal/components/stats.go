@@ -50,7 +50,11 @@ func getStageMult(stage int, factor float64) float64 {
 func (s *StatsData) MapStages() {
 	stats := maps.Clone(s.Base)
 	for stat := range stats {
-		stats[stat] = stats[stat] * getStageMult(s.Stages[stat], 2)
+		value := stats[stat]
+		stage := s.Stages[stat]
+		value *= getStageMult(stage, 2)
+
+		stats[stat] = value
 	}
 	s.Stats = stats
 }

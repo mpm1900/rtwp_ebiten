@@ -8,11 +8,13 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var systemModifiers = []components.ModifierData{}
+var systemModifiers = []components.Effect{
+	SystemResolveStats,
+}
 
 func LoadSystemModifiers(ecs *ecs.ECS) {
-	for _, mod := range systemModifiers {
-		mod.Effect.Spawn(ecs, math.NewVec2(0, 0))
+	for _, sys := range systemModifiers {
+		sys.Spawn(ecs, math.NewVec2(0, 0))
 	}
 }
 

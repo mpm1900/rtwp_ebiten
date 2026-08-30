@@ -34,7 +34,6 @@ func (e StatsChange) Apply(world donburi.World, frame *util.Frame, modifier *don
 		}
 	})
 }
-
 func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
 	entity := entities.CreateEffect(ecs, e, e.ModifierConfig)
 	entry := ecs.World.Entry(entity)
@@ -46,13 +45,13 @@ func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
 var SpeedUp StatsChange = StatsChange{
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
-		stats.Stats[components.StatSpeed] = stats.Stats[components.StatSpeed] * 2
+		stats.Stages[components.StatSpeed] += 2
 	},
 }
 
 var SpeedDown StatsChange = StatsChange{
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
-		stats.Stats[components.StatSpeed] = stats.Stats[components.StatSpeed] / 2
+		stats.Stages[components.StatSpeed] -= 2
 	},
 }

@@ -1,10 +1,11 @@
 package abilities
 
 import (
-	"rtwp_ebitengine/internal/systems"
-	"uuid"
+	"rtwp_ebitengine/internal/components"
+
+	"github.com/google/uuid"
 )
 
-var AbilityRegistry = map[uuid.UUID]systems.Ability{
+var AbilityRegistry = map[uuid.UUID]components.Ability{
 	Move.AbilityID: Move,
 }

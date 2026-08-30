@@ -4,21 +4,31 @@ import (
 	"image"
 	"rtwp_ebitengine/internal/util"
 
+	"github.com/google/uuid"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/ecs"
 	"github.com/yohamta/donburi/features/math"
 )
 
-type PlayerData struct {
-	ActionName string
-	DragStart  *math.Vec2
-	DragEnd    *math.Vec2
+type Ability struct {
+	AbilityID uuid.UUID
+	Key       ebiten.Key
+	Name      string
+	Handle    func(*ecs.ECS)
 }
 
-func NewPlayerData() PlayerData {
+type PlayerData struct {
+	Ability   *Ability
+	DragStart *math.Vec2
+	DragEnd   *math.Vec2
+}
+
+func NewPlayerData(ability *Ability) PlayerData {
 	return PlayerData{
-		ActionName: "Move",
-		DragStart:  nil,
-		DragEnd:    nil,
+		Ability:   ability,
+		DragStart: nil,
+		DragEnd:   nil,
 	}
 }
 

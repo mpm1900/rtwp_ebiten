@@ -4,8 +4,8 @@ import (
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/systems"
 	"rtwp_ebitengine/internal/util"
-	"uuid"
 
+	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
@@ -13,17 +13,12 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var Move = systems.Ability{
+var Move = components.Ability{
 	AbilityID: uuid.New(),
 	Key:       ebiten.Key1,
 	Name:      "Move",
 	Handle: func(ecs *ecs.ECS) {
 		mousePoint := util.CursorPoint()
-		player := components.GetPlayer(ecs.World)
-
-		if player.ActionName != "Move" {
-			return
-		}
 
 		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 			return

@@ -1,13 +1,14 @@
 package systems
 
 import (
+	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/util"
-	"uuid"
 
+	"github.com/google/uuid"
 	"github.com/yohamta/donburi/ecs"
 )
 
-func Load(ecs *ecs.ECS, frame *util.Frame, abilityRegistry map[uuid.UUID]Ability) {
+func Load(ecs *ecs.ECS, frame *util.Frame, abilityRegistry map[uuid.UUID]components.Ability) {
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)

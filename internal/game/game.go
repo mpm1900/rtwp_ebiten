@@ -29,7 +29,7 @@ func NewGame() Game {
 	events.Load(g.ECS.World)
 	systems.Load(g.ECS, g.Frame, abilities.AbilityRegistry)
 	renderers.Load(g.ECS)
-	entities.CreatePlayer(g.ECS)
+	entities.CreatePlayer(g.ECS, &abilities.Move)
 
 	return g
 }

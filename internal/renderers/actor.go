@@ -24,11 +24,6 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		options := ebiten.DrawImageOptions{}
-		bounds := image.Bounds()
-		halfW := float64(bounds.Dx()) / 2.0
-		halfH := float64(bounds.Dy()) / 2.0
-
-		options.GeoM.Translate(-halfW, -halfH)
 		options.GeoM.Rotate(trans.LocalRotation)
 		view.Translate(&options, trans.LocalPosition)
 

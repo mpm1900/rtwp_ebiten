@@ -1,7 +1,6 @@
 package systems
 
 import (
-	"math"
 	"rtwp_ebitengine/internal/components"
 
 	"github.com/yohamta/donburi"
@@ -17,9 +16,11 @@ type CollisionMoveResult struct {
 func MoveWithCollision(world donburi.World, entry *donburi.Entry, delta dmath.Vec2) CollisionMoveResult {
 	trans := transform.Transform.Get(entry)
 
-	if !delta.IsZero() {
-		trans.LocalRotation = math.Atan2(delta.Y, delta.X)
-	}
+	/*
+		if !delta.IsZero() {
+			trans.LocalRotation = math.Atan2(delta.Y, delta.X)
+		}
+	*/
 
 	startPos := trans.LocalPosition
 	nextPosition := startPos.Add(delta)

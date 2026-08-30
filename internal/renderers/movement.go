@@ -8,13 +8,19 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
+	"github.com/yohamta/donburi/features/transform"
+	"github.com/yohamta/donburi/filter"
+)
+
+var renderMovementQuery = donburi.NewQuery(
+	filter.Contains(components.Movement, transform.Transform, components.Selected),
 )
 
 func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
 	lineColor := color.RGBA{0xff, 0xff, 0xff, 0xff}
 	view := newCameraView(ecs)
 
-	for entry := range components.MovementQuery.Iter(ecs.World) {
+	for entry := range renderMovementQuery.Iter(ecs.World) {
 		movement := components.Movement.Get(entry)
 		from := components.Center(entry)
 		if movement.Follow != donburi.Null {

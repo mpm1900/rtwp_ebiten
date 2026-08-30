@@ -13,6 +13,9 @@ const (
 
 func MoveEntities(ecs *ecs.ECS) {
 	completed := []donburi.Entity{}
+	if ecs.IsPaused() {
+		return
+	}
 
 	for entry := range components.MovementQuery.Iter(ecs.World) {
 		movement := components.Movement.Get(entry)

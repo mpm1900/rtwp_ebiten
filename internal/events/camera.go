@@ -16,9 +16,5 @@ func InitCamera(world donburi.World) {
 
 func updateCamera(world donburi.World, delta math.Vec2) {
 	player := components.GetPlayer(world)
-	if player == nil || player.Camera == nil {
-		return
-	}
-
-	player.Camera.MovePosition(delta.X, delta.Y)
+	player.Camera.MovePosition(-delta.X, -delta.Y)
 }

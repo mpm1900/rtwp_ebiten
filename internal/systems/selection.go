@@ -28,10 +28,6 @@ func HandleSelection(ecs *ecs.ECS) {
 	}
 
 	player := components.GetPlayer(ecs.World)
-	if player == nil {
-		return
-	}
-
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonMiddle) {
 		player.StartCameraDrag(mousePoint)
 	}

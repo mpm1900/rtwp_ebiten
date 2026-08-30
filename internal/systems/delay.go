@@ -7,6 +7,10 @@ import (
 )
 
 func DecrementDelays(ecs *ecs.ECS) {
+	if ecs.IsPaused() {
+		return
+	}
+
 	for entry := range components.Delay.Iter(ecs.World) {
 		delay := components.Delay.Get(entry)
 		if *delay > 0 {

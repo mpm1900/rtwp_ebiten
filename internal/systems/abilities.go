@@ -11,9 +11,6 @@ import (
 func HandleAbilities(registry map[uuid.UUID]*components.Ability) ecs.System {
 	return func(ecs *ecs.ECS) {
 		player := components.GetPlayer(ecs.World)
-		if player == nil {
-			return
-		}
 
 		for _, ability := range registry {
 			if inpututil.IsKeyJustPressed(ability.Key) {

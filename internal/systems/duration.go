@@ -7,6 +7,10 @@ import (
 )
 
 func DecrementDurations(ecs *ecs.ECS) {
+	if ecs.IsPaused() {
+		return
+	}
+
 	for entry := range components.DurationQuery.Iter(ecs.World) {
 		duration := components.Duration.Get(entry)
 		if *duration > 0 {

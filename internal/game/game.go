@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"rtwp_ebitengine/internal/abilities"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
@@ -12,7 +11,6 @@ import (
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
 )
@@ -40,19 +38,7 @@ func NewGame() Game {
 func (g *Game) Update() error {
 	g.Frame.Restore(g.ECS.World)
 	g.ECS.Update()
-
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		if g.ECS.IsPaused() {
-			fmt.Println("resume")
-			g.ECS.Resume()
-		} else {
-			fmt.Println("pause")
-			g.ECS.Pause()
-		}
-	}
-
 	events.ProcessEvents(g.ECS.World)
-
 	return nil
 }
 

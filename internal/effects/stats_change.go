@@ -6,7 +6,6 @@ import (
 	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/util"
 
-	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
@@ -37,7 +36,7 @@ func (e StatsChange) Apply(world donburi.World, frame *util.Frame, modifier *don
 }
 
 func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
-	entity := entities.CreateEffect(ecs, e)
+	entity := entities.CreateEffect(ecs, e, e.ModifierConfig)
 	entry := ecs.World.Entry(entity)
 	components.WithImage(entry, assets.YellowSquareImage, position)
 	components.WithRange(entry, 100)
@@ -45,7 +44,6 @@ func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
 }
 
 var SpeedUp StatsChange = StatsChange{
-	EffectID: uuid.MustParse("01a03c4e-06de-7469-9bb8-efc31688ee16"),
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
 		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] * 2
@@ -53,7 +51,6 @@ var SpeedUp StatsChange = StatsChange{
 }
 
 var SpeedDown StatsChange = StatsChange{
-	EffectID: uuid.MustParse("01a044a8-c3dd-76ae-9f59-0187fae561bc"),
 	Priority: 0,
 	Update: func(stats *components.StatsData) {
 		stats.Base[components.StatSpeed] = stats.Base[components.StatSpeed] / 2

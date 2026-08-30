@@ -9,6 +9,8 @@ import (
 )
 
 func Load(ecs *ecs.ECS, frame *util.Frame, abilityRegistry map[uuid.UUID]*components.Ability) {
+	ecs.AddSystem(HandlePause)
+
 	ecs.AddSystem(DecrementDelays)
 	ecs.AddSystem(RemoveCompletedDelays)
 	ecs.AddSystem(DecrementDurations)

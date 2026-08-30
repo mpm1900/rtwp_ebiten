@@ -1,22 +1,38 @@
 package components
 
 import (
-	"github.com/google/uuid"
+	"rtwp_ebitengine/internal/util"
+
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/ecs"
+	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/filter"
 )
 
-type ModifierData struct {
-	EffectID uuid.UUID
+type Effect interface {
+	Active(world donburi.World, modifier *donburi.Entry) bool
+	Apply(world donburi.World, frame *util.Frame, modifier *donburi.Entry)
+	Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity
+}
+
+type ModifierConfig struct {
 	Priority int
+}
+
+type ModifierData struct {
+	ModifierConfig
+	Effect Effect
+}
+
+func NewModifierInstance(effect Effect, mod ModifierConfig) ModifierData {
+	return ModifierData{
+		ModifierConfig: mod,
+		Effect:         effect,
+	}
 }
 
 func (mod ModifierData) Order() int {
 	return mod.Priority
-}
-
-func (mod ModifierData) Modifier() ModifierData {
-	return mod
 }
 
 var Modifier = donburi.NewComponentType[ModifierData]()

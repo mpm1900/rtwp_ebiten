@@ -7,20 +7,50 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
+type Stat int
+
 const (
-	StatMelee = iota
-	StatSpeed
+	StatHealth Stat = iota
+	StatMelee  Stat = iota
+	StatSpeed  Stat = iota
 )
 
-type StatsValue map[int]float64
-
 type StatsData struct {
-	Base StatsValue
+	Base   map[Stat]float64
+	Stages map[Stat]int
+	Stats  map[Stat]float64
 }
 
-func NewStatsData(base StatsValue) *StatsData {
+func NewStatsData(base map[Stat]float64) *StatsData {
+	stages := map[Stat]int{}
+	for stat := range base {
+		stages[stat] = 0
+	}
+
 	return &StatsData{
-		Base: base,
+		Base:   base,
+		Stages: stages,
+		Stats:  maps.Clone(base),
+	}
+}
+
+func getStageMult(stage int, factor float64) float64 {
+	n := factor
+	d := factor
+	if stage > 0 {
+		n += float64(stage)
+	}
+	if stage < 0 {
+		d -= float64(stage)
+	}
+
+	return n / d
+}
+
+func (s *StatsData) MapStages() {
+	stats := maps.Clone(s.Base)
+	for stat := range stats {
+		stats[stat] = stats[stat] * getStageMult(s.Stages[stat], 2)
 	}
 }
 

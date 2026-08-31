@@ -22,7 +22,7 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 	vector.StrokeRect(
 		screen,
 		float32(mapRect.Min.X-components.MINIMAP_BORDER),
-		float32(mapRect.Min.X-components.MINIMAP_BORDER),
+		float32(mapRect.Min.Y-components.MINIMAP_BORDER),
 		float32(components.MINIMAP_SIZE+components.MINIMAP_BORDER*2),
 		float32(components.MINIMAP_SIZE+components.MINIMAP_BORDER*2),
 		1,

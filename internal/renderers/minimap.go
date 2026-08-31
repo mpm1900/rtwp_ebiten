@@ -25,7 +25,7 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 		float32(mapRect.Min.Y-components.MINIMAP_BORDER),
 		float32(components.MINIMAP_SIZE+components.MINIMAP_BORDER*2),
 		float32(components.MINIMAP_SIZE+components.MINIMAP_BORDER*2),
-		1,
+		2,
 		color.Black,
 		false,
 	)

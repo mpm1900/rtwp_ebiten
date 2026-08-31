@@ -22,11 +22,11 @@ func EachActorsInRange(world donburi.World, entry *donburi.Entry, yield func(*do
 		return
 	}
 
-	entry_transform := transform.Transform.Get(entry)
+	entry_center := Center(entry)
 	entry_range := *Range.Get(entry)
 	for actor := range Actor.Iter(world) {
-		actor_transform := transform.Transform.Get(actor)
-		distance := entry_transform.LocalPosition.Distance(actor_transform.LocalPosition)
+		actor_center := Center(actor)
+		distance := entry_center.Distance(actor_center)
 		if entry_range >= distance {
 			yield(actor)
 		}

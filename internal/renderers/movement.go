@@ -16,8 +16,9 @@ var renderMovementQuery = donburi.NewQuery(
 	filter.Contains(components.Movement, transform.Transform, components.Selected),
 )
 
+var lineColor = color.RGBA{0xff, 0xff, 0xff, 0xff}
+
 func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
-	lineColor := color.RGBA{0xff, 0xff, 0xff, 0xff}
 	view := newCameraView(ecs)
 
 	for entry := range renderMovementQuery.Iter(ecs.World) {

@@ -45,7 +45,7 @@ func DrawPoints(screen *ebiten.Image, start, end dmath.Vec2, strokeWidth float32
 		float32(end.Y),
 		strokeWidth,
 		strokeColor,
-		false,
+		true,
 	)
 }
 

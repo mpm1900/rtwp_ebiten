@@ -2,6 +2,7 @@ package systems
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi/ecs"
@@ -25,6 +26,11 @@ func HandleAbilities(ecs *ecs.ECS) {
 	}
 
 	if player.Ability != nil {
-		player.Ability.Handle(ecs)
+		screenPoint := util.CursorPoint()
+		if !player.Ability.Valid(ecs, screenPoint) {
+			return
+		}
+
+		player.Ability.Handle(ecs, screenPoint)
 	}
 }

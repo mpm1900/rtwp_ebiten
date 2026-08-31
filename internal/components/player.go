@@ -30,10 +30,14 @@ const (
 )
 
 type Ability struct {
-	AbilityID uuid.UUID
-	Key       ebiten.Key
-	Name      string
-	Handle    func(*ecs.ECS)
+	AbilityID     uuid.UUID
+	Key           ebiten.Key
+	Name          string
+	Cursor        *ebiten.Image
+	CursorInvalid *ebiten.Image
+	CursorOffset  math.Vec2
+	Handle        func(*ecs.ECS, math.Vec2)
+	Valid         func(*ecs.ECS, math.Vec2) bool
 }
 
 type PlayerData struct {

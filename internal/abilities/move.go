@@ -14,15 +14,15 @@ import (
 )
 
 var Move = components.Ability{
-	AbilityID: uuid.New(),
-	Key:       ebiten.Key1,
-	Name:      "Move",
-	Handle: func(ecs *ecs.ECS) {
+	AbilityID:    uuid.New(),
+	Key:          ebiten.Key1,
+	Name:         "Move",
+	CursorOffset: math.NewVec2(-8, -8),
+	Handle: func(ecs *ecs.ECS, screenPoint math.Vec2) {
 		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 			return
 		}
 
-		screenPoint := util.CursorPoint()
 		if components.IsOverMinimap(screenPoint, components.MinimapRect()) {
 			return
 		}
@@ -46,6 +46,17 @@ var Move = components.Ability{
 		} else {
 			moveSelectedTo(ecs.World, worldPoint, components.DEFAULT_STOP_DISTANCE)
 		}
+	},
+	Valid: func(ecs *ecs.ECS, screenPoint math.Vec2) bool {
+		if components.IsOverMinimap(screenPoint, components.MinimapRect()) {
+			return false
+		}
+		player := components.GetPlayer(ecs.World)
+		if player == nil {
+			return false
+		}
+		worldPoint := player.ScreenToWorld(screenPoint)
+		return components.IsInWorld(worldPoint)
 	},
 }
 

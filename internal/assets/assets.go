@@ -31,7 +31,7 @@ func MustLoadAssets() {
 	BlueSquareImage.Fill(color.RGBA{0, 0, 0xff, 0xff})
 	GreenSquareImage = ebiten.NewImage(24, 24)
 	GreenSquareImage.Fill(color.RGBA{0, 0xff, 0, 0xff})
-	YellowSquareImage = ebiten.NewImage(12, 12)
+	YellowSquareImage = ebiten.NewImage(48, 48)
 	YellowSquareImage.Fill(color.RGBA{0xff, 0xff, 0, 0xff})
 
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.Yolk6TTF))

@@ -30,11 +30,12 @@ func main() {
 		}
 	}
 
-	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(200, 200))
+	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(800, 800))
 	effects.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))
 
 	components.WithDelay(g.ECS.World.Entry(speed_up), 60)
 	components.WithRange(g.ECS.World.Entry(speed_up), 120)
+	components.WithCollision(g.ECS.World.Entry(speed_up))
 
 	ebiten.SetWindowSize(components.SCREEN_WIDTH, components.SCREEN_HEIGHT)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)

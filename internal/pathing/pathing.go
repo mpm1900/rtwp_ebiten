@@ -1,48 +1,57 @@
 package pathing
 
 import (
-	"container/heap"
+	"image"
 	"math"
+	"sync"
+
 	"rtwp_ebitengine/internal/components"
 
+	qpathing "github.com/quasilyte/pathing"
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 )
 
-const DefaultCellSize = 48.0
+const (
+	DefaultCellSize  = 12.0
+	MaxPointDistance = 48.0
+)
 
-type cell struct {
-	x, y   int
-	g, h   float64
-	parent *cell
+var (
+	gridMu sync.Mutex
+	grid   *qpathing.Grid
+	astar  *qpathing.AStar
+	layer  = qpathing.MakeGridLayer([8]uint8{0: 1})
+)
+
+func init() {
+	initGridAndAStar(DefaultCellSize)
 }
 
-type cellPriorityQueue []*cell
+func initGridAndAStar(cellSize float64) {
+	_, _, worldMaxX, worldMaxY := components.WorldRect()
+	maxX := worldMaxX + components.WORLD_BORDER
+	maxY := worldMaxY + components.WORLD_BORDER
 
-func (pq cellPriorityQueue) Len() int { return len(pq) }
+	cols := uint(math.Ceil(maxX / cellSize))
+	rows := uint(math.Ceil(maxY / cellSize))
 
-func (pq cellPriorityQueue) Less(i, j int) bool {
-	return (pq[i].g + pq[i].h) < (pq[j].g + pq[j].h)
+	grid = qpathing.NewGrid(qpathing.GridConfig{
+		WorldWidth:  cols * uint(cellSize),
+		WorldHeight: rows * uint(cellSize),
+		CellWidth:   uint(cellSize),
+		CellHeight:  uint(cellSize),
+	})
+
+	astar = qpathing.NewAStar(qpathing.AStarConfig{
+		NumCols: uint(grid.NumCols()),
+		NumRows: uint(grid.NumRows()),
+	})
 }
 
-func (pq cellPriorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-}
-
-func (pq *cellPriorityQueue) Push(x any) {
-	*pq = append(*pq, x.(*cell))
-}
-
-func (pq *cellPriorityQueue) Pop() any {
-	old := *pq
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil
-	*pq = old[:n-1]
-	return item
-}
-
+// FindPath finds a path between start and goal world coordinates around collision obstacles,
+// with diagonal line-of-sight path smoothing and multi-point interpolation.
 func FindPath(world donburi.World, start, goal dmath.Vec2) ([]dmath.Vec2, bool) {
 	start = components.ClampWorldPosition(start)
 	goal = components.ClampWorldPosition(goal)
@@ -50,11 +59,52 @@ func FindPath(world donburi.World, start, goal dmath.Vec2) ([]dmath.Vec2, bool) 
 		return []dmath.Vec2{goal}, true
 	}
 
-	cellSize := DefaultCellSize
-	boundsMinX := math.Min(start.X, goal.X) - cellSize
-	boundsMinY := math.Min(start.Y, goal.Y) - cellSize
-	boundsMaxX := math.Max(start.X, goal.X) + cellSize
-	boundsMaxY := math.Max(start.Y, goal.Y) + cellSize
+	gridMu.Lock()
+	defer gridMu.Unlock()
+
+	blocked := blockObstacles(world, start, goal)
+	defer func() {
+		for _, c := range blocked {
+			grid.SetCellIsBlocked(c, false)
+		}
+	}()
+
+	startCoord := grid.PosToCoord(start.X, start.Y)
+	goalCoord := grid.PosToCoord(goal.X, goal.Y)
+
+	if !inBounds(startCoord) || !inBounds(goalCoord) {
+		return nil, false
+	}
+	if startCoord == goalCoord {
+		return []dmath.Vec2{goal}, true
+	}
+
+	grid.SetCellIsBlocked(startCoord, false)
+	grid.SetCellIsBlocked(goalCoord, false)
+
+	if lineOfSight(startCoord, goalCoord) {
+		return subdividePath([]dmath.Vec2{start, goal}, MaxPointDistance), true
+	}
+
+	coords := findAStarPath(startCoord, goalCoord)
+	if len(coords) <= 1 {
+		return nil, false
+	}
+
+	smoothed := smoothPathCoords(coords)
+	rawPoints := make([]dmath.Vec2, len(smoothed))
+	rawPoints[0] = start
+	for i, c := range smoothed[1:] {
+		x, y := grid.CoordToPos(c)
+		rawPoints[i+1] = dmath.NewVec2(x, y)
+	}
+	rawPoints[len(rawPoints)-1] = goal
+
+	return subdividePath(rawPoints, MaxPointDistance), true
+}
+
+func blockObstacles(world donburi.World, start, goal dmath.Vec2) []qpathing.GridCoord {
+	var blocked []qpathing.GridCoord
 
 	for other := range components.CollisionQuery.Iter(world) {
 		if !other.HasComponent(transform.Transform) {
@@ -62,158 +112,150 @@ func FindPath(world donburi.World, start, goal dmath.Vec2) ([]dmath.Vec2, bool) 
 		}
 
 		bounds, ok := components.Rect(other)
-		if !ok {
+		if !ok || rectContains(bounds, start) || rectContains(bounds, goal) {
 			continue
 		}
 
-		boundsMinX = math.Min(boundsMinX, float64(bounds.Min.X)-cellSize)
-		boundsMinY = math.Min(boundsMinY, float64(bounds.Min.Y)-cellSize)
-		boundsMaxX = math.Max(boundsMaxX, float64(bounds.Max.X)+cellSize)
-		boundsMaxY = math.Max(boundsMaxY, float64(bounds.Max.Y)+cellSize)
-	}
+		minCoord := grid.PosToCoord(float64(bounds.Min.X), float64(bounds.Min.Y))
+		maxCoord := grid.PosToCoord(float64(bounds.Max.X-1), float64(bounds.Max.Y-1))
 
-	width := int(math.Ceil((boundsMaxX-boundsMinX)/cellSize)) + 1
-	height := int(math.Ceil((boundsMaxY-boundsMinY)/cellSize)) + 1
-	if width <= 0 || height <= 0 || width*height > 200000 {
-		return nil, false
-	}
-
-	blocked := make([][]bool, width)
-	cells := make([][]*cell, width)
-	for x := range width {
-		blocked[x] = make([]bool, height)
-		cells[x] = make([]*cell, height)
-		for y := range height {
-			cells[x][y] = &cell{x: x, y: y}
-		}
-	}
-
-	for other := range components.CollisionQuery.Iter(world) {
-		if !other.HasComponent(transform.Transform) {
-			continue
-		}
-
-		bounds, ok := components.Rect(other)
-		if !ok {
-			continue
-		}
-
-		minCellX := int(math.Floor((float64(bounds.Min.X) - boundsMinX) / cellSize))
-		maxCellX := int(math.Floor((float64(bounds.Max.X) - boundsMinX) / cellSize))
-		minCellY := int(math.Floor((float64(bounds.Min.Y) - boundsMinY) / cellSize))
-		maxCellY := int(math.Floor((float64(bounds.Max.Y) - boundsMinY) / cellSize))
-
-		for x := minCellX; x <= maxCellX; x++ {
-			if x < 0 || x >= width {
-				continue
-			}
-			for y := minCellY; y <= maxCellY; y++ {
-				if y < 0 || y >= height {
-					continue
-				}
-				blocked[x][y] = true
-			}
-		}
-	}
-
-	startCellX := int(math.Floor((start.X - boundsMinX) / cellSize))
-	startCellY := int(math.Floor((start.Y - boundsMinY) / cellSize))
-	goalCellX := int(math.Floor((goal.X - boundsMinX) / cellSize))
-	goalCellY := int(math.Floor((goal.Y - boundsMinY) / cellSize))
-
-	if startCellX < 0 || startCellX >= width || startCellY < 0 || startCellY >= height || goalCellX < 0 || goalCellX >= width || goalCellY < 0 || goalCellY >= height {
-		return nil, false
-	}
-
-	blocked[startCellX][startCellY] = false
-	blocked[goalCellX][goalCellY] = false
-
-	startCell := cells[startCellX][startCellY]
-	goalCell := cells[goalCellX][goalCellY]
-	startCell.g = 0
-	startCell.h = heuristic(startCell, goalCell)
-
-	open := &cellPriorityQueue{startCell}
-	closed := make(map[[2]int]bool)
-
-	for open.Len() > 0 {
-		current := heap.Pop(open).(*cell)
-		key := [2]int{current.x, current.y}
-		if closed[key] {
-			continue
-		}
-		closed[key] = true
-
-		if current.x == goalCellX && current.y == goalCellY {
-			return reconstructPath(current, goalCellX, goalCellY, boundsMinX, boundsMinY, cellSize), true
-		}
-
-		for dy := -1; dy <= 1; dy++ {
-			for dx := -1; dx <= 1; dx++ {
-				if dx == 0 && dy == 0 {
-					continue
-				}
-
-				nx := current.x + dx
-				ny := current.y + dy
-				if nx < 0 || nx >= width || ny < 0 || ny >= height {
-					continue
-				}
-				if blocked[nx][ny] {
-					continue
-				}
-
-				neighbor := cells[nx][ny]
-				neighborKey := [2]int{nx, ny}
-				if closed[neighborKey] {
-					continue
-				}
-
-				moveCost := 1.0
-				if dx != 0 && dy != 0 {
-					moveCost = 1.41421356237
-				}
-
-				tentative := current.g + moveCost
-				if tentative < neighbor.g || (neighbor.parent == nil && !(neighbor.x == startCellX && neighbor.y == startCellY)) {
-					neighbor.g = tentative
-					neighbor.h = heuristic(neighbor, goalCell)
-					neighbor.parent = current
-					heap.Push(open, neighbor)
+		for x := minCoord.X; x <= maxCoord.X; x++ {
+			for y := minCoord.Y; y <= maxCoord.Y; y++ {
+				c := qpathing.GridCoord{X: x, Y: y}
+				if inBounds(c) && !grid.GetCellIsBlocked(c) {
+					grid.SetCellIsBlocked(c, true)
+					blocked = append(blocked, c)
 				}
 			}
 		}
 	}
 
-	return nil, false
+	return blocked
 }
 
-func heuristic(a, b *cell) float64 {
-	dx := math.Abs(float64(a.x - b.x))
-	dy := math.Abs(float64(a.y - b.y))
-	return dx + dy
-}
+func findAStarPath(from, to qpathing.GridCoord) []qpathing.GridCoord {
+	curr := from
+	coords := []qpathing.GridCoord{from}
+	visited := map[qpathing.GridCoord]bool{from: true}
 
-func reconstructPath(end *cell, goalX, goalY int, minX, minY, cellSize float64) []dmath.Vec2 {
-	path := []dmath.Vec2{}
-	for current := end; current != nil; current = current.parent {
-		point := dmath.NewVec2(
-			minX+(float64(current.x)+0.5)*cellSize,
-			minY+(float64(current.y)+0.5)*cellSize,
-		)
-		path = append(path, point)
+	for _ = range 10 {
+		result := astar.BuildPath(grid, curr, to, layer)
+		if result.Steps.Len() == 0 {
+			break
+		}
+
+		added := 0
+		for result.Steps.HasNext() {
+			curr = curr.Move(result.Steps.Next())
+			coords = append(coords, curr)
+			added++
+		}
+
+		if added == 0 || !result.Partial || result.Finish == to || visited[result.Finish] {
+			break
+		}
+		visited[result.Finish] = true
+		curr = result.Finish
 	}
 
-	for left, right := 0, len(path)-1; left < right; left, right = left+1, right-1 {
-		path[left], path[right] = path[right], path[left]
+	return coords
+}
+
+func smoothPathCoords(coords []qpathing.GridCoord) []qpathing.GridCoord {
+	if len(coords) <= 2 {
+		return coords
+	}
+
+	smoothed := []qpathing.GridCoord{coords[0]}
+	for curr := 0; curr < len(coords)-1; {
+		furthest := curr + 1
+		for next := len(coords) - 1; next > curr+1; next-- {
+			if lineOfSight(coords[curr], coords[next]) {
+				furthest = next
+				break
+			}
+		}
+		smoothed = append(smoothed, coords[furthest])
+		curr = furthest
+	}
+
+	return smoothed
+}
+
+func lineOfSight(from, to qpathing.GridCoord) bool {
+	dx := max(from.X, to.X) - min(from.X, to.X)
+	dy := max(from.Y, to.Y) - min(from.Y, to.Y)
+
+	sx, sy := 1, 1
+	if from.X > to.X {
+		sx = -1
+	}
+	if from.Y > to.Y {
+		sy = -1
+	}
+
+	x, y := from.X, from.Y
+	err := dx - dy
+
+	for {
+		c := qpathing.GridCoord{X: x, Y: y}
+		if !inBounds(c) || grid.GetCellIsBlocked(c) {
+			return false
+		}
+		if x == to.X && y == to.Y {
+			return true
+		}
+
+		e2 := 2 * err
+		if e2 > -dy {
+			if e2 < dx {
+				if grid.GetCellIsBlocked(qpathing.GridCoord{X: x + sx, Y: y}) ||
+					grid.GetCellIsBlocked(qpathing.GridCoord{X: x, Y: y + sy}) {
+					return false
+				}
+			}
+			err -= dy
+			x += sx
+		}
+		if e2 < dx {
+			err += dx
+			y += sy
+		}
+	}
+}
+
+func subdividePath(points []dmath.Vec2, maxSpacing float64) []dmath.Vec2 {
+	if len(points) <= 1 {
+		return points
+	}
+
+	path := make([]dmath.Vec2, 0, len(points)*2)
+	for i := 0; i < len(points)-1; i++ {
+		p1, p2 := points[i], points[i+1]
+		dist := p1.Distance(p2)
+		if dist <= 0.001 {
+			continue
+		}
+
+		steps := int(math.Ceil(dist / maxSpacing))
+		for s := 1; s <= steps; s++ {
+			t := float64(s) / float64(steps)
+			path = append(path, p1.Add(p2.Sub(p1).MulScalar(t)))
+		}
 	}
 
 	if len(path) == 0 {
-		path = []dmath.Vec2{dmath.NewVec2(
-			minX+(float64(goalX)+0.5)*cellSize,
-			minY+(float64(goalY)+0.5)*cellSize,
-		)}
+		return []dmath.Vec2{points[len(points)-1]}
 	}
 
 	return path
+}
+
+func inBounds(c qpathing.GridCoord) bool {
+	return c.X >= 0 && c.X < grid.NumCols() && c.Y >= 0 && c.Y < grid.NumRows()
+}
+
+func rectContains(r image.Rectangle, p dmath.Vec2) bool {
+	return float64(r.Min.X) <= p.X && p.X <= float64(r.Max.X) &&
+		float64(r.Min.Y) <= p.Y && p.Y <= float64(r.Max.Y)
 }

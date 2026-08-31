@@ -19,6 +19,7 @@ func ProcessEvents(world donburi.World) {
 	SelectInRect.ProcessEvents(world)
 	SelectAt.ProcessEvents(world)
 	UpdateCamera.ProcessEvents(world)
+	ZoomCamera.ProcessEvents(world)
 	LeftClickMinimap.ProcessEvents(world)
 	RightClickMinimap.ProcessEvents(world)
 }

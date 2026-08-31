@@ -12,6 +12,15 @@ import (
 )
 
 func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
+	// zoom
+	_, wheelY := ebiten.Wheel()
+	if wheelY != 0 && !components.IsOverMinimap(point, components.MinimapRect()) {
+		events.ZoomCamera.Publish(ecs.World, events.ZoomCameraData{
+			Delta:  wheelY,
+			Cursor: point,
+		})
+	}
+
 	// left
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		if worldPoint, ok := components.MinimapWorldPoint(point); ok {

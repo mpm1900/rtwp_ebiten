@@ -24,6 +24,9 @@ const (
 	MINIMAP_SIZE    = 150
 	MINIMAP_PADDING = 12
 	MINIMAP_BORDER  = 2
+
+	MinCameraZoom = 0.7
+	MaxCameraZoom = 2
 )
 
 type Ability struct {
@@ -88,15 +91,29 @@ func (p *PlayerData) ClampCameraPosition() {
 		return
 	}
 
-	halfWidth := float64(p.Camera.Width) / 2.0 / p.Camera.Scale
-	halfHeight := float64(p.Camera.Height) / 2.0 / p.Camera.Scale
+	scale := p.Camera.Scale
+	if scale <= 0 {
+		scale = 1.0
+	}
+
+	halfWidth := float64(p.Camera.Width) / 2.0 / scale
+	halfHeight := float64(p.Camera.Height) / 2.0 / scale
 	minX := halfWidth
 	minY := halfHeight
 	maxX := WORLD_BORDER*2 + WORLD_WIDTH - halfWidth
 	maxY := WORLD_BORDER*2 + WORLD_HEIGHT - halfHeight
 
-	p.Camera.X = min(maxX, max(minX, p.Camera.X))
-	p.Camera.Y = min(maxY, max(minY, p.Camera.Y))
+	if minX > maxX {
+		p.Camera.X = float64(WORLD_BORDER*2+WORLD_WIDTH) / 2.0
+	} else {
+		p.Camera.X = min(maxX, max(minX, p.Camera.X))
+	}
+
+	if minY > maxY {
+		p.Camera.Y = float64(WORLD_BORDER*2+WORLD_HEIGHT) / 2.0
+	} else {
+		p.Camera.Y = min(maxY, max(minY, p.Camera.Y))
+	}
 }
 
 func NewPlayerData() PlayerData {

@@ -48,13 +48,22 @@ func WithMovementFollow(entry *donburi.Entry, follow donburi.Entity, stopDistanc
 }
 
 func PushMovement(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
+	PushMovementList(entry, []dmath.Vec2{target}, stopDistance)
+}
+
+func PushMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64) {
+	if len(targets) == 0 {
+		return
+	}
 	if !entry.HasComponent(Movement) {
-		WithMovementTo(entry, target, stopDistance)
+		WithMovementList(entry, targets, stopDistance)
 		return
 	}
 
 	movement := Movement.Get(entry)
-	movement.Targets = append(movement.Targets, target)
+	movement.Follow = donburi.Null
+	movement.StopDistance = stopDistance
+	movement.Targets = append(movement.Targets, targets...)
 }
 
 func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64) {

@@ -50,23 +50,24 @@ func moveSelectedTo(world donburi.World, point math.Vec2, stopDistance float64) 
 	push := ebiten.IsKeyPressed(ebiten.KeyShift)
 
 	for selected := range components.Selected.Iter(world) {
-		if push {
-			components.PushMovement(selected, point, stopDistance)
-			continue
-		}
-
 		start := components.Center(selected)
-		path, ok := pathing.FindPath(world, start, point)
-		if ok && len(path) > 0 {
-			if len(path) == 1 {
-				components.WithMovementTo(selected, point, stopDistance)
-				continue
+		if push && selected.HasComponent(components.Movement) {
+			movement := components.Movement.Get(selected)
+			if len(movement.Targets) > 0 {
+				start = movement.Targets[len(movement.Targets)-1]
 			}
-			components.WithMovementList(selected, path, stopDistance)
-			continue
 		}
 
-		components.WithMovementTo(selected, point, stopDistance)
+		path, ok := pathing.FindPath(world, start, point)
+		if !ok || len(path) == 0 {
+			path = []math.Vec2{point}
+		}
+
+		if push {
+			components.PushMovementList(selected, path, stopDistance)
+		} else {
+			components.WithMovementList(selected, path, stopDistance)
+		}
 	}
 }
 

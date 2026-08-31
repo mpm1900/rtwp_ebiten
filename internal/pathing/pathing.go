@@ -16,6 +16,7 @@ import (
 const (
 	DefaultCellSize  = 28.0
 	MaxPointDistance = 28.0
+	maxStepsPerChunk = 56
 )
 
 var (
@@ -133,12 +134,17 @@ func blockObstacles(world donburi.World, start, goal dmath.Vec2) []qpathing.Grid
 	return blocked
 }
 
+func maxPathChunks() int {
+	maxDist := grid.NumCols() + grid.NumRows()
+	return (maxDist / maxStepsPerChunk) * 2
+}
+
 func findAStarPath(from, to qpathing.GridCoord) []qpathing.GridCoord {
 	curr := from
 	coords := []qpathing.GridCoord{from}
 	visited := map[qpathing.GridCoord]bool{from: true}
 
-	for _ = range 10 {
+	for range maxPathChunks() {
 		result := astar.BuildPath(grid, curr, to, layer)
 		if result.Steps.Len() == 0 {
 			break

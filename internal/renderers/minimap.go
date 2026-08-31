@@ -41,6 +41,31 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 
 	worldW := worldMaxX - worldMinX
 	worldH := worldMaxY - worldMinY
+	playerEntity := components.GetPlayerEntity(ecs.World)
+	for entry := range components.ImageQuery.Iter(ecs.World) {
+		position := components.Center(entry)
+		mapX := (position.X - worldMinX) / worldW * components.MINIMAP_SIZE
+		mapY := (position.Y - worldMinY) / worldH * components.MINIMAP_SIZE
+		if mapX < 0 || mapX >= components.MINIMAP_SIZE || mapY < 0 || mapY >= components.MINIMAP_SIZE {
+			continue
+		}
+
+		var markerColor color.Color = color.White
+		if entry.HasComponent(components.Actor) {
+			markerColor = assets.ColorEnemy
+			actor := components.Actor.Get(entry)
+			if actor.Player == playerEntity {
+				markerColor = assets.ColorPlayer
+			}
+		}
+
+		screen.Set(
+			mapRect.Min.X+int(mapX),
+			mapRect.Min.Y+int(mapY),
+			markerColor,
+		)
+	}
+
 	viewLeft := player.Camera.X - float64(player.Camera.Width)/2.0
 	viewTop := player.Camera.Y - float64(player.Camera.Height)/2.0
 	viewRight := player.Camera.X + float64(player.Camera.Width)/2.0

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"image/color"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
@@ -45,6 +46,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{44, 19, 41, 0xff})
 	player := components.GetPlayer(g.ECS.World)
 	camera_surface := player.Camera.Surface
 	camera_surface.Clear()

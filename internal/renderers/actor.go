@@ -64,7 +64,7 @@ func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
 		barWidth := 24.0
 		barHeight := 6.0
 		barX := actorCenter.X - barWidth/2
-		barY := trans.LocalPosition.Y + trans.LocalScale.Y
+		barY := actorCenter.Y + trans.LocalScale.DivScalar(2.0).Y
 
 		bg := ebiten.NewImage(int(barWidth), int(barHeight))
 		bg.Fill(color.RGBA{0x20, 0x20, 0x20, 0xff})

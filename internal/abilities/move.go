@@ -18,18 +18,21 @@ var Move = components.Ability{
 	Key:       ebiten.Key1,
 	Name:      "Move",
 	Handle: func(ecs *ecs.ECS) {
+		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+			return
+		}
+
 		screenPoint := util.CursorPoint()
+		if components.IsOverMinimap(screenPoint, components.MinimapRect()) {
+			return
+		}
+
 		player := components.GetPlayer(ecs.World)
 		if player == nil {
 			return
 		}
 		worldPoint := player.ScreenToWorld(screenPoint)
-
-		if components.IsOverMinimap(screenPoint, components.MinimapRect()) {
-			return
-		}
-
-		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+		if !components.IsInWorld(worldPoint) {
 			return
 		}
 

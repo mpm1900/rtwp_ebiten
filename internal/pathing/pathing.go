@@ -20,10 +20,12 @@ const (
 )
 
 var (
-	gridMu sync.Mutex
-	grid   *qpathing.Grid
-	astar  *qpathing.AStar
-	layer  = qpathing.MakeGridLayer([8]uint8{0: 1})
+	gridMu           sync.Mutex
+	grid             *qpathing.Grid
+	astar            *qpathing.AStar
+	layer            = qpathing.MakeGridLayer([8]uint8{0: 1})
+	playableMinCoord qpathing.GridCoord
+	playableMaxCoord qpathing.GridCoord
 )
 
 func init() {
@@ -31,7 +33,7 @@ func init() {
 }
 
 func initGridAndAStar(cellSize float64) {
-	_, _, worldMaxX, worldMaxY := components.WorldRect()
+	worldMinX, worldMinY, worldMaxX, worldMaxY := components.WorldRect()
 	maxX := worldMaxX + components.WORLD_BORDER
 	maxY := worldMaxY + components.WORLD_BORDER
 
@@ -49,10 +51,24 @@ func initGridAndAStar(cellSize float64) {
 		NumCols: uint(grid.NumCols()),
 		NumRows: uint(grid.NumRows()),
 	})
+
+	playableMinCoord = grid.PosToCoord(worldMinX, worldMinY)
+	playableMaxCoord = grid.PosToCoord(worldMaxX-1, worldMaxY-1)
+
+	// Permanently block all cells in the world border area
+	for x := 0; x < grid.NumCols(); x++ {
+		for y := 0; y < grid.NumRows(); y++ {
+			c := qpathing.GridCoord{X: x, Y: y}
+			if !inBounds(c) {
+				grid.SetCellIsBlocked(c, true)
+			}
+		}
+	}
 }
 
 // FindPath finds a path between start and goal world coordinates around collision obstacles,
 // with diagonal line-of-sight path smoothing and multi-point interpolation.
+// No points will be placed in or outside the world border.
 func FindPath(world donburi.World, start, goal dmath.Vec2) ([]dmath.Vec2, bool) {
 	start = components.ClampWorldPosition(start)
 	goal = components.ClampWorldPosition(goal)
@@ -97,7 +113,7 @@ func FindPath(world donburi.World, start, goal dmath.Vec2) ([]dmath.Vec2, bool) 
 	rawPoints[0] = start
 	for i, c := range smoothed[1:] {
 		x, y := grid.CoordToPos(c)
-		rawPoints[i+1] = dmath.NewVec2(x, y)
+		rawPoints[i+1] = components.ClampWorldPosition(dmath.NewVec2(x, y))
 	}
 	rawPoints[len(rawPoints)-1] = goal
 
@@ -246,19 +262,21 @@ func subdividePath(points []dmath.Vec2, maxSpacing float64) []dmath.Vec2 {
 		steps := int(math.Ceil(dist / maxSpacing))
 		for s := 1; s <= steps; s++ {
 			t := float64(s) / float64(steps)
-			path = append(path, p1.Add(p2.Sub(p1).MulScalar(t)))
+			interp := p1.Add(p2.Sub(p1).MulScalar(t))
+			path = append(path, components.ClampWorldPosition(interp))
 		}
 	}
 
 	if len(path) == 0 {
-		return []dmath.Vec2{points[len(points)-1]}
+		return []dmath.Vec2{components.ClampWorldPosition(points[len(points)-1])}
 	}
 
 	return path
 }
 
 func inBounds(c qpathing.GridCoord) bool {
-	return c.X >= 0 && c.X < grid.NumCols() && c.Y >= 0 && c.Y < grid.NumRows()
+	return c.X >= playableMinCoord.X && c.X <= playableMaxCoord.X &&
+		c.Y >= playableMinCoord.Y && c.Y <= playableMaxCoord.Y
 }
 
 func rectContains(r image.Rectangle, p dmath.Vec2) bool {

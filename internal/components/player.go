@@ -25,8 +25,8 @@ const (
 	MINIMAP_PADDING = 12
 	MINIMAP_BORDER  = 2
 
-	MinCameraZoom = 0.7
-	MaxCameraZoom = 2
+	MinCameraZoom = 0.4
+	MaxCameraZoom = 2.5
 )
 
 type Ability struct {
@@ -46,6 +46,11 @@ type PlayerData struct {
 
 func WorldRect() (minX, minY, maxX, maxY float64) {
 	return WORLD_BORDER, WORLD_BORDER, WORLD_BORDER + WORLD_WIDTH, WORLD_BORDER + WORLD_HEIGHT
+}
+
+func IsInWorld(pos math.Vec2) bool {
+	minX, minY, maxX, maxY := WorldRect()
+	return pos.X >= minX && pos.X <= maxX && pos.Y >= minY && pos.Y <= maxY
 }
 
 func MinimapRect() image.Rectangle {

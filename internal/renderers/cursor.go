@@ -15,6 +15,7 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 	op.GeoM.Translate(float64(x), float64(y))
 
 	player := components.GetPlayer(ecs.World)
+
 	if player.Ability == nil || player.DragEnd != nil {
 		screen.DrawImage(assets.CursorPointerImage, op)
 		return

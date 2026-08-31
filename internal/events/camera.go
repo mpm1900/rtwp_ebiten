@@ -48,7 +48,7 @@ func zoomCamera(world donburi.World, data ZoomCameraData) {
 	}
 
 	factor := math.Pow(1.15, data.Delta)
-	newScale := min(components.MaxCameraZoom, max(components.MinCameraZoom, player.Camera.Scale*factor))
+	newScale := min(components.MAX_CAMERA_ZOOM, max(components.MIN_CAMERA_ZOOM, player.Camera.Scale*factor))
 	if newScale == player.Camera.Scale {
 		return
 	}

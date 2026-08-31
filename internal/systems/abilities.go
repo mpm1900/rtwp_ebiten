@@ -10,12 +10,18 @@ import (
 
 func HandleAbilities(ecs *ecs.ECS) {
 	player := components.GetPlayer(ecs.World)
+	if player == nil {
+		return
+	}
+
 	actions := map[*components.Ability]struct{}{}
 
 	for selected := range components.SelectedActorsQuery.Iter(ecs.World) {
 		actor := components.Actor.Get(selected)
 		for _, action := range actor.Abilities {
-			actions[action] = struct{}{}
+			if action != nil {
+				actions[action] = struct{}{}
+			}
 		}
 	}
 
@@ -27,10 +33,12 @@ func HandleAbilities(ecs *ecs.ECS) {
 
 	if player.Ability != nil {
 		screenPoint := util.CursorPoint()
-		if !player.Ability.Valid(ecs, screenPoint) {
+		if player.Ability.Valid != nil && !player.Ability.Valid(ecs, screenPoint) {
 			return
 		}
 
-		player.Ability.Handle(ecs, screenPoint)
+		if player.Ability.Handle != nil {
+			player.Ability.Handle(ecs, screenPoint)
+		}
 	}
 }

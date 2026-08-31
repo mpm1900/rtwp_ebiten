@@ -4,7 +4,6 @@ import (
 	"image"
 	"rtwp_ebitengine/internal/util"
 
-	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
@@ -25,12 +24,16 @@ const (
 	MINIMAP_PADDING = 12
 	MINIMAP_BORDER  = 2
 
-	MinCameraZoom = 0.4
-	MaxCameraZoom = 2.5
+	MIN_CAMERA_ZOOM = 0.7
+	MAX_CAMERA_ZOOM = 2.0
 )
 
+type Action interface {
+	Spawn(*ecs.ECS, math.Vec2) Ability
+	Handle(*ecs.ECS, math.Vec2)
+	Valid(*ecs.ECS, math.Vec2) bool
+}
 type Ability struct {
-	AbilityID     uuid.UUID
 	Key           ebiten.Key
 	Name          string
 	Cursor        *ebiten.Image

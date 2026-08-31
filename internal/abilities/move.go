@@ -5,7 +5,6 @@ import (
 	"rtwp_ebitengine/internal/pathing"
 	"rtwp_ebitengine/internal/util"
 
-	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
@@ -14,7 +13,6 @@ import (
 )
 
 var Move = components.Ability{
-	AbilityID:    uuid.New(),
 	Key:          ebiten.Key1,
 	Name:         "Move",
 	CursorOffset: math.NewVec2(-8, -8),

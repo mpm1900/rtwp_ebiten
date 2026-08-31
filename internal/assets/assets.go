@@ -13,6 +13,7 @@ import (
 
 var CursorPointerImage *ebiten.Image
 var CursorMoveImage *ebiten.Image
+var CursorAttackImage *ebiten.Image
 
 var ActorImage *ebiten.Image
 var BlueSquareImage *ebiten.Image

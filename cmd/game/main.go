@@ -16,6 +16,7 @@ import (
 
 var actions = []*components.Ability{
 	&abilities.Move,
+	&abilities.Attack,
 }
 
 var amount = 10
@@ -26,7 +27,6 @@ func main() {
 	for i := range amount {
 		for j := range amount {
 			entities.CreateActor(g.ECS, util.NewVec2(200+i*40, 200+j*40), actions, player)
-
 		}
 	}
 

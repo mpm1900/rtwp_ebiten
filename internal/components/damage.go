@@ -1,7 +1,10 @@
 package components
 
 import (
+	"rtwp_ebitengine/internal/util"
+
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/filter"
 )
 
@@ -19,6 +22,23 @@ func GetHealth(entry *donburi.Entry) (health float64, damage float64) {
 }
 
 func WithDamage(entry *donburi.Entry, damage float64) {
-	entry.AddComponent(Damage)
+	if !entry.HasComponent(Damage) {
+		entry.AddComponent(Damage)
+	}
 	Damage.SetValue(entry, damage)
+}
+
+func DamageAt(world donburi.World, point math.Vec2, amount float64) {
+	entry, ok := FirstActorAtPoint(world, util.ToPoint(point))
+	if !ok {
+		return
+	}
+
+	if !entry.HasComponent(Damage) {
+		WithDamage(entry, amount)
+		return
+	}
+
+	damage := Damage.Get(entry)
+	Damage.SetValue(entry, *damage+amount)
 }

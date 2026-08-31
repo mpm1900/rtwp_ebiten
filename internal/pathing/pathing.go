@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	DefaultCellSize  = 12.0
-	MaxPointDistance = 48.0
+	DefaultCellSize  = 28.0
+	MaxPointDistance = 28.0
 )
 
 var (

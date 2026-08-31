@@ -1,6 +1,8 @@
 package renderers
 
 import (
+	"image/color"
+	"math"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 
@@ -37,5 +39,46 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 		options.GeoM.Translate(centerPoint.X, centerPoint.Y)
 
 		screen.DrawImage(image, &options)
+	}
+}
+
+func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
+	view := newCameraView(ecs)
+
+	for entry := range components.StatsQuery.Iter(ecs.World) {
+		trans := transform.Transform.Get(entry)
+		if trans == nil {
+			continue
+		}
+
+		health, damage := components.GetHealth(entry)
+		percent := (health - damage) / health
+		if percent < 0 {
+			percent = 0
+		}
+		if percent > 1 {
+			percent = 1
+		}
+
+		actorCenter := view.Point(components.CenterTrans(*trans))
+		barWidth := 24.0
+		barHeight := 6.0
+		barX := actorCenter.X - barWidth/2
+		barY := trans.LocalPosition.Y + trans.LocalScale.Y
+
+		bg := ebiten.NewImage(int(barWidth), int(barHeight))
+		bg.Fill(color.RGBA{0x20, 0x20, 0x20, 0xff})
+		bgOptions := &ebiten.DrawImageOptions{}
+		bgOptions.GeoM.Translate(barX, barY)
+		screen.DrawImage(bg, bgOptions)
+
+		fillWidth := int(math.Max(0, barWidth*percent))
+		if fillWidth > 0 {
+			fill := ebiten.NewImage(fillWidth-2, int(barHeight)-2)
+			fill.Fill(color.RGBA{0x4c, 0xd3, 0x66, 0xff})
+			fillOptions := &ebiten.DrawImageOptions{}
+			fillOptions.GeoM.Translate(barX+1, barY+1)
+			screen.DrawImage(fill, fillOptions)
+		}
 	}
 }

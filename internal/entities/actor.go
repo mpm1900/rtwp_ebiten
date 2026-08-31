@@ -20,7 +20,7 @@ func CreateActor(ecs *ecs.ECS, position math.Vec2, abilities []*components.Abili
 		components.StatMelee:  10.0,
 		components.StatSpeed:  2.0,
 	}))
-
+	components.WithDamage(entry, 0)
 	components.WithImage(entry, assets.RedSquareImage, position)
 	components.WithCollision(entry)
 	return entity

@@ -7,6 +7,7 @@ import (
 	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/game"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -17,17 +18,17 @@ var actions = []*components.Ability{
 	&abilities.Move,
 }
 
+var amount = 10
+
 func main() {
 	g := game.NewGame()
 	player := components.GetPlayerEntity(g.ECS.World)
-	entities.CreateActor(g.ECS, math.NewVec2(100, 100), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(130, 130), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(130, 190), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(160, 100), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(160, 160), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(160, 210), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(190, 130), actions, player)
-	entities.CreateActor(g.ECS, math.NewVec2(190, 210), actions, player)
+	for i := range amount {
+		for j := range amount {
+			entities.CreateActor(g.ECS, util.NewVec2(200+i*40, 200+j*40), actions, player)
+
+		}
+	}
 
 	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(200, 200))
 	effects.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))

@@ -18,7 +18,25 @@ func HandleSelection(ecs *ecs.ECS) {
 	}
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if worldPoint, ok := components.MinimapWorldPoint(mousePoint); ok {
+			player := components.GetPlayer(ecs.World)
+			if player != nil && player.Camera != nil {
+				player.Camera.SetPosition(worldPoint.X, worldPoint.Y)
+				player.ClampCameraPosition()
+			}
+			return
+		}
 		events.StartDrag.Publish(ecs.World, mousePoint)
+	}
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+		if worldPoint, ok := components.MinimapWorldPoint(mousePoint); ok {
+			if _, hasSelection := components.Selected.First(ecs.World); hasSelection {
+				for selected := range components.Selected.Iter(ecs.World) {
+					components.WithMovementTo(selected, worldPoint, components.DEFAULT_STOP_DISTANCE)
+				}
+			}
+			return
+		}
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		events.UpdateDrag.Publish(ecs.World, mousePoint)

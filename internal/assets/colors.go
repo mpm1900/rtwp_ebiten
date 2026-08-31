@@ -2,7 +2,8 @@ package assets
 
 import "image/color"
 
-var ColorBackground = color.RGBA{44, 19, 41, 0xff}
+var ColorBackground = color.RGBA{28, 23, 41, 0xff}
+var ColorMinimap = color.RGBA{54, 22, 48, 0x80}
 var ColorHpFull = color.RGBA{197, 245, 125, 0xff}
 
 var ColorActor = color.RGBA{179, 194, 202, 0xff}

@@ -24,6 +24,10 @@ var Move = components.Ability{
 		}
 		worldPoint := player.ScreenToWorld(screenPoint)
 
+		if components.IsOverMinimap(screenPoint, components.MinimapRect()) {
+			return
+		}
+
 		if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 			return
 		}

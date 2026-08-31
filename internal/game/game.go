@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"image/color"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
@@ -12,6 +13,7 @@ import (
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
 )
@@ -59,6 +61,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.ECS.DrawLayer(renderers.RenderLayerSelection, screen)
 	g.ECS.DrawLayer(renderers.RenderLayerUI, screen)
 	g.ECS.DrawLayer(renderers.RenderLayerCursor, screen)
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("%f", ebiten.ActualTPS()))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

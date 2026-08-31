@@ -2,11 +2,11 @@ package renderers
 
 import (
 	"image/color"
-	"math"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
 	dmath "github.com/yohamta/donburi/features/math"
@@ -14,13 +14,24 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
+const (
+	HEALTH_BAR_HEIGHT float32 = 6
+	HEALTH_BAR_WIDTH  float32 = 24
+)
+
 var renderActorsQuery = donburi.NewQuery(filter.Contains(components.Actor, components.Image))
+var outlineCache = map[*ebiten.Image]map[uint32]*ebiten.Image{}
 
-func renderOutlinedSprite(screen *ebiten.Image, base *ebiten.Image, transformOptions ebiten.DrawImageOptions, outline color.Color) {
-	screen.DrawImage(base, &transformOptions)
+func outlineColorKey(outline color.Color) uint32 {
+	rgba := color.RGBAModel.Convert(outline).(color.RGBA)
+	return uint32(rgba.R)<<24 | uint32(rgba.G)<<16 | uint32(rgba.B)<<8 | uint32(rgba.A)
+}
 
+func buildOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
 	bounds := base.Bounds()
 	outlineImage := ebiten.NewImage(bounds.Dx(), bounds.Dy())
+	rgba := color.RGBAModel.Convert(outline).(color.RGBA)
+
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			baseColor := color.NRGBAModel.Convert(base.At(x, y)).(color.NRGBA)
@@ -54,11 +65,31 @@ func renderOutlinedSprite(screen *ebiten.Image, base *ebiten.Image, transformOpt
 			}
 
 			if isEdge {
-				outlineImage.Set(x-bounds.Min.X, y-bounds.Min.Y, outline)
+				outlineImage.Set(x-bounds.Min.X, y-bounds.Min.Y, color.RGBA{R: rgba.R, G: rgba.G, B: rgba.B, A: rgba.A})
 			}
 		}
 	}
 
+	return outlineImage
+}
+
+func getOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
+	key := outlineColorKey(outline)
+	if _, ok := outlineCache[base]; !ok {
+		outlineCache[base] = map[uint32]*ebiten.Image{}
+	}
+	if cached, ok := outlineCache[base][key]; ok {
+		return cached
+	}
+
+	cached := buildOutlineImage(base, outline)
+	outlineCache[base][key] = cached
+	return cached
+}
+
+func renderOutlinedSprite(screen *ebiten.Image, base *ebiten.Image, transformOptions ebiten.DrawImageOptions, outline color.Color) {
+	screen.DrawImage(base, &transformOptions)
+	outlineImage := getOutlineImage(base, outline)
 	outlineOptions := transformOptions
 	screen.DrawImage(outlineImage, &outlineOptions)
 }
@@ -105,7 +136,11 @@ func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		health, damage := components.GetHealth(entry)
-		percent := (health - damage) / health
+		if health <= 0 {
+			continue
+		}
+
+		percent := float32((health - damage) / health)
 		if percent < 0 {
 			percent = 0
 		}
@@ -114,24 +149,28 @@ func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		actorCenter := view.Point(components.CenterTrans(*trans))
-		barWidth := 24.0
-		barHeight := 6.0
-		barX := actorCenter.X - barWidth/2
-		barY := actorCenter.Y + trans.LocalScale.DivScalar(2.0).Y
+		barX := actorCenter.X - 12
+		barY := actorCenter.Y - 12
 
-		bg := ebiten.NewImage(int(barWidth), int(barHeight))
-		bg.Fill(color.RGBA{0x20, 0x20, 0x20, 0xff})
-		bgOptions := &ebiten.DrawImageOptions{}
-		bgOptions.GeoM.Translate(barX, barY)
-		screen.DrawImage(bg, bgOptions)
-
-		fillWidth := int(math.Max(0, barWidth*percent))
-		if fillWidth > 0 {
-			fill := ebiten.NewImage(fillWidth-2, int(barHeight)-2)
-			fill.Fill(assets.ColorHpFull)
-			fillOptions := &ebiten.DrawImageOptions{}
-			fillOptions.GeoM.Translate(barX+1, barY+1)
-			screen.DrawImage(fill, fillOptions)
+		vector.FillRect(
+			screen,
+			float32(barX),
+			float32(barY),
+			HEALTH_BAR_WIDTH,
+			HEALTH_BAR_HEIGHT,
+			color.RGBA{0, 0, 0, 0xff},
+			false,
+		)
+		if percent > 0 {
+			vector.FillRect(
+				screen,
+				float32(barX+1),
+				float32(barY+1),
+				HEALTH_BAR_WIDTH*percent-2,
+				HEALTH_BAR_HEIGHT-2,
+				assets.ColorHpFull,
+				false,
+			)
 		}
 	}
 }

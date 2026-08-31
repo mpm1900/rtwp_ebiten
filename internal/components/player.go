@@ -14,12 +14,16 @@ import (
 )
 
 const (
-	SCREEN_HEIGHT int = 720
-	SCREEN_WIDTH  int = 1280
+	SCREEN_HEIGHT = 720
+	SCREEN_WIDTH  = 1280
 
-	WorldBorder = 100.0
-	WorldWidth  = 3000.0
-	WorldHeight = 3000.0
+	WORLD_BORDER = 100
+	WORLD_WIDTH  = 3000
+	WORLD_HEIGHT = 3000
+
+	MINIMAP_SIZE    = 150
+	MINIMAP_PADDING = 12
+	MINIMAP_BORDER  = 2
 )
 
 type Ability struct {
@@ -38,7 +42,37 @@ type PlayerData struct {
 }
 
 func WorldRect() (minX, minY, maxX, maxY float64) {
-	return WorldBorder, WorldBorder, WorldBorder + WorldWidth, WorldBorder + WorldHeight
+	return WORLD_BORDER, WORLD_BORDER, WORLD_BORDER + WORLD_WIDTH, WORLD_BORDER + WORLD_HEIGHT
+}
+
+func MinimapRect() image.Rectangle {
+	windowW, windowH := ebiten.WindowSize()
+	mapX := windowW - MINIMAP_SIZE - MINIMAP_PADDING
+	mapY := windowH - MINIMAP_SIZE - MINIMAP_PADDING
+	return image.Rect(mapX, mapY, mapX+MINIMAP_SIZE, mapY+MINIMAP_SIZE)
+}
+
+func IsOverMinimap(point math.Vec2, mapRect image.Rectangle) bool {
+	if point.X < float64(mapRect.Min.X) || point.Y < float64(mapRect.Min.Y) || point.X >= float64(mapRect.Max.X) || point.Y >= float64(mapRect.Max.Y) {
+		return false
+	}
+
+	return true
+}
+
+func MinimapWorldPoint(point math.Vec2) (math.Vec2, bool) {
+	mapRect := MinimapRect()
+	if !IsOverMinimap(point, mapRect) {
+		return math.Vec2{}, false
+	}
+
+	worldMinX, worldMinY, worldMaxX, worldMaxY := WorldRect()
+	worldW := worldMaxX - worldMinX
+	worldH := worldMaxY - worldMinY
+
+	relX := (point.X - float64(mapRect.Min.X)) / float64(mapRect.Dx())
+	relY := (point.Y - float64(mapRect.Min.Y)) / float64(mapRect.Dy())
+	return math.NewVec2(worldMinX+relX*worldW, worldMinY+relY*worldH), true
 }
 
 func ClampWorldPosition(pos math.Vec2) math.Vec2 {
@@ -54,12 +88,12 @@ func (p *PlayerData) ClampCameraPosition() {
 		return
 	}
 
-	halfWidth := float64(p.Camera.Width)/2.0 / p.Camera.Scale
-	halfHeight := float64(p.Camera.Height)/2.0 / p.Camera.Scale
+	halfWidth := float64(p.Camera.Width) / 2.0 / p.Camera.Scale
+	halfHeight := float64(p.Camera.Height) / 2.0 / p.Camera.Scale
 	minX := halfWidth
 	minY := halfHeight
-	maxX := WorldBorder*2 + WorldWidth - halfWidth
-	maxY := WorldBorder*2 + WorldHeight - halfHeight
+	maxX := WORLD_BORDER*2 + WORLD_WIDTH - halfWidth
+	maxY := WORLD_BORDER*2 + WORLD_HEIGHT - halfHeight
 
 	p.Camera.X = min(maxX, max(minX, p.Camera.X))
 	p.Camera.Y = min(maxY, max(minY, p.Camera.Y))
@@ -68,7 +102,7 @@ func (p *PlayerData) ClampCameraPosition() {
 func NewPlayerData() PlayerData {
 	return PlayerData{
 		Ability:    nil,
-		Camera:     camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WorldBorder+SCREEN_WIDTH/2), float64(WorldBorder+SCREEN_HEIGHT/2), 0, 1),
+		Camera:     camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1),
 		CameraDrag: nil,
 		DragStart:  nil,
 		DragEnd:    nil,

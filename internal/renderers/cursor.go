@@ -23,8 +23,13 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 	switch player.Ability.AbilityID {
 	case abilities.Move.AbilityID:
 		{
-			screen.DrawImage(assets.CursorMoveImage, op)
-			break
+			if components.SelectedActorsQuery.Count(ecs.World) > 0 {
+				screen.DrawImage(assets.CursorMoveImage, op)
+				break
+			} else {
+				screen.DrawImage(assets.CursorPointerImage, op)
+				break
+			}
 		}
 	default:
 		{

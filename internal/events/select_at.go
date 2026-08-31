@@ -22,6 +22,12 @@ func selectActor(world donburi.World, entity donburi.Entity) {
 	}
 
 	entry := world.Entry(entity)
+	actor := components.Actor.Get(entry)
+	player := components.GetPlayerEntity(world)
+	if actor.Player != player {
+		return
+	}
+
 	entry.AddComponent(components.Selected)
 }
 

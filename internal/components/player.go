@@ -13,6 +13,15 @@ import (
 	camera "github.com/melonfunction/ebiten-camera"
 )
 
+const (
+	SCREEN_HEIGHT int = 720
+	SCREEN_WIDTH  int = 1280
+
+	WorldBorder = 100.0
+	WorldWidth  = 3000.0
+	WorldHeight = 3000.0
+)
+
 type Ability struct {
 	AbilityID uuid.UUID
 	Key       ebiten.Key
@@ -28,10 +37,38 @@ type PlayerData struct {
 	DragEnd    *math.Vec2
 }
 
+func WorldRect() (minX, minY, maxX, maxY float64) {
+	return WorldBorder, WorldBorder, WorldBorder + WorldWidth, WorldBorder + WorldHeight
+}
+
+func ClampWorldPosition(pos math.Vec2) math.Vec2 {
+	minX, minY, maxX, maxY := WorldRect()
+	return math.NewVec2(
+		min(maxX, max(minX, pos.X)),
+		min(maxY, max(minY, pos.Y)),
+	)
+}
+
+func (p *PlayerData) ClampCameraPosition() {
+	if p.Camera == nil {
+		return
+	}
+
+	halfWidth := float64(p.Camera.Width)/2.0 / p.Camera.Scale
+	halfHeight := float64(p.Camera.Height)/2.0 / p.Camera.Scale
+	minX := halfWidth
+	minY := halfHeight
+	maxX := WorldBorder*2 + WorldWidth - halfWidth
+	maxY := WorldBorder*2 + WorldHeight - halfHeight
+
+	p.Camera.X = min(maxX, max(minX, p.Camera.X))
+	p.Camera.Y = min(maxY, max(minY, p.Camera.Y))
+}
+
 func NewPlayerData() PlayerData {
 	return PlayerData{
 		Ability:    nil,
-		Camera:     camera.NewCamera(640, 480, 320, 240, 0, 1),
+		Camera:     camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WorldBorder+SCREEN_WIDTH/2), float64(WorldBorder+SCREEN_HEIGHT/2), 0, 1),
 		CameraDrag: nil,
 		DragStart:  nil,
 		DragEnd:    nil,
@@ -104,11 +141,11 @@ func (p *PlayerData) DragRect() image.Rectangle {
 
 var Player = donburi.NewComponentType[PlayerData]()
 
+func GetPlayerEntity(world donburi.World) donburi.Entity {
+	entry, _ := Player.First(world)
+	return entry.Entity()
+}
 func GetPlayer(world donburi.World) *PlayerData {
-	entry, ok := Player.First(world)
-	if !ok {
-		return nil
-	}
-
+	entry, _ := Player.First(world)
 	return Player.Get(entry)
 }

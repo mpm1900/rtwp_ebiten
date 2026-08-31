@@ -2,6 +2,7 @@ package renderers
 
 import (
 	"rtwp_ebitengine/internal/assets"
+	"rtwp_ebitengine/internal/components"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -14,7 +15,7 @@ func RenderPausedText(ecs *ecs.ECS, screen *ebiten.Image) {
 	}
 
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(SCREEN_WIDTH)-120, float64(SCREEN_HEIGHT)-24)
+	op.GeoM.Translate(float64(components.SCREEN_WIDTH)-120, float64(components.SCREEN_HEIGHT)-24)
 	text.Draw(screen, "Paused", &text.GoTextFace{
 		Source: assets.YolkFontSource,
 		Size:   24,

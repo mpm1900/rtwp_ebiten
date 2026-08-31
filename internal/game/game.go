@@ -46,10 +46,10 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{44, 19, 41, 0xff})
+	screen.Fill(assets.ColorBackground)
 	player := components.GetPlayer(g.ECS.World)
 	camera_surface := player.Camera.Surface
-	camera_surface.Clear()
+	camera_surface.Fill(color.Black)
 
 	g.ECS.DrawLayer(renderers.RenderLayerBackground, camera_surface)
 	g.ECS.DrawLayer(renderers.RenderLayerEffects, camera_surface)
@@ -62,5 +62,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return renderers.SCREEN_WIDTH, renderers.SCREEN_HEIGHT
+	return components.SCREEN_WIDTH, components.SCREEN_HEIGHT
 }

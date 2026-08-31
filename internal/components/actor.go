@@ -9,6 +9,7 @@ import (
 )
 
 type ActorData struct {
+	Player    donburi.Entity
 	Abilities []*Ability
 }
 

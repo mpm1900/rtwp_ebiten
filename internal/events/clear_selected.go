@@ -16,6 +16,7 @@ func InitClearSelected(world donburi.World) {
 func clearSelected(world donburi.World, _ struct{}) {
 	player := components.GetPlayer(world)
 	player.ClearDrag()
+	player.Ability = nil
 
 	for selected := range components.Selected.Iter(world) {
 		selected.RemoveComponent(components.Selected)

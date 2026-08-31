@@ -14,7 +14,7 @@ import (
 var CursorPointerImage *ebiten.Image
 var CursorMoveImage *ebiten.Image
 
-var RedSquareImage *ebiten.Image
+var ActorImage *ebiten.Image
 var BlueSquareImage *ebiten.Image
 var GreenSquareImage *ebiten.Image
 var YellowSquareImage *ebiten.Image
@@ -25,8 +25,8 @@ func MustLoadAssets() {
 	var err error
 	CursorPointerImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-pointer.png")
 	CursorMoveImage, _, err = ebitenutil.NewImageFromFile("assets/images/cursor-move.png")
-	RedSquareImage = ebiten.NewImage(24, 24)
-	RedSquareImage.Fill(color.RGBA{0xff, 0, 0, 0xff})
+	ActorImage = ebiten.NewImage(24, 24)
+	ActorImage.Fill(ColorActor)
 	BlueSquareImage = ebiten.NewImage(24, 24)
 	BlueSquareImage.Fill(color.RGBA{0, 0, 0xff, 0xff})
 	GreenSquareImage = ebiten.NewImage(24, 24)

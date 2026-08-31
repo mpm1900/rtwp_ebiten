@@ -7,7 +7,6 @@ import (
 	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/game"
-	"rtwp_ebitengine/internal/renderers"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -20,15 +19,23 @@ var actions = []*components.Ability{
 
 func main() {
 	g := game.NewGame()
-	entities.CreateActor(g.ECS, math.NewVec2(100, 100), actions)
-	entities.CreateActor(g.ECS, math.NewVec2(50, 200), actions)
+	player := components.GetPlayerEntity(g.ECS.World)
+	entities.CreateActor(g.ECS, math.NewVec2(100, 100), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(130, 130), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(130, 190), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(160, 100), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(160, 160), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(160, 210), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(190, 130), actions, player)
+	entities.CreateActor(g.ECS, math.NewVec2(190, 210), actions, player)
+
 	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(200, 200))
 	effects.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))
 
 	components.WithDelay(g.ECS.World.Entry(speed_up), 60)
 	components.WithRange(g.ECS.World.Entry(speed_up), 120)
 
-	ebiten.SetWindowSize(renderers.SCREEN_WIDTH, renderers.SCREEN_HEIGHT)
+	ebiten.SetWindowSize(components.SCREEN_WIDTH, components.SCREEN_HEIGHT)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)

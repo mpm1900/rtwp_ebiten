@@ -16,29 +16,82 @@ import (
 
 var renderActorsQuery = donburi.NewQuery(filter.Contains(components.Actor, components.Image))
 
+func renderOutlinedSprite(screen *ebiten.Image, base *ebiten.Image, transformOptions ebiten.DrawImageOptions, outline color.Color) {
+	screen.DrawImage(base, &transformOptions)
+
+	bounds := base.Bounds()
+	outlineImage := ebiten.NewImage(bounds.Dx(), bounds.Dy())
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			baseColor := color.NRGBAModel.Convert(base.At(x, y)).(color.NRGBA)
+			if baseColor.A == 0 {
+				continue
+			}
+
+			isEdge := false
+			for dx := -1; dx <= 1; dx++ {
+				for dy := -1; dy <= 1; dy++ {
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx := x + dx
+					ny := y + dy
+					if nx < bounds.Min.X || nx >= bounds.Max.X || ny < bounds.Min.Y || ny >= bounds.Max.Y {
+						isEdge = true
+						break
+					}
+
+					neighbor := color.NRGBAModel.Convert(base.At(nx, ny)).(color.NRGBA)
+					if neighbor.A == 0 {
+						isEdge = true
+						break
+					}
+				}
+				if isEdge {
+					break
+				}
+			}
+
+			if isEdge {
+				outlineImage.Set(x-bounds.Min.X, y-bounds.Min.Y, outline)
+			}
+		}
+	}
+
+	outlineOptions := transformOptions
+	screen.DrawImage(outlineImage, &outlineOptions)
+}
+
 func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 	view := newCameraView(ecs)
+	player := components.GetPlayerEntity(ecs.World)
 
 	for entry := range renderActorsQuery.Iter(ecs.World) {
 		trans := transform.Transform.Get(entry)
 		image := *components.Image.Get(entry)
-
-		if entry.HasComponent(components.Selected) {
-			image = assets.GreenSquareImage
-		}
-
 		options := ebiten.DrawImageOptions{}
 
 		centerScale := components.CenterScale(*trans)
 		options.GeoM.Translate(centerScale.X, centerScale.Y)
-
 		options.GeoM.Rotate(dmath.ToRadians(trans.LocalRotation))
 
 		center := components.CenterTrans(*trans)
 		centerPoint := view.Point(center)
 		options.GeoM.Translate(centerPoint.X, centerPoint.Y)
 
-		screen.DrawImage(image, &options)
+		outlineColor := assets.ColorEnemy
+		actor := components.Actor.Get(entry)
+
+		if actor.Player == player {
+			outlineColor = assets.ColorPlayer
+		}
+
+		if entry.HasComponent(components.Selected) {
+			outlineColor = assets.ColorSelected
+		}
+
+		renderOutlinedSprite(screen, image, options, outlineColor)
 	}
 }
 
@@ -75,7 +128,7 @@ func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
 		fillWidth := int(math.Max(0, barWidth*percent))
 		if fillWidth > 0 {
 			fill := ebiten.NewImage(fillWidth-2, int(barHeight)-2)
-			fill.Fill(color.RGBA{0x4c, 0xd3, 0x66, 0xff})
+			fill.Fill(assets.ColorHpFull)
 			fillOptions := &ebiten.DrawImageOptions{}
 			fillOptions.GeoM.Translate(barX+1, barY+1)
 			screen.DrawImage(fill, fillOptions)

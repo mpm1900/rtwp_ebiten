@@ -91,12 +91,12 @@ func MovementPosition(world donburi.World, movement *MovementData) (dmath.Vec2, 
 			return dmath.Vec2{}, false
 		}
 
-		return Center(follow), true
+		return ClampWorldPosition(Center(follow)), true
 	}
 
 	if len(movement.Targets) == 0 {
 		return dmath.Vec2{}, false
 	}
 
-	return movement.Targets[0], true
+	return ClampWorldPosition(movement.Targets[0]), true
 }

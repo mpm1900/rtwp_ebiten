@@ -2,6 +2,7 @@ package abilities
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/pathing"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/google/uuid"
@@ -51,6 +52,17 @@ func moveSelectedTo(world donburi.World, point math.Vec2, stopDistance float64) 
 	for selected := range components.Selected.Iter(world) {
 		if push {
 			components.PushMovement(selected, point, stopDistance)
+			continue
+		}
+
+		start := components.Center(selected)
+		path, ok := pathing.FindPath(world, start, point)
+		if ok && len(path) > 0 {
+			if len(path) == 1 {
+				components.WithMovementTo(selected, point, stopDistance)
+				continue
+			}
+			components.WithMovementList(selected, path, stopDistance)
 			continue
 		}
 

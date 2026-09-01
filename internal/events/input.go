@@ -8,21 +8,26 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var ActionClick = events.NewEventType[math.Vec2]()
+type ActionClickEvent struct {
+	Point math.Vec2
+	Shift bool
+}
+
+var ActionClick = events.NewEventType[ActionClickEvent]()
 
 func InitInput(world donburi.World) {
 	ActionClick.Subscribe(world, handleActionClick)
 }
 
-func handleActionClick(world donburi.World, worldPoint math.Vec2) {
+func handleActionClick(world donburi.World, event ActionClickEvent) {
 	player := components.GetPlayer(world)
-	if player.Action == nil {
+	if player.SelectedAction == nil {
 		return
 	}
 
-	if !player.Action.Valid(world, worldPoint) {
+	if !player.SelectedAction.Valid(world, event.Point) {
 		return
 	}
 
-	player.Action.Publish(world, worldPoint)
+	player.SelectedAction.Publish(world, event.Point, event.Shift)
 }

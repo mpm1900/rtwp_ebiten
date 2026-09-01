@@ -11,13 +11,13 @@ import (
 
 func RenderActionText(ecs *ecs.ECS, screen *ebiten.Image) {
 	player := components.GetPlayer(ecs.World)
-	if player.Action == nil {
+	if player.SelectedAction == nil {
 		return
 	}
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(0, float64(components.SCREEN_HEIGHT)-24)
-	text.Draw(screen, player.Action.Data().Name, &text.GoTextFace{
+	text.Draw(screen, player.SelectedAction.Data().Name, &text.GoTextFace{
 		Source: assets.YolkFontSource,
 		Size:   24,
 	}, op)

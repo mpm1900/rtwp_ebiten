@@ -28,15 +28,18 @@ const (
 )
 
 type ActionEvent struct {
-	Action Action
-	Source donburi.Entity
-	Point  math.Vec2
+	Action  Action
+	Source  donburi.Entity
+	Point   math.Vec2
+	Started bool
 }
 
 type Action interface {
 	Data() ActionData
-	Publish(donburi.World, math.Vec2)
+	Publish(donburi.World, math.Vec2, bool)
 	Handle(donburi.World, donburi.Entity, math.Vec2)
+	IsComplete(donburi.World, donburi.Entity) bool
+	Cancel(donburi.World, donburi.Entity)
 	Valid(donburi.World, math.Vec2) bool
 }
 
@@ -49,11 +52,11 @@ type ActionData struct {
 }
 
 type PlayerData struct {
-	Action     Action
-	Camera     *camera.Camera
-	CameraDrag *math.Vec2
-	DragStart  *math.Vec2
-	DragEnd    *math.Vec2
+	SelectedAction Action
+	Camera         *camera.Camera
+	CameraDrag     *math.Vec2
+	DragStart      *math.Vec2
+	DragEnd        *math.Vec2
 }
 
 func WorldRect() (minX, minY, maxX, maxY float64) {
@@ -135,11 +138,11 @@ func (p *PlayerData) ClampCameraPosition() {
 
 func NewPlayerData() PlayerData {
 	return PlayerData{
-		Action:     nil,
-		Camera:     camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1),
-		CameraDrag: nil,
-		DragStart:  nil,
-		DragEnd:    nil,
+		SelectedAction: nil,
+		Camera:         camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1),
+		CameraDrag:     nil,
+		DragStart:      nil,
+		DragEnd:        nil,
 	}
 }
 

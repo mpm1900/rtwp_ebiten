@@ -17,7 +17,7 @@ func InitSelectInRect(world donburi.World) {
 func selectInRect(world donburi.World, rect image.Rectangle) {
 	clearSelected(world, struct{}{})
 	player := components.GetPlayer(world)
-	player.Action = nil
+	player.SelectedAction = nil
 
 	for entry := range components.ActorQuery.Iter(world) {
 		actorRect, ok := components.Rect(entry)
@@ -28,7 +28,7 @@ func selectInRect(world donburi.World, rect image.Rectangle) {
 		if rect.Overlaps(actorRect) {
 			selectActor(world, entry.Entity())
 			actor := components.Actor.Get(entry)
-			player.Action = actor.Actions[0]
+			player.SelectedAction = actor.Actions[0]
 		}
 	}
 }

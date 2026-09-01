@@ -18,13 +18,29 @@ type MoveAction struct {
 func (a MoveAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a MoveAction) Publish(world donburi.World, point math.Vec2) {
+func (a MoveAction) Publish(world donburi.World, point math.Vec2, push bool) {
 	for selected := range components.Selected.Iter(world) {
-		events.Actions.Publish(world, components.ActionEvent{
+		actor := components.Actor.Get(selected)
+		if push && a.pushActiveMove(world, selected, actor, point) {
+			continue
+		}
+
+		event := components.ActionEvent{
 			Action: a,
 			Source: selected.Entity(),
 			Point:  point,
-		})
+		}
+
+		should_start := false
+		if push {
+			should_start = actor.PushActionEvent(event)
+		} else {
+			should_start = actor.SetActionEvent(world, event)
+		}
+
+		if should_start {
+			events.Actions.Publish(world, event)
+		}
 	}
 }
 func (a MoveAction) Handle(world donburi.World, source donburi.Entity, point math.Vec2) {
@@ -32,17 +48,53 @@ func (a MoveAction) Handle(world donburi.World, source donburi.Entity, point mat
 		return
 	}
 
-	if _, has_selection := components.Selected.First(world); !has_selection {
+	if !world.Valid(source) {
 		return
 	}
 
-	first, ok := components.FirstActorAtPoint(world, util.ToPoint(point))
+	f, ok := components.FirstActorAtPoint(world, util.ToPoint(point))
 	if ok {
-		moveFollow(world, source, first.Entity(), components.DEFAULT_STOP_DISTANCE)
+		follow := f.Entity()
+		if follow == source {
+			return
+		}
+		components.WithMovementFollow(world.Entry(source), follow, components.DEFAULT_STOP_DISTANCE)
 	} else {
 		moveTo(world, source, point, components.DEFAULT_STOP_DISTANCE)
 	}
 
+}
+func (a MoveAction) IsComplete(world donburi.World, source donburi.Entity) bool {
+	if !world.Valid(source) {
+		return true
+	}
+
+	return !world.Entry(source).HasComponent(components.Movement)
+}
+func (a MoveAction) Cancel(world donburi.World, source donburi.Entity) {
+	if !world.Valid(source) {
+		return
+	}
+
+	entry := world.Entry(source)
+	if entry.HasComponent(components.Movement) {
+		entry.RemoveComponent(components.Movement)
+	}
+}
+func (a MoveAction) pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2) bool {
+	active_event, ok := actor.PeekActionQueue()
+	if !ok || len(actor.ActionQueue) != 1 || !active_event.Started {
+		return false
+	}
+	if _, ok := active_event.Action.(MoveAction); !ok {
+		return false
+	}
+	if !entry.HasComponent(components.Movement) {
+		return false
+	}
+
+	pushMoveTo(world, entry.Entity(), point, components.DEFAULT_STOP_DISTANCE)
+	return true
 }
 func (a MoveAction) Valid(world donburi.World, point math.Vec2) bool {
 	return components.IsInWorld(point)
@@ -55,11 +107,21 @@ var Move = MoveAction{
 }
 
 func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
-	push := ebiten.IsKeyPressed(ebiten.KeyShift)
-
 	entry := world.Entry(source)
 	start := components.Center(entry)
-	if push && entry.HasComponent(components.Movement) {
+
+	path, ok := pathing.FindPath(world, start, point)
+	if !ok || len(path) == 0 {
+		path = []math.Vec2{point}
+	}
+
+	components.WithMovementList(entry, path, stopDistance)
+}
+
+func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
+	entry := world.Entry(source)
+	start := components.Center(entry)
+	if entry.HasComponent(components.Movement) {
 		movement := components.Movement.Get(entry)
 		if len(movement.Targets) > 0 {
 			start = movement.Targets[len(movement.Targets)-1]
@@ -71,17 +133,5 @@ func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDis
 		path = []math.Vec2{point}
 	}
 
-	if push {
-		components.PushMovementList(entry, path, stopDistance)
-	} else {
-		components.WithMovementList(entry, path, stopDistance)
-	}
-}
-
-func moveFollow(world donburi.World, source donburi.Entity, follow donburi.Entity, stopDistance float64) {
-	if source == follow {
-		return
-	}
-
-	components.WithMovementFollow(world.Entry(source), follow, stopDistance)
+	components.PushMovementList(entry, path, stopDistance)
 }

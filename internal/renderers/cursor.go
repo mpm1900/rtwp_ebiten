@@ -19,19 +19,19 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 		return
 	}
 
-	if player.Action == nil || player.DragEnd != nil {
+	if player.SelectedAction == nil || player.DragEnd != nil {
 		screen.DrawImage(assets.CursorPointerImage, base)
 		return
 	}
 
 	mousePoint := util.CursorPoint()
-	data := player.Action.Data()
+	data := player.SelectedAction.Data()
 	isValid := false
 
 	if worldPoint, ok := components.MinimapWorldPoint(mousePoint); ok {
-		isValid = player.Action.Valid(ecs.World, worldPoint)
+		isValid = player.SelectedAction.Valid(ecs.World, worldPoint)
 	} else {
-		isValid = player.Action.Valid(ecs.World, player.ScreenToWorld(mousePoint))
+		isValid = player.SelectedAction.Valid(ecs.World, player.ScreenToWorld(mousePoint))
 	}
 
 	cursorImage := assets.CursorPointerImage

@@ -44,11 +44,14 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 
 	// right
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+		eventPoint := player.ScreenToWorld(point)
 		if worldPoint, ok := components.MinimapWorldPoint(point); ok {
-			events.ActionClick.Publish(ecs.World, worldPoint)
-		} else {
-			events.ActionClick.Publish(ecs.World, player.ScreenToWorld(point))
+			eventPoint = worldPoint
 		}
+		events.ActionClick.Publish(ecs.World, events.ActionClickEvent{
+			Point: eventPoint,
+			Shift: ebiten.IsKeyPressed(ebiten.KeyShift),
+		})
 	}
 
 	// middle
@@ -66,6 +69,30 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 	}
 }
 
+func handleActionInput(ecs *ecs.ECS) {
+	player := components.GetPlayer(ecs.World)
+	if player.SelectedAction == nil {
+		return
+	}
+
+	actions := map[components.Action]int{}
+	count := 0
+
+	for selected := range components.SelectedActorsQuery.Iter(ecs.World) {
+		count++
+		actor := components.Actor.Get(selected)
+		for _, action := range actor.Actions {
+			actions[action]++
+		}
+	}
+
+	for action := range actions {
+		if inpututil.IsKeyJustPressed(action.Data().Key) && actions[action] == count {
+			player.SelectedAction = action
+		}
+	}
+}
+
 func HandleInput(ecs *ecs.ECS) {
 	mousePoint := util.CursorPoint()
 	handleMouseInput(ecs, mousePoint)
@@ -73,4 +100,6 @@ func HandleInput(ecs *ecs.ECS) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		events.ClearSelected.Publish(ecs.World, struct{}{})
 	}
+
+	handleActionInput(ecs)
 }

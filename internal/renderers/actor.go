@@ -1,11 +1,13 @@
 package renderers
 
 import (
+	"fmt"
 	"image/color"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
@@ -126,6 +128,13 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		renderOutlinedSprite(screen, image, options, outlineColor, thickness)
+
+		textop := &text.DrawOptions{}
+		textop.GeoM.Translate(centerPoint.X-6, centerPoint.Y-10)
+		text.Draw(screen, fmt.Sprintf("%d", len(actor.ActionQueue)), &text.GoTextFace{
+			Source: assets.YolkFontSource,
+			Size:   24,
+		}, textop)
 	}
 }
 

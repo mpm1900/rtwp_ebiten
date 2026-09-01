@@ -16,13 +16,25 @@ type AttackAction struct {
 func (a AttackAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a AttackAction) Publish(world donburi.World, point math.Vec2) {
+func (a AttackAction) Publish(world donburi.World, point math.Vec2, push bool) {
 	for selected := range components.Selected.Iter(world) {
-		events.Actions.Publish(world, components.ActionEvent{
+		actor := components.Actor.Get(selected)
+		event := components.ActionEvent{
 			Action: a,
 			Source: selected.Entity(),
 			Point:  point,
-		})
+		}
+
+		should_start := false
+		if push {
+			should_start = actor.PushActionEvent(event)
+		} else {
+			should_start = actor.SetActionEvent(world, event)
+		}
+
+		if should_start {
+			events.Actions.Publish(world, event)
+		}
 	}
 }
 func (a AttackAction) Handle(world donburi.World, source donburi.Entity, point math.Vec2) {
@@ -32,6 +44,11 @@ func (a AttackAction) Handle(world donburi.World, source donburi.Entity, point m
 	})
 }
 
+func (a AttackAction) IsComplete(world donburi.World, source donburi.Entity) bool {
+	return true
+}
+func (a AttackAction) Cancel(world donburi.World, source donburi.Entity) {
+}
 func (a AttackAction) Valid(world donburi.World, point math.Vec2) bool {
 	return components.IsInWorld(point)
 }

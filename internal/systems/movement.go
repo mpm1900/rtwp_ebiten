@@ -2,6 +2,7 @@ package systems
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/events"
 
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
@@ -57,6 +58,9 @@ func MoveEntities(ecs *ecs.ECS) {
 		entry := ecs.World.Entry(entity)
 		if entry.HasComponent(components.Movement) {
 			entry.RemoveComponent(components.Movement)
+		}
+		if entry.HasComponent(components.Actor) {
+			events.HandleActionQueue(ecs.World, entity)
 		}
 	}
 }

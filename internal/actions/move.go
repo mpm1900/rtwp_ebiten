@@ -19,9 +19,9 @@ func (a MoveAction) Data() components.ActionData {
 	return a.ActionData
 }
 func (a MoveAction) Publish(world donburi.World, point math.Vec2, push bool) {
-	for selected := range components.Selected.Iter(world) {
+	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
-		if push && a.pushActiveMove(world, selected, actor, point) {
+		if push && pushActiveMove(world, selected, actor, point) {
 			continue
 		}
 
@@ -74,7 +74,17 @@ func (a MoveAction) Cancel(world donburi.World, source donburi.Entity) {
 		entry.RemoveComponent(components.Movement)
 	}
 }
-func (a MoveAction) pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2) bool {
+func (a MoveAction) Valid(world donburi.World, point math.Vec2) bool {
+	return components.IsInWorld(point)
+}
+
+var Move = MoveAction{
+	Key:          ebiten.Key1,
+	Name:         "Move",
+	CursorOffset: math.NewVec2(-8, -8),
+}
+
+func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2) bool {
 	active_event, ok := actor.PeekActionQueue()
 	if !ok || actor.ActionQueueLen() != 1 || !active_event.Started {
 		return false
@@ -89,16 +99,6 @@ func (a MoveAction) pushActiveMove(world donburi.World, entry *donburi.Entry, ac
 	pushMoveTo(world, entry.Entity(), point, components.DEFAULT_STOP_DISTANCE)
 	return true
 }
-func (a MoveAction) Valid(world donburi.World, point math.Vec2) bool {
-	return components.IsInWorld(point)
-}
-
-var Move = MoveAction{
-	Key:          ebiten.Key1,
-	Name:         "Move",
-	CursorOffset: math.NewVec2(-8, -8),
-}
-
 func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
 	entry := world.Entry(source)
 	start := components.Center(entry)
@@ -110,7 +110,6 @@ func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDis
 
 	components.WithMovementList(entry, path, stopDistance)
 }
-
 func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
 	entry := world.Entry(source)
 	start := components.Center(entry)

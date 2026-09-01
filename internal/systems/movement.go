@@ -8,6 +8,8 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
+const blockedMoveStopMultiplier = 8.0
+
 func MoveEntities(ecs *ecs.ECS) {
 	completed := []donburi.Entity{}
 	if ecs.IsPaused() {
@@ -35,7 +37,7 @@ func MoveEntities(ecs *ecs.ECS) {
 			step := min(components.GetSpeed(entry), distance)
 			moveResult := MoveWithCollision(ecs.World, entry, direction.Normalized().MulScalar(step))
 			remainingDistance = components.Center(entry).Distance(target)
-			if moveResult.Collided && remainingDistance <= components.CollisionStopDistance(entry, stopDistance) {
+			if moveResult.Collided && remainingDistance <= components.CollisionStopDistance(entry, stopDistance)*blockedMoveStopMultiplier {
 				if movement.NextTarget() {
 					completed = append(completed, entry.Entity())
 				}

@@ -163,7 +163,7 @@ func (p *PlayerData) UpdateCameraDrag(point math.Vec2) (math.Vec2, bool) {
 		return math.Vec2{}, false
 	}
 
-	delta := point.Sub(*p.CameraDrag)
+	delta := point.Sub(*p.CameraDrag).MulScalar(2)
 	p.CameraDrag = &point
 	if delta.IsZero() {
 		return math.Vec2{}, false

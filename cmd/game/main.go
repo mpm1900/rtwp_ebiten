@@ -14,15 +14,14 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var actor_actions = []components.Action{
-	actions.Move,
-	actions.Attack,
-}
-
 var amount = 10
 
 func main() {
 	g := game.NewGame()
+	actor_actions := []components.Action{
+		actions.Move,
+		actions.Attack,
+	}
 	player := components.GetPlayerEntity(g.ECS.World)
 	for i := range amount {
 		for j := range amount {

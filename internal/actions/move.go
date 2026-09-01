@@ -50,7 +50,7 @@ func (a MoveAction) Handle(world donburi.World, point math.Vec2) {
 }
 func (a MoveAction) Valid(world donburi.World, point math.Vec2) bool {
 	if components.IsOverMinimap(point, components.MinimapRect()) {
-		return false
+		return true
 	}
 	player := components.GetPlayer(world)
 	if player == nil {

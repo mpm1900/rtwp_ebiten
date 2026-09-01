@@ -22,7 +22,7 @@ func RenderRanges(ecs *ecs.ECS, screen *ebiten.Image) {
 			float32(*r),
 			2,
 			color.RGBA{0xff, 0xff, 0, 0xff},
-			false,
+			true,
 		)
 	}
 }

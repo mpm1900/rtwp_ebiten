@@ -16,20 +16,26 @@ import (
 
 const (
 	HEALTH_BAR_HEIGHT float32 = 6
-	HEALTH_BAR_WIDTH  float32 = 24
+	HEALTH_BAR_WIDTH  float32 = 28
 )
 
 var renderActorsQuery = donburi.NewQuery(filter.Contains(components.Actor, components.Image))
 var outlineCache = map[*ebiten.Image]map[uint32]*ebiten.Image{}
 
-func outlineColorKey(outline color.Color) uint32 {
+func outlineColorKey(outline color.Color, thickness int) uint32 {
 	rgba := color.RGBAModel.Convert(outline).(color.RGBA)
-	return uint32(rgba.R)<<24 | uint32(rgba.G)<<16 | uint32(rgba.B)<<8 | uint32(rgba.A)
+	return uint32(rgba.R)<<24 | uint32(rgba.G)<<16 | uint32(rgba.B)<<8 | uint32(rgba.A)<<0 | uint32(thickness)
 }
 
-func buildOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
+func buildOutlineImage(base *ebiten.Image, outline color.Color, thickness int) *ebiten.Image {
+	if thickness <= 0 {
+		return ebiten.NewImage(base.Bounds().Dx(), base.Bounds().Dy())
+	}
+
 	bounds := base.Bounds()
-	outlineImage := ebiten.NewImage(bounds.Dx(), bounds.Dy())
+	width := bounds.Dx()
+	height := bounds.Dy()
+	outlineImage := ebiten.NewImage(width+thickness*2, height+thickness*2)
 	rgba := color.RGBAModel.Convert(outline).(color.RGBA)
 
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
@@ -39,9 +45,10 @@ func buildOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
 				continue
 			}
 
-			isEdge := false
-			for dx := -1; dx <= 1; dx++ {
-				for dy := -1; dy <= 1; dy++ {
+			localX := x - bounds.Min.X
+			localY := y - bounds.Min.Y
+			for dx := -thickness; dx <= thickness; dx++ {
+				for dy := -thickness; dy <= thickness; dy++ {
 					if dx == 0 && dy == 0 {
 						continue
 					}
@@ -49,23 +56,15 @@ func buildOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
 					nx := x + dx
 					ny := y + dy
 					if nx < bounds.Min.X || nx >= bounds.Max.X || ny < bounds.Min.Y || ny >= bounds.Max.Y {
-						isEdge = true
-						break
+						outlineImage.Set(localX+thickness+dx, localY+thickness+dy, rgba)
+						continue
 					}
 
 					neighbor := color.NRGBAModel.Convert(base.At(nx, ny)).(color.NRGBA)
 					if neighbor.A == 0 {
-						isEdge = true
-						break
+						outlineImage.Set(localX+thickness+dx, localY+thickness+dy, rgba)
 					}
 				}
-				if isEdge {
-					break
-				}
-			}
-
-			if isEdge {
-				outlineImage.Set(x-bounds.Min.X, y-bounds.Min.Y, color.RGBA{R: rgba.R, G: rgba.G, B: rgba.B, A: rgba.A})
 			}
 		}
 	}
@@ -73,8 +72,8 @@ func buildOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
 	return outlineImage
 }
 
-func getOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
-	key := outlineColorKey(outline)
+func getOutlineImage(base *ebiten.Image, outline color.Color, thickness int) *ebiten.Image {
+	key := outlineColorKey(outline, thickness)
 	if _, ok := outlineCache[base]; !ok {
 		outlineCache[base] = map[uint32]*ebiten.Image{}
 	}
@@ -82,15 +81,17 @@ func getOutlineImage(base *ebiten.Image, outline color.Color) *ebiten.Image {
 		return cached
 	}
 
-	cached := buildOutlineImage(base, outline)
+	cached := buildOutlineImage(base, outline, thickness)
 	outlineCache[base][key] = cached
 	return cached
 }
 
-func renderOutlinedSprite(screen *ebiten.Image, base *ebiten.Image, transformOptions ebiten.DrawImageOptions, outline color.Color) {
+func renderOutlinedSprite(screen *ebiten.Image, base *ebiten.Image, transformOptions ebiten.DrawImageOptions, outline color.Color, thickness int) {
 	screen.DrawImage(base, &transformOptions)
-	outlineImage := getOutlineImage(base, outline)
-	outlineOptions := transformOptions
+	outlineImage := getOutlineImage(base, outline, thickness)
+	outlineOptions := ebiten.DrawImageOptions{}
+	outlineOptions.GeoM.Translate(float64(-thickness), float64(-thickness))
+	outlineOptions.GeoM.Concat(transformOptions.GeoM)
 	screen.DrawImage(outlineImage, &outlineOptions)
 }
 
@@ -113,6 +114,7 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 
 		outlineColor := assets.ColorEnemy
 		actor := components.Actor.Get(entry)
+		thickness := 1
 
 		if actor.Player == player {
 			outlineColor = assets.ColorPlayer
@@ -120,9 +122,10 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 
 		if entry.HasComponent(components.Selected) {
 			outlineColor = assets.ColorSelected
+			thickness = 2
 		}
 
-		renderOutlinedSprite(screen, image, options, outlineColor)
+		renderOutlinedSprite(screen, image, options, outlineColor, thickness)
 	}
 }
 
@@ -149,8 +152,8 @@ func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		actorCenter := view.Point(components.CenterTrans(*trans))
-		barX := actorCenter.X - 12
-		barY := actorCenter.Y - 12
+		barX := actorCenter.X - 14
+		barY := actorCenter.Y - 18
 
 		vector.FillRect(
 			screen,

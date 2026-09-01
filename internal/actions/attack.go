@@ -5,7 +5,6 @@ import (
 	"rtwp_ebitengine/internal/events"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
 )
@@ -17,39 +16,24 @@ type AttackAction struct {
 func (a AttackAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a AttackAction) Handle(world donburi.World, point math.Vec2) {
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-		return
-	}
-
-	if components.IsOverMinimap(point, components.MinimapRect()) {
-		return
-	}
-
-	player := components.GetPlayer(world)
-	if player == nil {
-		return
-	}
-	worldPoint := player.ScreenToWorld(point)
-
-	for _ = range components.Selected.Iter(world) {
-		events.DamageAt.Publish(world, events.DamageEvent{
-			Point:  worldPoint,
-			Amount: 10,
+func (a AttackAction) Publish(world donburi.World, point math.Vec2) {
+	for selected := range components.Selected.Iter(world) {
+		events.Actions.Publish(world, components.ActionEvent{
+			Action: a,
+			Source: selected.Entity(),
+			Point:  point,
 		})
 	}
 }
+func (a AttackAction) Handle(world donburi.World, source donburi.Entity, point math.Vec2) {
+	events.DamageAt.Publish(world, events.DamageEvent{
+		Point:  point,
+		Amount: 10,
+	})
+}
 
 func (a AttackAction) Valid(world donburi.World, point math.Vec2) bool {
-	if components.IsOverMinimap(point, components.MinimapRect()) {
-		return false
-	}
-	player := components.GetPlayer(world)
-	if player == nil {
-		return false
-	}
-	worldPoint := player.ScreenToWorld(point)
-	return components.IsInWorld(worldPoint)
+	return components.IsInWorld(point)
 }
 
 var Attack = AttackAction{

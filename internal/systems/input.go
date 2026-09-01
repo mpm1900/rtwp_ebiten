@@ -40,15 +40,18 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 		events.EndDrag.Publish(ecs.World, point)
 	}
 
+	player := components.GetPlayer(ecs.World)
+
 	// right
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 		if worldPoint, ok := components.MinimapWorldPoint(point); ok {
-			events.RightClickMinimap.Publish(ecs.World, worldPoint)
+			events.ActionClick.Publish(ecs.World, worldPoint)
+		} else {
+			events.ActionClick.Publish(ecs.World, player.ScreenToWorld(point))
 		}
 	}
 
 	// middle
-	player := components.GetPlayer(ecs.World)
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonMiddle) {
 		player.StartCameraDrag(point)
 	}

@@ -27,9 +27,16 @@ const (
 	MAX_CAMERA_ZOOM = 2.0
 )
 
+type ActionEvent struct {
+	Action Action
+	Source donburi.Entity
+	Point  math.Vec2
+}
+
 type Action interface {
 	Data() ActionData
-	Handle(donburi.World, math.Vec2)
+	Publish(donburi.World, math.Vec2)
+	Handle(donburi.World, donburi.Entity, math.Vec2)
 	Valid(donburi.World, math.Vec2) bool
 }
 

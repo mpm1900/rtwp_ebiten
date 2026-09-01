@@ -2,11 +2,11 @@ package actions
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/pathing"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
 )
@@ -18,21 +18,17 @@ type MoveAction struct {
 func (a MoveAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a MoveAction) Handle(world donburi.World, point math.Vec2) {
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-		return
+func (a MoveAction) Publish(world donburi.World, point math.Vec2) {
+	for selected := range components.Selected.Iter(world) {
+		events.Actions.Publish(world, components.ActionEvent{
+			Action: a,
+			Source: selected.Entity(),
+			Point:  point,
+		})
 	}
-
-	if components.IsOverMinimap(point, components.MinimapRect()) {
-		return
-	}
-
-	player := components.GetPlayer(world)
-	if player == nil {
-		return
-	}
-	worldPoint := player.ScreenToWorld(point)
-	if !components.IsInWorld(worldPoint) {
+}
+func (a MoveAction) Handle(world donburi.World, source donburi.Entity, point math.Vec2) {
+	if !components.IsInWorld(point) {
 		return
 	}
 
@@ -40,24 +36,16 @@ func (a MoveAction) Handle(world donburi.World, point math.Vec2) {
 		return
 	}
 
-	first, ok := components.FirstActorAtPoint(world, util.ToPoint(worldPoint))
+	first, ok := components.FirstActorAtPoint(world, util.ToPoint(point))
 	if ok {
-		moveSelectedFollow(world, first.Entity(), components.DEFAULT_STOP_DISTANCE)
+		moveFollow(world, source, first.Entity(), components.DEFAULT_STOP_DISTANCE)
 	} else {
-		moveSelectedTo(world, worldPoint, components.DEFAULT_STOP_DISTANCE)
+		moveTo(world, source, point, components.DEFAULT_STOP_DISTANCE)
 	}
 
 }
 func (a MoveAction) Valid(world donburi.World, point math.Vec2) bool {
-	if components.IsOverMinimap(point, components.MinimapRect()) {
-		return true
-	}
-	player := components.GetPlayer(world)
-	if player == nil {
-		return false
-	}
-	worldPoint := player.ScreenToWorld(point)
-	return components.IsInWorld(worldPoint)
+	return components.IsInWorld(point)
 }
 
 var Move = MoveAction{
@@ -66,37 +54,34 @@ var Move = MoveAction{
 	CursorOffset: math.NewVec2(-8, -8),
 }
 
-func moveSelectedTo(world donburi.World, point math.Vec2, stopDistance float64) {
+func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
 	push := ebiten.IsKeyPressed(ebiten.KeyShift)
 
-	for selected := range components.Selected.Iter(world) {
-		start := components.Center(selected)
-		if push && selected.HasComponent(components.Movement) {
-			movement := components.Movement.Get(selected)
-			if len(movement.Targets) > 0 {
-				start = movement.Targets[len(movement.Targets)-1]
-			}
+	entry := world.Entry(source)
+	start := components.Center(entry)
+	if push && entry.HasComponent(components.Movement) {
+		movement := components.Movement.Get(entry)
+		if len(movement.Targets) > 0 {
+			start = movement.Targets[len(movement.Targets)-1]
 		}
+	}
 
-		path, ok := pathing.FindPath(world, start, point)
-		if !ok || len(path) == 0 {
-			path = []math.Vec2{point}
-		}
+	path, ok := pathing.FindPath(world, start, point)
+	if !ok || len(path) == 0 {
+		path = []math.Vec2{point}
+	}
 
-		if push {
-			components.PushMovementList(selected, path, stopDistance)
-		} else {
-			components.WithMovementList(selected, path, stopDistance)
-		}
+	if push {
+		components.PushMovementList(entry, path, stopDistance)
+	} else {
+		components.WithMovementList(entry, path, stopDistance)
 	}
 }
 
-func moveSelectedFollow(world donburi.World, follow donburi.Entity, stopDistance float64) {
-	for selected := range components.Selected.Iter(world) {
-		if selected.Entity() == follow {
-			continue
-		}
-
-		components.WithMovementFollow(selected, follow, stopDistance)
+func moveFollow(world donburi.World, source donburi.Entity, follow donburi.Entity, stopDistance float64) {
+	if source == follow {
+		return
 	}
+
+	components.WithMovementFollow(world.Entry(source), follow, stopDistance)
 }

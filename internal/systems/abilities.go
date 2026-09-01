@@ -2,7 +2,6 @@ package systems
 
 import (
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/yohamta/donburi/ecs"
@@ -10,7 +9,7 @@ import (
 
 func HandleActions(ecs *ecs.ECS) {
 	player := components.GetPlayer(ecs.World)
-	if player == nil || player.Action == nil {
+	if player.Action == nil {
 		return
 	}
 
@@ -30,11 +29,4 @@ func HandleActions(ecs *ecs.ECS) {
 			player.Action = action
 		}
 	}
-
-	screenPoint := util.CursorPoint()
-	if !player.Action.Valid(ecs.World, screenPoint) {
-		return
-	}
-
-	player.Action.Handle(ecs.World, screenPoint)
 }

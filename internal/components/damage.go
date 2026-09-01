@@ -28,17 +28,18 @@ func WithDamage(entry *donburi.Entry, damage float64) {
 	Damage.SetValue(entry, damage)
 }
 
-func DamageAt(world donburi.World, point math.Vec2, amount float64) {
+func DamageAt(world donburi.World, point math.Vec2, amount float64) (*donburi.Entry, bool) {
 	entry, ok := FirstActorAtPoint(world, util.ToPoint(point))
 	if !ok {
-		return
+		return nil, false
 	}
 
 	if !entry.HasComponent(Damage) {
 		WithDamage(entry, amount)
-		return
+		return nil, false
 	}
 
 	damage := Damage.Get(entry)
 	Damage.SetValue(entry, *damage+amount)
+	return entry, true
 }

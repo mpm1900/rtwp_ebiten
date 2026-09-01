@@ -2,6 +2,7 @@ package actions
 
 import (
 	"rtwp_ebitengine/internal/components"
+	"rtwp_ebitengine/internal/events"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -32,7 +33,10 @@ func (a AttackAction) Handle(world donburi.World, point math.Vec2) {
 	worldPoint := player.ScreenToWorld(point)
 
 	for _ = range components.Selected.Iter(world) {
-		components.DamageAt(world, worldPoint, 10)
+		events.DamageAt.Publish(world, events.DamageEvent{
+			Point:  worldPoint,
+			Amount: 10,
+		})
 	}
 }
 

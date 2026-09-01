@@ -9,6 +9,7 @@ func Load(world donburi.World) {
 	InitSelectInRect(world)
 	InitCamera(world)
 	InitMinimap(world)
+	InitDamage(world)
 }
 
 func ProcessEvents(world donburi.World) {
@@ -22,4 +23,5 @@ func ProcessEvents(world donburi.World) {
 	ZoomCamera.ProcessEvents(world)
 	LeftClickMinimap.ProcessEvents(world)
 	RightClickMinimap.ProcessEvents(world)
+	DamageAt.ProcessEvents(world)
 }

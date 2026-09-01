@@ -1,7 +1,6 @@
 package events
 
 import (
-	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/util"
 
@@ -34,10 +33,11 @@ func selectActor(world donburi.World, entity donburi.Entity) {
 func selectAt(world donburi.World, at math.Vec2) {
 	clearSelected(world, struct{}{})
 	player := components.GetPlayer(world)
-	player.Action = actions.Null
+	player.Action = nil
 
 	components.EachActorAtPoint(world, util.ToPoint(at), func(entry *donburi.Entry) {
 		selectActor(world, entry.Entity())
-		player.Action = actions.Move
+		actor := components.Actor.Get(entry)
+		player.Action = actor.Actions[0]
 	})
 }

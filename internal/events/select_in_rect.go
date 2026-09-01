@@ -2,7 +2,6 @@ package events
 
 import (
 	"image"
-	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/components"
 
 	"github.com/yohamta/donburi"
@@ -18,7 +17,7 @@ func InitSelectInRect(world donburi.World) {
 func selectInRect(world donburi.World, rect image.Rectangle) {
 	clearSelected(world, struct{}{})
 	player := components.GetPlayer(world)
-	player.Action = actions.Null
+	player.Action = nil
 
 	for entry := range components.ActorQuery.Iter(world) {
 		actorRect, ok := components.Rect(entry)
@@ -28,8 +27,8 @@ func selectInRect(world donburi.World, rect image.Rectangle) {
 
 		if rect.Overlaps(actorRect) {
 			selectActor(world, entry.Entity())
-			action := actions.Move
-			player.Action = &action
+			actor := components.Actor.Get(entry)
+			player.Action = actor.Actions[0]
 		}
 	}
 }

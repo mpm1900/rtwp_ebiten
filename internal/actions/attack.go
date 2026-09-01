@@ -25,14 +25,7 @@ func (a AttackAction) Publish(world donburi.World, point math.Vec2, push bool) {
 			Point:  point,
 		}
 
-		should_start := false
-		if push {
-			should_start = actor.PushActionEvent(event)
-		} else {
-			should_start = actor.SetActionEvent(world, event)
-		}
-
-		if should_start {
+		if actor.QueueActionEvent(world, event, push) {
 			events.Actions.Publish(world, event)
 		}
 	}

@@ -31,14 +31,7 @@ func (a MoveAction) Publish(world donburi.World, point math.Vec2, push bool) {
 			Point:  point,
 		}
 
-		should_start := false
-		if push {
-			should_start = actor.PushActionEvent(event)
-		} else {
-			should_start = actor.SetActionEvent(world, event)
-		}
-
-		if should_start {
+		if actor.QueueActionEvent(world, event, push) {
 			events.Actions.Publish(world, event)
 		}
 	}
@@ -83,7 +76,7 @@ func (a MoveAction) Cancel(world donburi.World, source donburi.Entity) {
 }
 func (a MoveAction) pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2) bool {
 	active_event, ok := actor.PeekActionQueue()
-	if !ok || len(actor.ActionQueue) != 1 || !active_event.Started {
+	if !ok || actor.ActionQueueLen() != 1 || !active_event.Started {
 		return false
 	}
 	if _, ok := active_event.Action.(MoveAction); !ok {

@@ -131,7 +131,7 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 
 		textop := &text.DrawOptions{}
 		textop.GeoM.Translate(centerPoint.X-6, centerPoint.Y-10)
-		text.Draw(screen, fmt.Sprintf("%d", len(actor.ActionQueue)), &text.GoTextFace{
+		text.Draw(screen, fmt.Sprintf("%d", actor.ActionQueueLen()), &text.GoTextFace{
 			Source: assets.YolkFontSource,
 			Size:   24,
 		}, textop)

@@ -2,6 +2,7 @@ package components
 
 import (
 	"image"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/transform"
@@ -11,18 +12,17 @@ import (
 type ActorData struct {
 	Player      donburi.Entity
 	Actions     []Action
-	ActionQueue []ActionEvent
+	ActionQueue util.Queue[ActionEvent]
 }
 
 func (a *ActorData) PeekActionQueue() (*ActionEvent, bool) {
-	if len(a.ActionQueue) == 0 {
-		return nil, false
-	}
-
-	return &a.ActionQueue[0], true
+	return a.ActionQueue.Peek()
 }
 func (a *ActorData) HasAction() bool {
-	return len(a.ActionQueue) > 0
+	return a.ActionQueue.Len() > 0
+}
+func (a *ActorData) ActionQueueLen() int {
+	return a.ActionQueue.Len()
 }
 func (a *ActorData) SetActionEvent(world donburi.World, event ActionEvent) bool {
 	if active_event, ok := a.PeekActionQueue(); ok && active_event.Started {
@@ -30,25 +30,22 @@ func (a *ActorData) SetActionEvent(world donburi.World, event ActionEvent) bool 
 	}
 
 	event.Started = false
-	clear(a.ActionQueue)
-	a.ActionQueue = append(a.ActionQueue[:0], event)
+	a.ActionQueue.Set(event)
 	return true
 }
 func (a *ActorData) PushActionEvent(event ActionEvent) bool {
 	event.Started = false
-	a.ActionQueue = append(a.ActionQueue, event)
-	return len(a.ActionQueue) == 1
+	return a.ActionQueue.Push(event)
 }
-func (a *ActorData) NextActionEvent() (*ActionEvent, bool) {
-	if len(a.ActionQueue) == 0 {
-		return nil, false
+func (a *ActorData) QueueActionEvent(world donburi.World, event ActionEvent, push bool) bool {
+	if push {
+		return a.PushActionEvent(event)
 	}
 
-	copy(a.ActionQueue, a.ActionQueue[1:])
-	last_index := len(a.ActionQueue) - 1
-	a.ActionQueue[last_index] = ActionEvent{}
-	a.ActionQueue = a.ActionQueue[:last_index]
-	return a.PeekActionQueue()
+	return a.SetActionEvent(world, event)
+}
+func (a *ActorData) NextActionEvent() (*ActionEvent, bool) {
+	return a.ActionQueue.Pop()
 }
 
 var Actor = donburi.NewComponentType[ActorData]()

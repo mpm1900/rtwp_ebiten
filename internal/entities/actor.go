@@ -12,14 +12,14 @@ import (
 func CreateActor(
 	ecs *ecs.ECS,
 	position math.Vec2,
-	abilities []*components.Ability,
+	actions []components.Action,
 	player donburi.Entity,
 ) donburi.Entity {
 	entity := ecs.Create(ActorLayer, components.Actor, components.Stats)
 	entry := ecs.World.Entry(entity)
 	components.Actor.SetValue(entry, components.ActorData{
-		Abilities: abilities,
-		Player:    player,
+		Actions: actions,
+		Player:  player,
 	})
 	components.Stats.SetValue(entry, *components.NewStatsData(map[components.Stat]float64{
 		components.StatHealth: 100.0,

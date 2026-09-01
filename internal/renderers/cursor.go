@@ -15,23 +15,24 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 	op.GeoM.Translate(float64(x), float64(y))
 	player := components.GetPlayer(ecs.World)
 
-	if player == nil || player.Ability == nil || player.DragEnd != nil {
+	if player == nil || player.Action == nil || player.DragEnd != nil {
 		screen.DrawImage(assets.CursorPointerImage, op)
 		return
 	}
 
 	cursorPoint := util.NewVec2(x, y)
-	if player.Ability.Valid != nil && player.Ability.Valid(ecs, cursorPoint) {
-		if player.Ability.Cursor != nil {
-			op.GeoM.Translate(player.Ability.CursorOffset.X, player.Ability.CursorOffset.Y)
-			screen.DrawImage(player.Ability.Cursor, op)
+	data := player.Action.Data()
+	if player.Action.Valid(ecs.World, cursorPoint) {
+		if data.Cursor != nil {
+			op.GeoM.Translate(data.CursorOffset.X, data.CursorOffset.Y)
+			screen.DrawImage(data.Cursor, op)
 		} else {
 			screen.DrawImage(assets.CursorPointerImage, op)
 		}
 	} else {
-		if player.Ability.CursorInvalid != nil {
-			op.GeoM.Translate(player.Ability.CursorOffset.X, player.Ability.CursorOffset.Y)
-			screen.DrawImage(player.Ability.CursorInvalid, op)
+		if data.CursorInvalid != nil {
+			op.GeoM.Translate(data.CursorOffset.X, data.CursorOffset.Y)
+			screen.DrawImage(data.CursorInvalid, op)
 		} else {
 		}
 	}

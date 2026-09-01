@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"rtwp_ebitengine/internal/abilities"
+	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
@@ -14,9 +14,9 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var actions = []*components.Ability{
-	&abilities.Move,
-	&abilities.Attack,
+var actor_actions = []components.Action{
+	actions.Move,
+	actions.Attack,
 }
 
 var amount = 10
@@ -26,7 +26,7 @@ func main() {
 	player := components.GetPlayerEntity(g.ECS.World)
 	for i := range amount {
 		for j := range amount {
-			entities.CreateActor(g.ECS, util.NewVec2(200+i*40, 200+j*40), actions, player)
+			entities.CreateActor(g.ECS, util.NewVec2(200+i*40, 200+j*40), actor_actions, player)
 		}
 	}
 

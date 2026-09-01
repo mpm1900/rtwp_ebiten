@@ -3,7 +3,7 @@ package game
 import (
 	"fmt"
 	"image/color"
-	"rtwp_ebitengine/internal/abilities"
+	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/effects"
@@ -31,7 +31,7 @@ func NewGame() Game {
 	}
 
 	assets.MustLoadAssets()
-	abilities.LoadAbilities()
+	actions.LoadAbilities()
 	events.Load(g.ECS.World)
 	systems.Load(g.ECS, g.Frame)
 	renderers.Load(g.ECS)

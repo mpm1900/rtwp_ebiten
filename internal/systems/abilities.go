@@ -8,37 +8,33 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func HandleAbilities(ecs *ecs.ECS) {
+func HandleActions(ecs *ecs.ECS) {
 	player := components.GetPlayer(ecs.World)
-	if player == nil {
+	if player == nil || player.Action == nil {
 		return
 	}
 
-	actions := map[*components.Ability]struct{}{}
+	actions := map[components.Action]int{}
+	count := 0
 
 	for selected := range components.SelectedActorsQuery.Iter(ecs.World) {
+		count++
 		actor := components.Actor.Get(selected)
-		for _, action := range actor.Abilities {
-			if action != nil {
-				actions[action] = struct{}{}
-			}
+		for _, action := range actor.Actions {
+			actions[action]++
 		}
 	}
 
-	for ability := range actions {
-		if inpututil.IsKeyJustPressed(ability.Key) {
-			player.Ability = ability
+	for action := range actions {
+		if inpututil.IsKeyJustPressed(action.Data().Key) && actions[action] == count {
+			player.Action = action
 		}
 	}
 
-	if player.Ability != nil {
-		screenPoint := util.CursorPoint()
-		if player.Ability.Valid != nil && !player.Ability.Valid(ecs, screenPoint) {
-			return
-		}
-
-		if player.Ability.Handle != nil {
-			player.Ability.Handle(ecs, screenPoint)
-		}
+	screenPoint := util.CursorPoint()
+	if !player.Action.Valid(ecs.World, screenPoint) {
+		return
 	}
+
+	player.Action.Handle(ecs.World, screenPoint)
 }

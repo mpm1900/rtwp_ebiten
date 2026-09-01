@@ -6,7 +6,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/ecs"
 	"github.com/yohamta/donburi/features/math"
 
 	camera "github.com/melonfunction/ebiten-camera"
@@ -29,22 +28,21 @@ const (
 )
 
 type Action interface {
-	Spawn(*ecs.ECS, math.Vec2) Ability
-	Handle(*ecs.ECS, math.Vec2)
-	Valid(*ecs.ECS, math.Vec2) bool
+	Data() ActionData
+	Handle(donburi.World, math.Vec2)
+	Valid(donburi.World, math.Vec2) bool
 }
-type Ability struct {
+
+type ActionData struct {
 	Key           ebiten.Key
 	Name          string
 	Cursor        *ebiten.Image
 	CursorInvalid *ebiten.Image
 	CursorOffset  math.Vec2
-	Handle        func(*ecs.ECS, math.Vec2)
-	Valid         func(*ecs.ECS, math.Vec2) bool
 }
 
 type PlayerData struct {
-	Ability    *Ability
+	Action     Action
 	Camera     *camera.Camera
 	CameraDrag *math.Vec2
 	DragStart  *math.Vec2
@@ -130,7 +128,7 @@ func (p *PlayerData) ClampCameraPosition() {
 
 func NewPlayerData() PlayerData {
 	return PlayerData{
-		Ability:    nil,
+		Action:     nil,
 		Camera:     camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1),
 		CameraDrag: nil,
 		DragStart:  nil,

@@ -16,7 +16,7 @@ func Load(ecs *ecs.ECS, frame *util.Frame) {
 	ecs.AddSystem(ResolveModifiers(frame))
 
 	ecs.AddSystem(HandleInput)
-	ecs.AddSystem(HandleAbilities)
+	ecs.AddSystem(HandleActions)
 
 	ecs.AddSystem(MoveEntities)
 }

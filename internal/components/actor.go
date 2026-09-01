@@ -9,8 +9,8 @@ import (
 )
 
 type ActorData struct {
-	Player    donburi.Entity
-	Abilities []*Ability
+	Player  donburi.Entity
+	Actions []Action
 }
 
 var Actor = donburi.NewComponentType[ActorData]()

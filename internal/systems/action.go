@@ -25,8 +25,7 @@ func TickActorActions(ecs *ecs.ECS) {
 			continue
 		}
 
-		active_event, ok := actor.PeekActionQueue()
-		if ok && (was_blocked || !active_event.Started) {
+		if was_blocked || !actor.StartedAction {
 			events.HandleActionQueue(ecs.World, entry.Entity())
 		}
 	}

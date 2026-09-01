@@ -19,16 +19,6 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 	worldMinX, worldMinY, worldMaxX, worldMaxY := components.WorldRect()
 	mapRect := components.MinimapRect()
 
-	vector.StrokeRect(
-		screen,
-		float32(mapRect.Min.X-components.MINIMAP_BORDER),
-		float32(mapRect.Min.Y-components.MINIMAP_BORDER),
-		float32(components.MINIMAP_SIZE+components.MINIMAP_BORDER*2),
-		float32(components.MINIMAP_SIZE+components.MINIMAP_BORDER*2),
-		2,
-		color.Black,
-		false,
-	)
 	vector.FillRect(
 		screen,
 		float32(mapRect.Min.X),

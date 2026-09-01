@@ -5,6 +5,7 @@ import (
 	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/pathing"
 	"rtwp_ebitengine/internal/util"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
@@ -18,31 +19,33 @@ type MoveAction struct {
 func (a MoveAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a MoveAction) Publish(world donburi.World, point math.Vec2, shift bool, ctrl bool) {
+func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 	first, ok := components.SelectedActorsQuery.First(world)
 	if !ok {
 		return
 	}
 
+	shift := slices.Contains(event.Keys, ebiten.KeyShift)
+	ctrl := slices.Contains(event.Keys, ebiten.KeyControl)
 	first_center := components.Center(first)
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
-		p := point
+		point := event.Point
 
 		if ctrl {
 			center := components.Center(selected)
 			delta := center.Sub(first_center)
-			p = point.Add(delta)
+			point = point.Add(delta)
 		}
 
-		if shift && pushActiveMove(world, selected, actor, p) {
+		if shift && pushActiveMove(world, selected, actor, point) {
 			continue
 		}
 
 		event := components.ActionEvent{
 			Action: a,
 			Source: selected.Entity(),
-			Point:  p,
+			Point:  point,
 		}
 
 		if actor.QueueActionEvent(world, event, shift) {
@@ -50,24 +53,24 @@ func (a MoveAction) Publish(world donburi.World, point math.Vec2, shift bool, ct
 		}
 	}
 }
-func (a MoveAction) Handle(world donburi.World, source donburi.Entity, point math.Vec2) {
-	if !components.IsInWorld(point) {
+func (a MoveAction) Handle(world donburi.World, event components.ActionEvent) {
+	if !components.IsInWorld(event.Point) {
 		return
 	}
 
-	if !world.Valid(source) {
+	if !world.Valid(event.Source) {
 		return
 	}
 
-	f, ok := components.FirstActorAtPoint(world, util.ToPoint(point))
+	f, ok := components.FirstActorAtPoint(world, util.ToPoint(event.Point))
 	if ok {
 		follow := f.Entity()
-		if follow == source {
+		if follow == event.Source {
 			return
 		}
-		components.WithMovementFollow(world.Entry(source), follow, components.DEFAULT_STOP_DISTANCE)
+		components.WithMovementFollow(world.Entry(event.Source), follow, components.DEFAULT_STOP_DISTANCE)
 	} else {
-		moveTo(world, source, point, components.DEFAULT_STOP_DISTANCE)
+		moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE)
 	}
 
 }

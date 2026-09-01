@@ -3,6 +3,7 @@ package actions
 import (
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/events"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
@@ -16,33 +17,26 @@ type AttackAction struct {
 func (a AttackAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a AttackAction) Publish(world donburi.World, point math.Vec2, push bool, ctrl bool) {
+func (a AttackAction) Publish(world donburi.World, event components.ActionEvent) {
+	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	for selected := range components.Selected.Iter(world) {
 		actor := components.Actor.Get(selected)
-		event := components.ActionEvent{
+		action_event := components.ActionEvent{
 			Action: a,
 			Source: selected.Entity(),
-			Point:  point,
+			Point:  event.Point,
 		}
 
-		if actor.QueueActionEvent(world, event, push) {
-			actor.ActionDelay = 10
-			events.Actions.Publish(world, event)
+		if actor.QueueActionEvent(world, action_event, shift) {
+			events.Actions.Publish(world, action_event)
 		}
 	}
 }
-func (a AttackAction) Handle(world donburi.World, source donburi.Entity, point math.Vec2) {
+func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) {
 	events.DamageAt.Publish(world, events.DamageEvent{
-		Point:  point,
+		Point:  event.Point,
 		Amount: 10,
 	})
-	if world.Valid(source) {
-		entry := world.Entry(source)
-		if entry.HasComponent(components.Actor) {
-			actor := components.Actor.Get(entry)
-			actor.ActionCooldown = 60
-		}
-	}
 }
 
 func (a AttackAction) IsComplete(world donburi.World, source donburi.Entity) bool {
@@ -65,6 +59,8 @@ func (a AttackAction) Valid(world donburi.World, point math.Vec2) bool {
 }
 
 var Attack = AttackAction{
-	Key:  ebiten.Key2,
-	Name: "Attack",
+	Key:      ebiten.Key2,
+	Name:     "Attack",
+	Delay:    10,
+	Cooldown: 60,
 }

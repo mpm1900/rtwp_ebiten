@@ -124,7 +124,7 @@ func blockObstacles(world donburi.World, start, goal dmath.Vec2) []qpathing.Grid
 	var blocked []qpathing.GridCoord
 
 	for other := range components.CollisionQuery.Iter(world) {
-		if !other.HasComponent(transform.Transform) {
+		if !other.HasComponent(transform.Transform) || other.HasComponent(components.Selected) {
 			continue
 		}
 

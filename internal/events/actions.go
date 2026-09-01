@@ -41,12 +41,17 @@ func HandleActionQueue(world donburi.World, source donburi.Entity) {
 		}
 
 		if !active_event.Started {
+			if !active_event.DelayStarted {
+				active_event.DelayStarted = true
+				actor.ActionDelay = active_event.Action.Data().Delay
+			}
 			if actor.ActionDelay > 0 || actor.ActionCooldown > 0 {
 				return
 			}
 
 			active_event.Started = true
-			active_event.Action.Handle(world, active_event.Source, active_event.Point)
+			active_event.Action.Handle(world, active_event.ActionEvent)
+			actor.ActionCooldown = active_event.Action.Data().Cooldown
 			continue
 		}
 
@@ -65,6 +70,8 @@ func handleClearActions(world donburi.World, _ struct{}) {
 		if ok {
 			action.Action.Cancel(world, selected.Entity())
 		}
+		actor.ActionDelay = 0
+		actor.ActionCooldown = 0
 		actor.ActionQueue.Clear()
 	}
 }

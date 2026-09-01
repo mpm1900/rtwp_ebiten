@@ -28,16 +28,16 @@ const (
 )
 
 type ActionEvent struct {
-	Action  Action
-	Source  donburi.Entity
-	Point   math.Vec2
-	Started bool
+	Action Action
+	Keys   []ebiten.Key
+	Point  math.Vec2
+	Source donburi.Entity
 }
 
 type Action interface {
 	Data() ActionData
-	Publish(w donburi.World, p math.Vec2, shift bool, ctrl bool)
-	Handle(donburi.World, donburi.Entity, math.Vec2)
+	Publish(donburi.World, ActionEvent)
+	Handle(donburi.World, ActionEvent)
 	IsComplete(donburi.World, donburi.Entity) bool
 	Cancel(donburi.World, donburi.Entity)
 	Valid(donburi.World, math.Vec2) bool
@@ -46,6 +46,8 @@ type Action interface {
 type ActionData struct {
 	Key           ebiten.Key
 	Name          string
+	Delay         int
+	Cooldown      int
 	Cursor        *ebiten.Image
 	CursorInvalid *ebiten.Image
 	CursorOffset  math.Vec2

@@ -48,10 +48,16 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 		if worldPoint, ok := components.MinimapWorldPoint(point); ok {
 			eventPoint = worldPoint
 		}
-		events.ActionClick.Publish(ecs.World, events.ActionClickEvent{
+		keys := []ebiten.Key{}
+		if ebiten.IsKeyPressed(ebiten.KeyShift) {
+			keys = append(keys, ebiten.KeyShift)
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyControl) {
+			keys = append(keys, ebiten.KeyControl)
+		}
+		events.ActionClick.Publish(ecs.World, components.ActionEvent{
 			Point: eventPoint,
-			Shift: ebiten.IsKeyPressed(ebiten.KeyShift),
-			Ctrl:  ebiten.IsKeyPressed(ebiten.KeyControl),
+			Keys:  keys,
 		})
 	}
 

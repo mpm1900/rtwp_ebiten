@@ -10,9 +10,11 @@ import (
 )
 
 type ActorData struct {
-	Player      donburi.Entity
-	Actions     []Action
-	ActionQueue util.Queue[ActionEvent]
+	Player         donburi.Entity
+	Actions        []Action
+	ActionQueue    util.Queue[ActionEvent]
+	ActionDelay    int
+	ActionCooldown int
 }
 
 func (a *ActorData) PeekActionQueue() (*ActionEvent, bool) {
@@ -30,6 +32,7 @@ func (a *ActorData) SetActionEvent(world donburi.World, event ActionEvent) bool 
 	}
 
 	event.Started = false
+	a.ActionDelay = 0
 	a.ActionQueue.Set(event)
 	return true
 }

@@ -16,7 +16,7 @@ type AttackAction struct {
 func (a AttackAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a AttackAction) Publish(world donburi.World, point math.Vec2, push bool) {
+func (a AttackAction) Publish(world donburi.World, point math.Vec2, push bool, ctrl bool) {
 	for selected := range components.Selected.Iter(world) {
 		actor := components.Actor.Get(selected)
 		event := components.ActionEvent{

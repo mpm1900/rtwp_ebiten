@@ -11,6 +11,7 @@ import (
 type ActionClickEvent struct {
 	Point math.Vec2
 	Shift bool
+	Ctrl  bool
 }
 
 var ActionClick = events.NewEventType[ActionClickEvent]()
@@ -29,5 +30,5 @@ func handleActionClick(world donburi.World, event ActionClickEvent) {
 		return
 	}
 
-	player.SelectedAction.Publish(world, event.Point, event.Shift)
+	player.SelectedAction.Publish(world, event.Point, event.Shift, event.Ctrl)
 }

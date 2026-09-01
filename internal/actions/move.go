@@ -18,20 +18,34 @@ type MoveAction struct {
 func (a MoveAction) Data() components.ActionData {
 	return a.ActionData
 }
-func (a MoveAction) Publish(world donburi.World, point math.Vec2, push bool) {
+func (a MoveAction) Publish(world donburi.World, point math.Vec2, shift bool, ctrl bool) {
+	first, ok := components.SelectedActorsQuery.First(world)
+	if !ok {
+		return
+	}
+
+	first_center := components.Center(first)
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
-		if push && pushActiveMove(world, selected, actor, point) {
+		p := point
+
+		if ctrl {
+			center := components.Center(selected)
+			delta := center.Sub(first_center)
+			p = point.Add(delta)
+		}
+
+		if shift && pushActiveMove(world, selected, actor, p) {
 			continue
 		}
 
 		event := components.ActionEvent{
 			Action: a,
 			Source: selected.Entity(),
-			Point:  point,
+			Point:  p,
 		}
 
-		if actor.QueueActionEvent(world, event, push) {
+		if actor.QueueActionEvent(world, event, shift) {
 			events.Actions.Publish(world, event)
 		}
 	}

@@ -51,6 +51,7 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 		events.ActionClick.Publish(ecs.World, events.ActionClickEvent{
 			Point: eventPoint,
 			Shift: ebiten.IsKeyPressed(ebiten.KeyShift),
+			Ctrl:  ebiten.IsKeyPressed(ebiten.KeyControl),
 		})
 	}
 
@@ -99,6 +100,7 @@ func HandleInput(ecs *ecs.ECS) {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		events.ClearSelected.Publish(ecs.World, struct{}{})
+		events.ClearActions.Publish(ecs.World, struct{}{})
 	}
 
 	handleActionInput(ecs)

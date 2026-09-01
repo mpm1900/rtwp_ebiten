@@ -36,7 +36,7 @@ type ActionEvent struct {
 
 type Action interface {
 	Data() ActionData
-	Publish(donburi.World, math.Vec2, bool)
+	Publish(w donburi.World, p math.Vec2, shift bool, ctrl bool)
 	Handle(donburi.World, donburi.Entity, math.Vec2)
 	IsComplete(donburi.World, donburi.Entity) bool
 	Cancel(donburi.World, donburi.Entity)

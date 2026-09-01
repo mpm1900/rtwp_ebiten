@@ -22,6 +22,7 @@ func ProcessEvents(world donburi.World) {
 	StartDrag.ProcessEvents(world)
 	UpdateDrag.ProcessEvents(world)
 	EndDrag.ProcessEvents(world)
+	ClearActions.ProcessEvents(world)
 	ClearSelected.ProcessEvents(world)
 	SelectInRect.ProcessEvents(world)
 	SelectAt.ProcessEvents(world)

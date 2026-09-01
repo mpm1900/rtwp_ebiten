@@ -8,9 +8,11 @@ import (
 )
 
 var Actions = events.NewEventType[components.ActionEvent]()
+var ClearActions = events.NewEventType[struct{}]()
 
 func InitActions(world donburi.World) {
 	Actions.Subscribe(world, handleActions)
+	ClearActions.Subscribe(world, handleClearActions)
 }
 
 func handleActions(world donburi.World, event components.ActionEvent) {
@@ -49,5 +51,16 @@ func HandleActionQueue(world donburi.World, source donburi.Entity) {
 		}
 
 		actor.NextActionEvent()
+	}
+}
+
+func handleClearActions(world donburi.World, _ struct{}) {
+	for selected := range components.SelectedActorsQuery.Iter(world) {
+		actor := components.Actor.Get(selected)
+		action, ok := actor.PeekActionQueue()
+		if ok {
+			action.Action.Cancel(world, selected.Entity())
+		}
+		actor.ActionQueue.Clear()
 	}
 }

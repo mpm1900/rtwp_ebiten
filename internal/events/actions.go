@@ -41,6 +41,10 @@ func HandleActionQueue(world donburi.World, source donburi.Entity) {
 		}
 
 		if !active_event.Started {
+			if actor.ActionDelay > 0 || actor.ActionCooldown > 0 {
+				return
+			}
+
 			active_event.Started = true
 			active_event.Action.Handle(world, active_event.Source, active_event.Point)
 			continue

@@ -14,10 +14,8 @@ type ActorData struct {
 	Player          donburi.Entity
 	Actions         []Action
 	ActionQueue     util.Queue[ActionEvent]
-	ActionDelay     int
 	ActionCooldowns map[ebiten.Key]int
 	ActionStarted   bool
-	DelayStarted    bool
 }
 
 func (a *ActorData) PeekActionQueue() (*ActionEvent, bool) {
@@ -34,18 +32,14 @@ func (a *ActorData) SetActionEvent(world donburi.World, event ActionEvent) bool 
 		active_event.Action.Cancel(world, active_event.Source)
 	}
 
-	a.DelayStarted = false
 	a.ActionStarted = false
-	a.ActionDelay = 0
 	a.ActionQueue.Set(event)
 	return true
 }
 func (a *ActorData) PushActionEvent(event ActionEvent) bool {
 	should_start := a.ActionQueue.Push(event)
 	if should_start {
-		a.DelayStarted = false
 		a.ActionStarted = false
-		a.ActionDelay = 0
 	}
 
 	return should_start
@@ -59,16 +53,10 @@ func (a *ActorData) QueueActionEvent(world donburi.World, event ActionEvent, pus
 }
 func (a *ActorData) NextActionEvent() (*ActionEvent, bool) {
 	next_event, ok := a.ActionQueue.Pop()
-	a.DelayStarted = false
 	a.ActionStarted = false
-	a.ActionDelay = 0
 	return next_event, ok
 }
 func (a *ActorData) TickActionTimers() {
-	if a.ActionDelay > 0 {
-		a.ActionDelay--
-	}
-
 	for action_key, cooldown := range a.ActionCooldowns {
 		cooldown--
 		if cooldown <= 0 {

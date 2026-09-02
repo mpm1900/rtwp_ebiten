@@ -7,6 +7,9 @@ import (
 var Delay = donburi.NewComponentType[int]()
 
 func WithDelay(entry *donburi.Entry, delay int) {
-	entry.AddComponent(Delay)
+	if !entry.HasComponent(Delay) {
+		entry.AddComponent(Delay)
+	}
+
 	Delay.SetValue(entry, delay)
 }

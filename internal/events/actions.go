@@ -44,11 +44,16 @@ func HandleActionQueue(world donburi.World, source donburi.Entity) {
 			if actor.CooldownForAction(active_event.Action) > 0 {
 				return
 			}
-			if !actor.DelayStarted {
-				actor.DelayStarted = true
-				actor.ActionDelay = active_event.Action.Data().Delay
-			}
-			if actor.ActionDelay > 0 {
+
+			if entry.HasComponent(components.Delay) {
+				delay := *components.Delay.Get(entry)
+				if delay > 0 {
+					return
+				}
+
+				entry.RemoveComponent(components.Delay)
+			} else if delay := active_event.Action.Data().Delay; delay > 0 {
+				components.WithDelay(entry, delay)
 				return
 			}
 
@@ -74,9 +79,10 @@ func handleClearActions(world donburi.World, _ struct{}) {
 		if ok {
 			action.Action.Cancel(world, selected.Entity())
 		}
-		actor.ActionDelay = 0
+		if selected.HasComponent(components.Delay) {
+			selected.RemoveComponent(components.Delay)
+		}
 		actor.ActionStarted = false
-		actor.DelayStarted = false
 		actor.ActionQueue.Clear()
 	}
 }

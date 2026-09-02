@@ -29,8 +29,10 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 			events.StartDrag.Publish(ecs.World, point)
 		}
 	}
+
+	player := components.GetPlayer(ecs.World)
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		if worldPoint, ok := components.MinimapWorldPoint(point); ok {
+		if worldPoint, ok := components.MinimapWorldPoint(point); ok && player.DragStart == nil {
 			events.LeftClickMinimap.Publish(ecs.World, worldPoint)
 		} else {
 			events.UpdateDrag.Publish(ecs.World, point)
@@ -39,8 +41,6 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		events.EndDrag.Publish(ecs.World, point)
 	}
-
-	player := components.GetPlayer(ecs.World)
 
 	// right
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {

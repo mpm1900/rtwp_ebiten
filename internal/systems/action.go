@@ -21,9 +21,12 @@ func TickActorActions(ecs *ecs.ECS) {
 			continue
 		}
 
-		was_blocked := actor.ActionDelay > 0 || actor.CooldownForAction(active_event.Action) > 0
+		was_blocked := actor.CooldownForAction(active_event.Action) > 0
 		actor.TickActionTimers()
-		if actor.ActionDelay > 0 || actor.CooldownForAction(active_event.Action) > 0 {
+		if entry.HasComponent(components.Delay) && *components.Delay.Get(entry) > 0 {
+			continue
+		}
+		if actor.CooldownForAction(active_event.Action) > 0 {
 			continue
 		}
 

@@ -27,9 +27,10 @@ func (m *MovementData) NextTarget() bool {
 }
 
 var Movement = donburi.NewComponentType[MovementData]()
-var MovementQuery = donburi.NewQuery(
+var MovementQuery = donburi.NewQuery(filter.And(
 	filter.Contains(Movement, transform.Transform),
-)
+	filter.Not(filter.Contains(Delay)),
+))
 
 func WithMovementTo(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
 	WithMovementList(entry, []dmath.Vec2{target}, stopDistance)

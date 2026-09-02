@@ -45,10 +45,7 @@ var ModifierQuery = donburi.NewOrderedQuery[ModifierData](
 
 func EachDependent(world donburi.World, modifier *donburi.Entry, yield func(*donburi.Entry)) {
 	if modifier.HasComponent(Targets) {
-		entities := Targets.Get(modifier)
-		for _, entity := range *entities {
-			yield(world.Entry(entity))
-		}
+		EachTarget(world, modifier, yield)
 	}
 
 	if modifier.HasComponent(TargetsWhere) {

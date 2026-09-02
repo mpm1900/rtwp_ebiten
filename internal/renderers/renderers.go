@@ -6,6 +6,7 @@ func Load(ecs *ecs.ECS) {
 	ecs.AddRenderer(RenderLayerBackground, RenderBackground)
 	ecs.AddRenderer(RenderLayerActors, RenderActors)
 	ecs.AddRenderer(RenderLayerEffects, RenderMovement)
+	ecs.AddRenderer(RenderLayerEffects, RenderTargets)
 	ecs.AddRenderer(RenderLayerEffects, RenderRanges)
 	ecs.AddRenderer(RenderLayerEffects, RenderEffect)
 	ecs.AddRenderer(RenderLayerSelection, RenderDragRect)

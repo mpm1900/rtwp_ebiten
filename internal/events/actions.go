@@ -62,6 +62,7 @@ func HandleActionQueue(world donburi.World, source donburi.Entity) {
 			return
 		}
 
+		active_event.Action.Cancel(world, active_event.Source)
 		actor.NextActionEvent()
 	}
 }

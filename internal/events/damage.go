@@ -25,7 +25,7 @@ func damageAt(world donburi.World, event DamageEvent) {
 		damage := components.Damage.Get(entry)
 		stats := components.Stats.Get(entry)
 		if *damage >= stats.Stats[components.StatHealth] {
-			world.Remove(entry.Entity())
+			ActorDeath.Publish(world, entry.Entity())
 		}
 	}
 }

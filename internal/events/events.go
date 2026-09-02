@@ -10,6 +10,7 @@ func Load(world donburi.World) {
 	InitMinimap(world)
 	InitDamage(world)
 	InitActions(world)
+	InitDeath(world)
 }
 
 func ProcessEvents(world donburi.World) {
@@ -29,4 +30,7 @@ func ProcessEvents(world donburi.World) {
 	LeftClickMinimap.ProcessEvents(world)
 	DamageAt.ProcessEvents(world)
 	Actions.ProcessEvents(world)
+
+	// post events
+	ActorDeath.ProcessEvents(world)
 }

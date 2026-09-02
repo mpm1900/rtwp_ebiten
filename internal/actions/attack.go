@@ -3,6 +3,7 @@ package actions
 import (
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/events"
+	"rtwp_ebitengine/internal/util"
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -33,6 +34,16 @@ func (a AttackAction) Publish(world donburi.World, event components.ActionEvent)
 	}
 }
 func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) {
+	entry, ok := components.FirstActorAtPoint(world, util.ToPoint(event.Point))
+	if !ok {
+		return
+	}
+	if !world.Valid(event.Source) {
+		return
+	}
+
+	source := world.Entry(event.Source)
+	components.WithTargets(source, entry.Entity())
 	events.DamageAt.Publish(world, events.DamageEvent{
 		Point:  event.Point,
 		Amount: 10,
@@ -40,9 +51,40 @@ func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) 
 }
 
 func (a AttackAction) IsComplete(world donburi.World, source donburi.Entity) bool {
+	if !world.Valid(source) {
+		return true
+	}
+
+	entry := world.Entry(source)
+	if !entry.HasComponent(components.Actor) {
+		return true
+	}
+
+	actor := components.Actor.Get(entry)
+	if actor.CooldownForAction(a) > 0 {
+		return false
+	}
+
+	if actor.ActionQueueLen() == 1 {
+		if target, ok := components.FirstTarget(world, entry); ok {
+			actor.PushActionEvent(components.ActionEvent{
+				Action: a,
+				Source: source,
+				Point:  components.Center(target),
+			})
+		}
+	}
 	return true
 }
 func (a AttackAction) Cancel(world donburi.World, source donburi.Entity) {
+	if !world.Valid(source) {
+		return
+	}
+
+	entry := world.Entry(source)
+	if entry.HasComponent(components.Targets) {
+		entry.RemoveComponent(components.Targets)
+	}
 }
 func (a AttackAction) Valid(world donburi.World, point math.Vec2) bool {
 	return components.IsInWorld(point)

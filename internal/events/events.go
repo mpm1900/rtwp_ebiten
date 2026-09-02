@@ -5,9 +5,7 @@ import "github.com/yohamta/donburi"
 func Load(world donburi.World) {
 	InitInput(world)
 	InitDrag(world)
-	InitClearSelected(world)
-	InitSelectAt(world)
-	InitSelectInRect(world)
+	InitSelection(world)
 	InitCamera(world)
 	InitMinimap(world)
 	InitDamage(world)

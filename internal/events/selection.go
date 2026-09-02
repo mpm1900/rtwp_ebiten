@@ -1,6 +1,7 @@
 package events
 
 import (
+	"image"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/util"
 
@@ -9,10 +10,24 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
+var ClearSelected = events.NewEventType[struct{}]()
 var SelectAt = events.NewEventType[math.Vec2]()
+var SelectInRect = events.NewEventType[image.Rectangle]()
 
-func InitSelectAt(world donburi.World) {
+func InitSelection(world donburi.World) {
+	ClearSelected.Subscribe(world, clearSelected)
 	SelectAt.Subscribe(world, selectAt)
+	SelectInRect.Subscribe(world, selectInRect)
+}
+
+func clearSelected(world donburi.World, _ struct{}) {
+	player := components.GetPlayer(world)
+	player.ClearDrag()
+	player.SelectedAction = nil
+
+	for selected := range components.Selected.Iter(world) {
+		selected.RemoveComponent(components.Selected)
+	}
 }
 
 func selectActor(world donburi.World, entity donburi.Entity) {
@@ -40,4 +55,23 @@ func selectAt(world donburi.World, at math.Vec2) {
 		actor := components.Actor.Get(entry)
 		player.SelectedAction = actor.Actions[0]
 	})
+}
+
+func selectInRect(world donburi.World, rect image.Rectangle) {
+	clearSelected(world, struct{}{})
+	player := components.GetPlayer(world)
+	player.SelectedAction = nil
+
+	for entry := range components.ActorQuery.Iter(world) {
+		actorRect, ok := components.Rect(entry)
+		if !ok {
+			continue
+		}
+
+		if rect.Overlaps(actorRect) {
+			selectActor(world, entry.Entity())
+			actor := components.Actor.Get(entry)
+			player.SelectedAction = actor.Actions[0]
+		}
+	}
 }

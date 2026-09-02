@@ -103,7 +103,7 @@ var Move = MoveAction{
 
 func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2) bool {
 	active_event, ok := actor.PeekActionQueue()
-	if !ok || actor.ActionQueueLen() != 1 || !actor.StartedAction {
+	if !ok || actor.ActionQueueLen() != 1 || !actor.ActionStarted {
 		return false
 	}
 	if _, ok := active_event.Action.(MoveAction); !ok {

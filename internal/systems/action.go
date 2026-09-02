@@ -14,18 +14,20 @@ func TickActorActions(ecs *ecs.ECS) {
 
 	for entry := range components.ActorQuery.Iter(ecs.World) {
 		actor := components.Actor.Get(entry)
-		was_blocked := actor.ActionCooldown > 0 || actor.ActionDelay > 0
-		if actor.ActionCooldown > 0 {
-			actor.ActionCooldown--
-		}
-		if actor.ActionDelay > 0 {
-			actor.ActionDelay--
-		}
-		if actor.ActionCooldown > 0 || actor.ActionDelay > 0 {
+
+		active_event, ok := actor.PeekActionQueue()
+		if !ok {
+			actor.TickActionTimers()
 			continue
 		}
 
-		if was_blocked || !actor.StartedAction {
+		was_blocked := actor.ActionDelay > 0 || actor.CooldownForAction(active_event.Action) > 0
+		actor.TickActionTimers()
+		if actor.ActionDelay > 0 || actor.CooldownForAction(active_event.Action) > 0 {
+			continue
+		}
+
+		if was_blocked || !actor.ActionStarted {
 			events.HandleActionQueue(ecs.World, entry.Entity())
 		}
 	}

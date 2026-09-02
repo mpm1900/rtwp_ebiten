@@ -40,17 +40,7 @@ func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) 
 }
 
 func (a AttackAction) IsComplete(world donburi.World, source donburi.Entity) bool {
-	if !world.Valid(source) {
-		return true
-	}
-
-	entry := world.Entry(source)
-	if !entry.HasComponent(components.Actor) {
-		return true
-	}
-
-	actor := components.Actor.Get(entry)
-	return actor.ActionCooldown == 0
+	return true
 }
 func (a AttackAction) Cancel(world donburi.World, source donburi.Entity) {
 }

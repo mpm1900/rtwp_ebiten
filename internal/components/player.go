@@ -138,10 +138,14 @@ func (p *PlayerData) ClampCameraPosition() {
 	}
 }
 
+func NewPlayerCamera() *camera.Camera {
+	return camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1)
+}
+
 func NewPlayerData() PlayerData {
 	return PlayerData{
 		SelectedAction: nil,
-		Camera:         camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1),
+		Camera:         NewPlayerCamera(),
 		CameraDrag:     nil,
 		DragStart:      nil,
 		DragEnd:        nil,

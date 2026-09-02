@@ -4,6 +4,7 @@ import (
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/util"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/events"
 	"github.com/yohamta/donburi/features/math"
@@ -45,12 +46,19 @@ func endDrag(world donburi.World, point math.Vec2) {
 		return
 	}
 
+	shift := ebiten.IsKeyPressed(ebiten.KeyShift)
 	if player.DragStart.Distance(point) <= dragClickThreshold {
-		selectAt(world, player.ScreenToWorld(*player.DragStart))
+		selectAt(world, SelectAtEvent{
+			Point: player.ScreenToWorld(*player.DragStart),
+			Shift: shift,
+		})
 	} else {
 		start := player.ScreenToWorld(*player.DragStart)
 		end := player.ScreenToWorld(point)
-		selectInRect(world, util.ToRect(start, end))
+		selectInRect(world, SelectInRectEvent{
+			Rect:  util.ToRect(start, end),
+			Shift: shift,
+		})
 	}
 
 	player.ClearDrag()

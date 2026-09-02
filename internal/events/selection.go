@@ -10,9 +10,18 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
+type SelectAtEvent struct {
+	Point math.Vec2
+	Shift bool
+}
+type SelectInRectEvent struct {
+	Rect  image.Rectangle
+	Shift bool
+}
+
 var ClearSelected = events.NewEventType[struct{}]()
-var SelectAt = events.NewEventType[math.Vec2]()
-var SelectInRect = events.NewEventType[image.Rectangle]()
+var SelectAt = events.NewEventType[SelectAtEvent]()
+var SelectInRect = events.NewEventType[SelectInRectEvent]()
 
 func InitSelection(world donburi.World) {
 	ClearSelected.Subscribe(world, clearSelected)
@@ -45,20 +54,26 @@ func selectActor(world donburi.World, entity donburi.Entity) {
 	entry.AddComponent(components.Selected)
 }
 
-func selectAt(world donburi.World, at math.Vec2) {
-	clearSelected(world, struct{}{})
+func selectAt(world donburi.World, event SelectAtEvent) {
+	if !event.Shift {
+		clearSelected(world, struct{}{})
+	}
+
 	player := components.GetPlayer(world)
 	player.SelectedAction = nil
 
-	components.EachActorAtPoint(world, util.ToPoint(at), func(entry *donburi.Entry) {
+	components.EachActorAtPoint(world, util.ToPoint(event.Point), func(entry *donburi.Entry) {
 		selectActor(world, entry.Entity())
 		actor := components.Actor.Get(entry)
 		player.SelectedAction = actor.Actions[0]
 	})
 }
 
-func selectInRect(world donburi.World, rect image.Rectangle) {
-	clearSelected(world, struct{}{})
+func selectInRect(world donburi.World, event SelectInRectEvent) {
+	if !event.Shift {
+		clearSelected(world, struct{}{})
+	}
+
 	player := components.GetPlayer(world)
 	player.SelectedAction = nil
 
@@ -68,7 +83,7 @@ func selectInRect(world donburi.World, rect image.Rectangle) {
 			continue
 		}
 
-		if rect.Overlaps(actorRect) {
+		if event.Rect.Overlaps(actorRect) {
 			selectActor(world, entry.Entity())
 			actor := components.Actor.Get(entry)
 			player.SelectedAction = actor.Actions[0]

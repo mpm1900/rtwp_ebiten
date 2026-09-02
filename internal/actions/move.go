@@ -27,6 +27,7 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	ctrl := slices.Contains(event.Keys, ebiten.KeyControl)
+	loop := slices.Contains(event.Keys, ebiten.KeyZ)
 	first_center := components.Center(first)
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
@@ -38,7 +39,7 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 			point = point.Add(delta)
 		}
 
-		if shift && pushActiveMove(world, selected, actor, point) {
+		if shift && pushActiveMove(world, selected, actor, point, loop) {
 			continue
 		}
 
@@ -46,6 +47,7 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 			Action: a,
 			Source: selected.Entity(),
 			Point:  point,
+			Loop:   loop,
 		}
 
 		if actor.QueueActionEvent(world, event, shift) {
@@ -70,7 +72,7 @@ func (a MoveAction) Handle(world donburi.World, event components.ActionEvent) {
 		}
 		components.WithMovementFollow(world.Entry(event.Source), follow, components.DEFAULT_STOP_DISTANCE)
 	} else {
-		moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE)
+		moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE, event.Loop)
 	}
 
 }
@@ -101,7 +103,7 @@ var Move = MoveAction{
 	CursorOffset: math.NewVec2(-8, -8),
 }
 
-func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2) bool {
+func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2, loop bool) bool {
 	active_event, ok := actor.PeekActionQueue()
 	if !ok || actor.ActionQueueLen() != 1 || !actor.ActionStarted {
 		return false
@@ -113,10 +115,10 @@ func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components
 		return false
 	}
 
-	pushMoveTo(world, entry.Entity(), point, components.DEFAULT_STOP_DISTANCE)
+	pushMoveTo(world, entry.Entity(), point, components.DEFAULT_STOP_DISTANCE, loop)
 	return true
 }
-func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
+func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64, loop bool) {
 	entry := world.Entry(source)
 	start := components.Center(entry)
 
@@ -125,9 +127,9 @@ func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDis
 		path = []math.Vec2{point}
 	}
 
-	components.WithMovementList(entry, path, stopDistance)
+	components.WithMovementList(entry, path, stopDistance, loop)
 }
-func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64) {
+func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64, loop bool) {
 	entry := world.Entry(source)
 	start := components.Center(entry)
 	if entry.HasComponent(components.Movement) {
@@ -142,5 +144,5 @@ func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, sto
 		path = []math.Vec2{point}
 	}
 
-	components.PushMovementList(entry, path, stopDistance)
+	components.PushMovementList(entry, path, stopDistance, loop)
 }

@@ -12,9 +12,11 @@ const (
 )
 
 type MovementData struct {
-	Targets      []dmath.Vec2
-	Follow       donburi.Entity
-	StopDistance float64
+	Targets         []dmath.Vec2
+	TargetLoopIndex int
+	Loop            bool
+	Follow          donburi.Entity
+	StopDistance    float64
 }
 
 func (m *MovementData) NextTarget() bool {
@@ -22,6 +24,10 @@ func (m *MovementData) NextTarget() bool {
 		return false
 	}
 
+	if m.Loop && len(m.Targets) > 0 {
+		m.TargetLoopIndex = (m.TargetLoopIndex + 1) % len(m.Targets)
+		return false
+	}
 	m.Targets = m.Targets[1:]
 	return len(m.Targets) == 0
 }
@@ -33,7 +39,10 @@ var MovementQuery = donburi.NewQuery(filter.And(
 ))
 
 func WithMovementTo(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	WithMovementList(entry, []dmath.Vec2{target}, stopDistance)
+	WithMovementList(entry, []dmath.Vec2{target}, stopDistance, false)
+}
+func WithMovementLoopTo(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
+	WithMovementList(entry, []dmath.Vec2{target}, stopDistance, true)
 }
 
 func WithMovementFollow(entry *donburi.Entry, follow donburi.Entity, stopDistance float64) {
@@ -49,34 +58,48 @@ func WithMovementFollow(entry *donburi.Entry, follow donburi.Entity, stopDistanc
 }
 
 func PushMovement(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	PushMovementList(entry, []dmath.Vec2{target}, stopDistance)
+	PushMovementList(entry, []dmath.Vec2{target}, stopDistance, false)
+}
+func PushMovementLoop(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
+	PushMovementList(entry, []dmath.Vec2{target}, stopDistance, true)
 }
 
-func PushMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64) {
+func PushMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64, loop bool) {
 	if len(targets) == 0 {
 		return
 	}
 	if !entry.HasComponent(Movement) {
-		WithMovementList(entry, targets, stopDistance)
+		WithMovementList(entry, targets, stopDistance, loop)
 		return
 	}
 
 	movement := Movement.Get(entry)
 	movement.Follow = donburi.Null
+	movement.Loop = movement.Loop || loop
 	movement.StopDistance = stopDistance
 	movement.Targets = append(movement.Targets, targets...)
 }
 
-func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64) {
+func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64, loop bool) {
 	if !entry.HasComponent(Movement) {
 		entry.AddComponent(Movement)
 	}
 
 	Movement.SetValue(entry, MovementData{
-		Follow:       donburi.Null,
-		Targets:      targets,
-		StopDistance: stopDistance,
+		Follow:          donburi.Null,
+		Targets:         targets,
+		StopDistance:    stopDistance,
+		Loop:            loop,
+		TargetLoopIndex: initialTargetLoopIndex(targets, loop),
 	})
+}
+
+func initialTargetLoopIndex(targets []dmath.Vec2, loop bool) int {
+	if loop && len(targets) > 1 {
+		return 1
+	}
+
+	return 0
 }
 
 func GetSpeed(entry *donburi.Entry) float64 {
@@ -108,5 +131,13 @@ func MovementPosition(world donburi.World, movement *MovementData) (dmath.Vec2, 
 		return dmath.Vec2{}, false
 	}
 
-	return ClampWorldPosition(movement.Targets[0]), true
+	target := movement.Targets[0]
+	if movement.Loop {
+		if movement.TargetLoopIndex >= len(movement.Targets) {
+			movement.TargetLoopIndex = 0
+		}
+		target = movement.Targets[movement.TargetLoopIndex]
+	}
+
+	return ClampWorldPosition(target), true
 }

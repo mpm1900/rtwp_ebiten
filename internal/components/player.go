@@ -30,6 +30,7 @@ const (
 type ActionEvent struct {
 	Action Action
 	Keys   []ebiten.Key
+	Loop   bool
 	Point  math.Vec2
 	Source donburi.Entity
 }

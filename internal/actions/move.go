@@ -29,6 +29,7 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 	ctrl := slices.Contains(event.Keys, ebiten.KeyControl)
 	loop := slices.Contains(event.Keys, ebiten.KeyZ)
 	first_center := components.Center(first)
+	_, interact := components.FirstInteractableAtPoint(world, util.ToPoint(event.Point))
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
 		point := event.Point
@@ -50,6 +51,10 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 			Loop:   loop,
 		}
 
+		if interact {
+			event.Action = Interact
+		}
+
 		if actor.QueueActionEvent(world, event, shift) {
 			events.Actions.Publish(world, event)
 		}
@@ -64,17 +69,22 @@ func (a MoveAction) Handle(world donburi.World, event components.ActionEvent) {
 		return
 	}
 
-	f, ok := components.FirstActorAtPoint(world, util.ToPoint(event.Point))
-	if ok {
+	stop_distance := components.DEFAULT_STOP_DISTANCE
+	point := util.ToPoint(event.Point)
+	if f, ok := components.FirstActorAtPoint(world, point); ok {
 		follow := f.Entity()
 		if follow == event.Source {
 			return
 		}
-		components.WithMovementFollow(world.Entry(event.Source), follow, components.DEFAULT_STOP_DISTANCE)
-	} else {
-		moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE, event.Loop)
+		components.WithMovementFollow(world.Entry(event.Source), follow, stop_distance)
+		return
 	}
 
+	if _, ok := components.FirstColliderAtPoint(world, point); ok {
+		return
+	}
+
+	moveTo(world, event.Source, event.Point, stop_distance, event.Loop)
 }
 func (a MoveAction) IsComplete(world donburi.World, source donburi.Entity) bool {
 	if !world.Valid(source) {

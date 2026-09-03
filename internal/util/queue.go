@@ -22,6 +22,15 @@ func (q *Queue[T]) Set(item T) {
 	q.items = append(q.items, item)
 }
 
+func (q *Queue[T]) Replace(item T) bool {
+	if q.Len() == 0 {
+		return false
+	}
+
+	q.items[q.head] = item
+	return true
+}
+
 func (q *Queue[T]) Push(item T) bool {
 	was_empty := q.Len() == 0
 	if was_empty && q.head > 0 {
@@ -31,6 +40,18 @@ func (q *Queue[T]) Push(item T) bool {
 
 	q.items = append(q.items, item)
 	return was_empty
+}
+
+func (q *Queue[T]) InsertNext(item T) bool {
+	if q.Len() == 0 {
+		return q.Push(item)
+	}
+
+	insert_at := q.head + 1
+	q.items = append(q.items, item)
+	copy(q.items[insert_at+1:], q.items[insert_at:len(q.items)-1])
+	q.items[insert_at] = item
+	return false
 }
 
 func (q *Queue[T]) Pop() (*T, bool) {

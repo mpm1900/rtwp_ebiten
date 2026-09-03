@@ -12,8 +12,10 @@ import (
 )
 
 var CursorPointerImage *ebiten.Image
+var CursorInvalidImage *ebiten.Image
 var CursorMoveImage *ebiten.Image
 var CursorAttackImage *ebiten.Image
+var CursorInteractImage *ebiten.Image
 
 var ActorImage *ebiten.Image
 var BlueSquareImage *ebiten.Image
@@ -25,7 +27,10 @@ var YolkFontSource *text.GoTextFaceSource
 func MustLoadAssets() {
 	var err error
 	CursorPointerImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-pointer.png")
-	CursorMoveImage, _, err = ebitenutil.NewImageFromFile("assets/images/cursor-move.png")
+	CursorInvalidImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-invalid.png")
+	CursorMoveImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-move.png")
+	CursorAttackImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-attack.png")
+	CursorInteractImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-interact.png")
 	ActorImage = ebiten.NewImage(24, 24)
 	ActorImage.Fill(ColorActor)
 	BlueSquareImage = ebiten.NewImage(24, 24)

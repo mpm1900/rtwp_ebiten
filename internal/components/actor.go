@@ -36,8 +36,24 @@ func (a *ActorData) SetActionEvent(world donburi.World, event ActionEvent) bool 
 	a.ActionQueue.Set(event)
 	return true
 }
+func (a *ActorData) ReplaceActionEvent(event ActionEvent) bool {
+	if !a.ActionQueue.Replace(event) {
+		return a.PushActionEvent(event)
+	}
+
+	a.ActionStarted = false
+	return true
+}
 func (a *ActorData) PushActionEvent(event ActionEvent) bool {
 	should_start := a.ActionQueue.Push(event)
+	if should_start {
+		a.ActionStarted = false
+	}
+
+	return should_start
+}
+func (a *ActorData) PushNextActionEvent(event ActionEvent) bool {
+	should_start := a.ActionQueue.InsertNext(event)
 	if should_start {
 		a.ActionStarted = false
 	}

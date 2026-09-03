@@ -57,9 +57,10 @@ func HandleActionQueue(world donburi.World, source donburi.Entity) {
 				return
 			}
 
+			event := *active_event
 			actor.ActionStarted = true
-			active_event.Action.Handle(world, *active_event)
-			actor.SetActionCooldown(active_event.Action)
+			event.Action.Handle(world, event)
+			actor.SetActionCooldown(event.Action)
 			continue
 		}
 

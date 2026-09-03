@@ -1,6 +1,8 @@
 package components
 
 import (
+	"image"
+
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
@@ -45,4 +47,19 @@ func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 	}
 
 	return max(stopDistance, scale.Magnitude())
+}
+
+func FirstColliderAtPoint(world donburi.World, point image.Point) (*donburi.Entry, bool) {
+	for entry := range CollisionQuery.Iter(world) {
+		bounds, ok := Rect(entry)
+		if !ok {
+			continue
+		}
+
+		if point.In(bounds) {
+			return entry, true
+		}
+	}
+
+	return nil, false
 }

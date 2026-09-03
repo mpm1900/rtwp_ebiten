@@ -35,6 +35,9 @@ func main() {
 	components.WithDelay(g.ECS.World.Entry(speed_up), 60)
 	components.WithRange(g.ECS.World.Entry(speed_up), 120)
 	components.WithCollision(g.ECS.World.Entry(speed_up))
+	components.WitherInteractable(g.ECS.World.Entry(speed_up), components.InteractableData{
+		TargetOffset: math.NewVec2(0, -24),
+	})
 
 	ebiten.SetWindowSize(components.SCREEN_WIDTH, components.SCREEN_HEIGHT)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)

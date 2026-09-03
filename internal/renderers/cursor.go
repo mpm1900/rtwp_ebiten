@@ -34,7 +34,7 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 		isValid = player.SelectedAction.Valid(ecs.World, player.ScreenToWorld(mousePoint))
 	}
 
-	cursorImage := assets.CursorPointerImage
+	var cursorImage *ebiten.Image
 	if isValid {
 		if data.Cursor != nil {
 			cursorImage = data.Cursor
@@ -43,7 +43,9 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 		cursorImage = data.CursorInvalid
 	}
 
-	options := *base
-	options.GeoM.Translate(data.CursorOffset.X, data.CursorOffset.Y)
-	screen.DrawImage(cursorImage, &options)
+	if cursorImage != nil {
+		options := *base
+		options.GeoM.Translate(data.CursorOffset.X, data.CursorOffset.Y)
+		screen.DrawImage(cursorImage, &options)
+	}
 }

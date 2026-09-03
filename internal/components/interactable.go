@@ -11,6 +11,7 @@ import (
 
 type InteractableData struct {
 	TargetOffset math.Vec2
+	OnInteract   func(world donburi.World, entity donburi.Entity)
 }
 
 func (i InteractableData) Point(p math.Vec2) math.Vec2 {

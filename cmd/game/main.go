@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/components"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
 )
 
@@ -37,6 +39,9 @@ func main() {
 	components.WithCollision(g.ECS.World.Entry(speed_up))
 	components.WitherInteractable(g.ECS.World.Entry(speed_up), components.InteractableData{
 		TargetOffset: math.NewVec2(0, -24),
+		OnInteract: func(world donburi.World, entity donburi.Entity) {
+			fmt.Println(entity, "did the thing")
+		},
 	})
 
 	ebiten.SetWindowSize(components.SCREEN_WIDTH, components.SCREEN_HEIGHT)

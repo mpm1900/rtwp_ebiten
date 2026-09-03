@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"fmt"
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/util"
@@ -57,7 +56,8 @@ func (a InteractAction) Handle(world donburi.World, event components.ActionEvent
 		return
 	}
 
-	interact_point := components.Interactable.Get(target).Point(components.Center(target))
+	entry := components.Interactable.Get(target)
+	interact_point := entry.Point(components.Center(target))
 	interact_range := components.DEFAULT_STOP_DISTANCE
 	if target.HasComponent(components.Range) {
 		interact_range = *components.Range.Get(target)
@@ -72,7 +72,7 @@ func (a InteractAction) Handle(world donburi.World, event components.ActionEvent
 		return
 	}
 
-	fmt.Println("dong the interact")
+	entry.OnInteract(world, event.Source)
 }
 func (a InteractAction) IsComplete(world donburi.World, source donburi.Entity) bool {
 	if !world.Valid(source) {

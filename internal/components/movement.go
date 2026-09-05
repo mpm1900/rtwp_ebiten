@@ -85,21 +85,53 @@ func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance f
 		entry.AddComponent(Movement)
 	}
 
+	current_center := Center(entry)
 	Movement.SetValue(entry, MovementData{
 		Follow:          donburi.Null,
 		Targets:         targets,
 		StopDistance:    stopDistance,
 		Loop:            loop,
-		TargetLoopIndex: initialTargetLoopIndex(targets, loop),
+		TargetLoopIndex: initialTargetLoopIndex(targets, loop, current_center, stopDistance),
 	})
 }
 
-func initialTargetLoopIndex(targets []dmath.Vec2, loop bool) int {
-	if loop && len(targets) > 1 {
+func initialTargetLoopIndex(targets []dmath.Vec2, loop bool, current dmath.Vec2, stopDistance float64) int {
+	if !loop || len(targets) == 0 {
+		return 0
+	}
+
+	if stopDistance <= 0 {
+		stopDistance = DEFAULT_STOP_DISTANCE
+	}
+	if targets[0].Distance(current) <= stopDistance && len(targets) > 1 {
 		return 1
 	}
 
 	return 0
+}
+
+func LoopOriginForEntry(entry *donburi.Entry) dmath.Vec2 {
+	if entry.HasComponent(Movement) {
+		movement := Movement.Get(entry)
+		if movement.Loop && len(movement.Targets) > 0 {
+			return movement.Targets[len(movement.Targets)-1]
+		}
+	}
+
+	return Center(entry)
+}
+
+func AppendLoopOrigin(targets []dmath.Vec2, origin dmath.Vec2) []dmath.Vec2 {
+	if len(targets) == 0 {
+		return []dmath.Vec2{origin}
+	}
+
+	last_target := targets[len(targets)-1]
+	if last_target.Distance(origin) <= DEFAULT_STOP_DISTANCE {
+		return targets
+	}
+
+	return append(targets, origin)
 }
 
 func GetSpeed(entry *donburi.Entry) float64 {

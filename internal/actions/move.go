@@ -28,16 +28,16 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	ctrl := slices.Contains(event.Keys, ebiten.KeyControl)
 	loop := slices.Contains(event.Keys, ebiten.KeyZ)
-	first_center := components.Center(first)
+
 	_, interact := components.FirstInteractableAtPoint(world, util.ToPoint(event.Point))
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
 		point := event.Point
 
 		if ctrl {
+			first_center := components.Center(first)
 			center := components.Center(selected)
-			delta := center.Sub(first_center)
-			point = point.Add(delta)
+			point = point.Add(center.Sub(first_center))
 		}
 
 		if shift && pushActiveMove(world, selected, actor, point, loop) {
@@ -136,6 +136,9 @@ func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDis
 	if !ok || len(path) == 0 {
 		path = []math.Vec2{point}
 	}
+	if loop {
+		path = components.AppendLoopOrigin(path, start)
+	}
 
 	components.WithMovementList(entry, path, stopDistance, loop)
 }
@@ -152,6 +155,9 @@ func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, sto
 	path, ok := pathing.FindPath(world, start, point)
 	if !ok || len(path) == 0 {
 		path = []math.Vec2{point}
+	}
+	if loop {
+		path = components.AppendLoopOrigin(path, components.LoopOriginForEntry(entry))
 	}
 
 	components.PushMovementList(entry, path, stopDistance, loop)

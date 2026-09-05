@@ -14,6 +14,22 @@ func WithTransform(entry *donburi.Entry, trans transform.TransformData) {
 	transform.Transform.SetValue(entry, trans)
 }
 
+func Position(entry *donburi.Entry) dmath.Vec2 {
+	return transform.Transform.Get(entry).LocalPosition
+}
+
+func SetPosition(entry *donburi.Entry, position dmath.Vec2) {
+	trans := transform.Transform.Get(entry)
+	trans.LocalPosition = position
+	transform.Transform.SetValue(entry, *trans)
+}
+
+func SetCenter(entry *donburi.Entry, center dmath.Vec2) {
+	trans := transform.Transform.Get(entry)
+	trans.LocalPosition = center.Sub(trans.LocalScale.DivScalar(2))
+	transform.Transform.SetValue(entry, *trans)
+}
+
 func Rect(entry *donburi.Entry) (image.Rectangle, bool) {
 	trans := transform.Transform.Get(entry)
 	return RectAt(entry, trans.LocalPosition)

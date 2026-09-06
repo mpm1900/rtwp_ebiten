@@ -2,13 +2,10 @@ package components
 
 import (
 	"image"
-	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
-
-	camera "github.com/melonfunction/ebiten-camera"
 )
 
 const (
@@ -22,17 +19,10 @@ const (
 	MINIMAP_SIZE    = 150
 	MINIMAP_PADDING = 12
 	MINIMAP_BORDER  = 2
-
-	MIN_CAMERA_ZOOM = 0.7
-	MAX_CAMERA_ZOOM = 2.0
 )
 
 type PlayerData struct {
 	SelectedAction *Action
-	Camera         *camera.Camera
-	CameraDrag     *math.Vec2
-	DragStart      *math.Vec2
-	DragEnd        *math.Vec2
 }
 
 func WorldRect() (minX, minY, maxX, maxY float64) {
@@ -82,112 +72,10 @@ func ClampWorldPosition(pos math.Vec2) math.Vec2 {
 	)
 }
 
-func (p *PlayerData) ClampCameraPosition() {
-	if p.Camera == nil {
-		return
-	}
-
-	scale := p.Camera.Scale
-	if scale <= 0 {
-		scale = 1.0
-	}
-
-	halfWidth := float64(p.Camera.Width) / 2.0 / scale
-	halfHeight := float64(p.Camera.Height) / 2.0 / scale
-	minX := halfWidth
-	minY := halfHeight
-	maxX := WORLD_BORDER*2 + WORLD_WIDTH - halfWidth
-	maxY := WORLD_BORDER*2 + WORLD_HEIGHT - halfHeight
-
-	if minX > maxX {
-		p.Camera.X = float64(WORLD_BORDER*2+WORLD_WIDTH) / 2.0
-	} else {
-		p.Camera.X = min(maxX, max(minX, p.Camera.X))
-	}
-
-	if minY > maxY {
-		p.Camera.Y = float64(WORLD_BORDER*2+WORLD_HEIGHT) / 2.0
-	} else {
-		p.Camera.Y = min(maxY, max(minY, p.Camera.Y))
-	}
-}
-
-func NewPlayerCamera() *camera.Camera {
-	return camera.NewCamera(SCREEN_WIDTH, SCREEN_HEIGHT, float64(WORLD_BORDER+SCREEN_WIDTH/2), float64(WORLD_BORDER+SCREEN_HEIGHT/2), 0, 1)
-}
-
 func NewPlayerData() PlayerData {
 	return PlayerData{
 		SelectedAction: nil,
-		Camera:         NewPlayerCamera(),
-		CameraDrag:     nil,
-		DragStart:      nil,
-		DragEnd:        nil,
 	}
-}
-
-func (p *PlayerData) StartDrag(point math.Vec2) {
-	p.DragStart = &point
-	p.DragEnd = nil
-}
-
-func (p *PlayerData) UpdateDrag(point math.Vec2) {
-	if p.DragStart == nil {
-		return
-	}
-
-	p.DragEnd = &point
-}
-func (p *PlayerData) ClearDrag() {
-	p.DragStart = nil
-	p.DragEnd = nil
-}
-
-func (p *PlayerData) StartCameraDrag(point math.Vec2) {
-	p.CameraDrag = &point
-}
-
-func (p *PlayerData) UpdateCameraDrag(point math.Vec2) (math.Vec2, bool) {
-	if p.CameraDrag == nil {
-		p.StartCameraDrag(point)
-		return math.Vec2{}, false
-	}
-
-	delta := point.Sub(*p.CameraDrag).MulScalar(2)
-	p.CameraDrag = &point
-	if delta.IsZero() {
-		return math.Vec2{}, false
-	}
-
-	return delta, true
-}
-
-func (p *PlayerData) ClearCameraDrag() {
-	p.CameraDrag = nil
-}
-
-func (p *PlayerData) ScreenToWorld(point math.Vec2) math.Vec2 {
-	if p.Camera == nil {
-		return point
-	}
-
-	x, y := p.Camera.GetWorldCoords(point.X, point.Y)
-	return math.NewVec2(x, y)
-}
-
-func (p *PlayerData) DragDistance() float64 {
-	if p.DragStart == nil || p.DragEnd == nil {
-		return 0
-	}
-
-	return p.DragStart.Distance(*p.DragEnd)
-}
-func (p *PlayerData) DragRect() image.Rectangle {
-	if p.DragStart == nil || p.DragEnd == nil {
-		return image.Rectangle{}
-	}
-
-	return util.ToRect(*p.DragStart, *p.DragEnd)
 }
 
 var Player = donburi.NewComponentType[PlayerData]()

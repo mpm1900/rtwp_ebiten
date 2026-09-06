@@ -11,8 +11,8 @@ import (
 )
 
 func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
-	player := components.GetPlayer(ecs.World)
-	if player == nil || player.Camera == nil {
+	camera := components.GetCamera(ecs.World)
+	if camera.Camera == nil {
 		return
 	}
 
@@ -56,18 +56,18 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 		)
 	}
 
-	scale := player.Camera.Scale
+	scale := camera.Camera.Scale
 	if scale <= 0 {
 		scale = 1.0
 	}
 
-	halfWidth := float64(player.Camera.Width) / 2.0 / scale
-	halfHeight := float64(player.Camera.Height) / 2.0 / scale
+	halfWidth := float64(camera.Camera.Width) / 2.0 / scale
+	halfHeight := float64(camera.Camera.Height) / 2.0 / scale
 
-	viewLeft := player.Camera.X - halfWidth
-	viewTop := player.Camera.Y - halfHeight
-	viewRight := player.Camera.X + halfWidth
-	viewBottom := player.Camera.Y + halfHeight
+	viewLeft := camera.Camera.X - halfWidth
+	viewTop := camera.Camera.Y - halfHeight
+	viewRight := camera.Camera.X + halfWidth
+	viewBottom := camera.Camera.Y + halfHeight
 
 	viewLeft = max(viewLeft, worldMinX)
 	viewTop = max(viewTop, worldMinY)

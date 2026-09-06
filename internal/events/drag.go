@@ -23,43 +23,36 @@ func InitDrag(world donburi.World) {
 }
 
 func startDrag(world donburi.World, point math.Vec2) {
-	player := components.GetPlayer(world)
-	if player == nil {
-		return
-	}
-
-	player.StartDrag(point)
+	cursor := components.GetCursor(world)
+	cursor.StartDrag(point)
 }
 
 func updateDrag(world donburi.World, point math.Vec2) {
-	player := components.GetPlayer(world)
-	if player == nil {
-		return
-	}
-
-	player.UpdateDrag(point)
+	cursor := components.GetCursor(world)
+	cursor.UpdateDrag(point)
 }
 
 func endDrag(world donburi.World, point math.Vec2) {
-	player := components.GetPlayer(world)
-	if player == nil || player.DragStart == nil {
+	cursor := components.GetCursor(world)
+	camera := components.GetCamera(world)
+	if cursor.DragStart == nil {
 		return
 	}
 
 	shift := ebiten.IsKeyPressed(ebiten.KeyShift)
-	if player.DragStart.Distance(point) <= dragClickThreshold {
+	if cursor.DragStart.Distance(point) <= dragClickThreshold {
 		selectAt(world, SelectAtEvent{
-			Point: player.ScreenToWorld(*player.DragStart),
+			Point: camera.ScreenToWorld(*cursor.DragStart),
 			Shift: shift,
 		})
 	} else {
-		start := player.ScreenToWorld(*player.DragStart)
-		end := player.ScreenToWorld(point)
+		start := camera.ScreenToWorld(*cursor.DragStart)
+		end := camera.ScreenToWorld(point)
 		selectInRect(world, SelectInRectEvent{
 			Rect:  util.ToRect(start, end),
 			Shift: shift,
 		})
 	}
 
-	player.ClearDrag()
+	cursor.ClearDrag()
 }

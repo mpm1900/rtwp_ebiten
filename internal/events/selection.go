@@ -29,8 +29,9 @@ func InitSelection(world donburi.World) {
 }
 
 func clearSelected(world donburi.World, _ struct{}) {
+	cursor := components.GetCursor(world)
 	player := components.GetPlayer(world)
-	player.ClearDrag()
+	cursor.ClearDrag()
 	player.SelectedAction = nil
 
 	for selected := range components.Selected.Iter(world) {

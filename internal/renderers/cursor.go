@@ -13,13 +13,15 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 	x, y := ebiten.CursorPosition()
 	base := &ebiten.DrawImageOptions{}
 	base.GeoM.Translate(float64(x), float64(y))
+	cursor := components.GetCursor(ecs.World)
+	camera := components.GetCamera(ecs.World)
 	player := components.GetPlayer(ecs.World)
 
-	if player.CameraDrag != nil {
+	if camera.CameraDrag != nil {
 		return
 	}
 
-	if player.SelectedAction == nil || player.DragEnd != nil {
+	if player.SelectedAction == nil || cursor.DragEnd != nil {
 		screen.DrawImage(assets.CursorPointerImage, base)
 		return
 	}
@@ -31,7 +33,7 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 	if worldPoint, ok := components.MinimapWorldPoint(mousePoint); ok {
 		isValid = action.Valid(ecs.World, worldPoint)
 	} else {
-		isValid = action.Valid(ecs.World, player.ScreenToWorld(mousePoint))
+		isValid = action.Valid(ecs.World, camera.ScreenToWorld(mousePoint))
 	}
 
 	var cursorImage *ebiten.Image

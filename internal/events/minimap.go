@@ -15,9 +15,9 @@ func InitMinimap(world donburi.World) {
 }
 
 func leftClickMinimap(world donburi.World, point math.Vec2) {
-	player := components.GetPlayer(world)
-	if player != nil && player.Camera != nil {
-		player.Camera.SetPosition(point.X, point.Y)
-		player.ClampCameraPosition()
+	camera := components.GetCamera(world)
+	if camera.Camera != nil {
+		camera.Camera.SetPosition(point.X, point.Y)
+		camera.ClampCameraPosition()
 	}
 }

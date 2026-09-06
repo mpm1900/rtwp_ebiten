@@ -11,11 +11,11 @@ import (
 )
 
 func RenderDragRect(ecs *ecs.ECS, screen *ebiten.Image) {
-	player := components.GetPlayer(ecs.World)
-	if player.DragStart == nil || player.DragEnd == nil {
+	cursor := components.GetCursor(ecs.World)
+	if cursor.DragStart == nil || cursor.DragEnd == nil {
 		return
 	}
-	rect := util.ToRect(*player.DragStart, *player.DragEnd)
+	rect := util.ToRect(*cursor.DragStart, *cursor.DragEnd)
 	borderColor := color.RGBA{0, 0xff, 0, 0xff}
 	vx := float32(rect.Min.X)
 	vy := float32(rect.Min.Y)

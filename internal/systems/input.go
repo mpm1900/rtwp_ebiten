@@ -30,9 +30,10 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 		}
 	}
 
-	player := components.GetPlayer(ecs.World)
+	cursor := components.GetCursor(ecs.World)
+	camera := components.GetCamera(ecs.World)
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		if worldPoint, ok := components.MinimapWorldPoint(point); ok && player.DragStart == nil {
+		if worldPoint, ok := components.MinimapWorldPoint(point); ok && cursor.DragStart == nil {
 			events.LeftClickMinimap.Publish(ecs.World, worldPoint)
 		} else {
 			events.UpdateDrag.Publish(ecs.World, point)
@@ -44,7 +45,7 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 
 	// right
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-		eventPoint := player.ScreenToWorld(point)
+		eventPoint := camera.ScreenToWorld(point)
 		if worldPoint, ok := components.MinimapWorldPoint(point); ok {
 			eventPoint = worldPoint
 		}
@@ -66,16 +67,16 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 
 	// middle
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonMiddle) {
-		player.StartCameraDrag(point)
+		camera.StartCameraDrag(point)
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) {
-		delta, ok := player.UpdateCameraDrag(point)
+		delta, ok := camera.UpdateCameraDrag(point)
 		if ok {
 			events.UpdateCamera.Publish(ecs.World, delta)
 		}
 	}
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonMiddle) {
-		player.ClearCameraDrag()
+		camera.ClearCameraDrag()
 	}
 }
 

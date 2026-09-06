@@ -51,14 +51,14 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(assets.ColorBackground)
-	player := components.GetPlayer(g.ECS.World)
-	camera_surface := player.Camera.Surface
+	camera := components.GetCamera(g.ECS.World)
+	camera_surface := camera.Camera.Surface
 	camera_surface.Fill(color.Black)
 
 	g.ECS.DrawLayer(renderers.RenderLayerBackground, camera_surface)
 	g.ECS.DrawLayer(renderers.RenderLayerEffects, camera_surface)
 	g.ECS.DrawLayer(renderers.RenderLayerActors, camera_surface)
-	player.Camera.Blit(screen)
+	camera.Camera.Blit(screen)
 
 	g.ECS.DrawLayer(renderers.RenderLayerSelection, screen)
 	g.ECS.DrawLayer(renderers.RenderLayerUI, screen)

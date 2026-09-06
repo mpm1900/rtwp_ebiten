@@ -12,16 +12,16 @@ type cameraView struct {
 }
 
 func newCameraView(ecs *ecs.ECS) cameraView {
-	player := components.GetPlayer(ecs.World)
-	if player == nil || player.Camera == nil {
+	c := components.GetCamera(ecs.World)
+	if c.Camera == nil {
 		return cameraView{}
 	}
 
-	rect := player.Camera.Surface.Bounds()
+	rect := c.Camera.Surface.Bounds()
 	return cameraView{
 		offset: math.NewVec2(
-			float64(rect.Dx())/2-player.Camera.X,
-			float64(rect.Dy())/2-player.Camera.Y,
+			float64(rect.Dx())/2-c.Camera.X,
+			float64(rect.Dy())/2-c.Camera.Y,
 		),
 	}
 }

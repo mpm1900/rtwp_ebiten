@@ -88,6 +88,17 @@ func (c *CameraData) ScreenToWorld(point math.Vec2) math.Vec2 {
 	return math.NewVec2(x, y)
 }
 
+// CenterOn moves the camera to center on the given world point.
+func (c *CameraData) CenterOn(point math.Vec2) {
+	if c.Camera == nil {
+		return
+	}
+
+	c.Camera.X = point.X
+	c.Camera.Y = point.Y
+	c.ClampCameraPosition()
+}
+
 var Camera = donburi.NewComponentType[CameraData]()
 
 func WithCamera(entry *donburi.Entry, data CameraData) {

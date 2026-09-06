@@ -10,9 +10,6 @@ import (
 )
 
 func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
-	x, y := ebiten.CursorPosition()
-	base := &ebiten.DrawImageOptions{}
-	base.GeoM.Translate(float64(x), float64(y))
 	cursor := components.GetCursor(ecs.World)
 	camera := components.GetCamera(ecs.World)
 	player := components.GetPlayer(ecs.World)
@@ -20,6 +17,11 @@ func RenderCursor(ecs *ecs.ECS, screen *ebiten.Image) {
 	if camera.CameraDrag != nil {
 		return
 	}
+
+	x, y := ebiten.CursorPosition()
+
+	base := &ebiten.DrawImageOptions{}
+	base.GeoM.Translate(float64(x), float64(y))
 
 	if player.SelectedAction == nil || cursor.DragEnd != nil {
 		screen.DrawImage(assets.CursorPointerImage, base)

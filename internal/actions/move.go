@@ -24,10 +24,10 @@ func (b MoveBehavior) Publish(action *components.Action, world donburi.World, ev
 	loop := slices.Contains(event.Keys, ebiten.KeyZ)
 	first_anchor := moveAnchor(first, shift)
 
-	_, interact := components.FirstInteractableAtPoint(world, util.ToPoint(event.Point))
+	_, interact := components.FirstInteractableAtPoint(world, util.ToPoint(event.Position))
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
-		point := event.Point
+		point := event.Position
 
 		if ctrl {
 			anchor := moveAnchor(selected, shift)
@@ -39,10 +39,10 @@ func (b MoveBehavior) Publish(action *components.Action, world donburi.World, ev
 		}
 
 		event := components.ActionEvent{
-			Action: action,
-			Source: selected.Entity(),
-			Point:  point,
-			Loop:   loop,
+			Action:   action,
+			Source:   selected.Entity(),
+			Position: point,
+			Loop:     loop,
 		}
 
 		if interact {
@@ -53,7 +53,7 @@ func (b MoveBehavior) Publish(action *components.Action, world donburi.World, ev
 	}
 }
 func (b MoveBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
-	if !components.IsInWorld(event.Point) {
+	if !components.IsInWorld(event.Position) {
 		return
 	}
 
@@ -61,7 +61,7 @@ func (b MoveBehavior) Start(action *components.Action, world donburi.World, even
 		return
 	}
 
-	if f, ok := components.FirstActorAtPoint(world, event.Point); ok {
+	if f, ok := components.FirstActorAtPoint(world, event.Position); ok {
 		follow := f.Entity()
 		if follow == event.Source {
 			return
@@ -70,11 +70,11 @@ func (b MoveBehavior) Start(action *components.Action, world donburi.World, even
 		return
 	}
 
-	if _, ok := components.FirstColliderAtPoint(world, event.Point); ok {
+	if _, ok := components.FirstColliderAtPoint(world, event.Position); ok {
 		return
 	}
 
-	moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE, event.Loop)
+	setMoveTo(world, event.Source, event.Position, event.Loop)
 }
 func (b MoveBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
 	if !world.Valid(event.Source) {
@@ -108,6 +108,42 @@ var Move = &components.Action{
 	Behavior:     MoveBehavior{},
 }
 
+func moveAnchor(entry *donburi.Entry, queued bool) math.Vec2 {
+	if queued && entry.HasComponent(components.Movement) {
+		movement := components.Movement.Get(entry)
+		if last, ok := movement.Last(); ok {
+			return last
+		}
+	}
+
+	return components.Center(entry)
+}
+func getPath(world donburi.World, start, point math.Vec2) []math.Vec2 {
+	path, ok := pathing.FindPath(world, start, point)
+	if !ok || len(path) == 0 {
+		return []math.Vec2{}
+	}
+
+	return path
+}
+func setMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, loop bool) {
+	entry := world.Entry(source)
+	start := components.Center(entry)
+
+	path := getPath(world, start, point)
+	components.WithMovement(entry, components.NewPathMovement(entry, path, loop))
+}
+func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, loop bool) {
+	entry := world.Entry(source)
+	start := components.Center(entry)
+	movement := components.Movement.Get(entry)
+	if len(movement.Path) > 0 {
+		start, _ = movement.Last()
+	}
+
+	path := getPath(world, start, point)
+	components.PushMovementList(entry, path, movement.StopDistance, loop)
+}
 func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2, loop bool) bool {
 	active_event, ok := actor.PeekActionQueue()
 	if !ok || actor.ActionQueueLen() != 1 || !actor.ActionStarted {
@@ -120,46 +156,6 @@ func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components
 		return false
 	}
 
-	pushMoveTo(world, entry.Entity(), point, components.DEFAULT_STOP_DISTANCE, loop)
+	pushMoveTo(world, entry.Entity(), point, loop)
 	return true
-}
-
-func moveAnchor(entry *donburi.Entry, queued bool) math.Vec2 {
-	if queued && entry.HasComponent(components.Movement) {
-		movement := components.Movement.Get(entry)
-		if last, ok := movement.Last(); ok {
-			return last
-		}
-	}
-
-	return components.Center(entry)
-}
-
-func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64, loop bool) {
-	entry := world.Entry(source)
-	start := components.Center(entry)
-
-	path, ok := pathing.FindPath(world, start, point)
-	if !ok || len(path) == 0 {
-		path = []math.Vec2{point}
-	}
-
-	components.WithMovement(entry, components.NewPathMovement(entry, path, loop))
-}
-func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64, loop bool) {
-	entry := world.Entry(source)
-	start := components.Center(entry)
-	if entry.HasComponent(components.Movement) {
-		movement := components.Movement.Get(entry)
-		if len(movement.Path) > 0 {
-			start, _ = movement.Last()
-		}
-	}
-
-	path, ok := pathing.FindPath(world, start, point)
-	if !ok || len(path) == 0 {
-		path = []math.Vec2{point}
-	}
-
-	components.PushMovementList(entry, path, stopDistance, loop)
 }

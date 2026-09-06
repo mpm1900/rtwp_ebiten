@@ -59,8 +59,8 @@ func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 			keys = append(keys, ebiten.KeyZ)
 		}
 		events.ActionClick.Publish(ecs.World, components.ActionEvent{
-			Point: eventPoint,
-			Keys:  keys,
+			Position: eventPoint,
+			Keys:     keys,
 		})
 	}
 

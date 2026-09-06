@@ -7,11 +7,13 @@ import (
 )
 
 type ActionEvent struct {
-	Action *Action
-	Keys   []ebiten.Key
-	Loop   bool
-	Point  math.Vec2
-	Source donburi.Entity
+	Action           *Action
+	Keys             []ebiten.Key
+	Loop             bool
+	Position         math.Vec2
+	Source           donburi.Entity
+	OnActionStart    func()
+	OnActionComplete func()
 }
 
 type ActionStatus int
@@ -64,6 +66,10 @@ func (a *Action) Start(world donburi.World, event ActionEvent) {
 		return
 	}
 
+	if event.OnActionStart != nil {
+		event.OnActionStart()
+	}
+
 	a.Behavior.Start(a, world, event)
 }
 
@@ -78,6 +84,10 @@ func (a *Action) Update(world donburi.World, event ActionEvent) ActionStatus {
 func (a *Action) Cancel(world donburi.World, event ActionEvent) {
 	if a == nil || a.Behavior == nil {
 		return
+	}
+
+	if event.OnActionComplete != nil {
+		event.OnActionComplete()
 	}
 
 	a.Behavior.Cancel(a, world, event)

@@ -16,7 +16,7 @@ func (b InteractBehavior) Publish(action *components.Action, world donburi.World
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
-		point := event.Point
+		point := event.Position
 
 		// just add point to current path
 		if shift && pushActiveMove(world, selected, actor, point, false) {
@@ -24,17 +24,17 @@ func (b InteractBehavior) Publish(action *components.Action, world donburi.World
 		}
 
 		event := components.ActionEvent{
-			Action: action,
-			Source: selected.Entity(),
-			Point:  point,
-			Loop:   false,
+			Action:   action,
+			Source:   selected.Entity(),
+			Position: point,
+			Loop:     false,
 		}
 
 		actor.QueueActionEvent(world, event, shift)
 	}
 }
 func (b InteractBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
-	if !components.IsInWorld(event.Point) {
+	if !components.IsInWorld(event.Position) {
 		return
 	}
 
@@ -42,7 +42,7 @@ func (b InteractBehavior) Start(action *components.Action, world donburi.World, 
 		return
 	}
 
-	point := util.ToPoint(event.Point)
+	point := util.ToPoint(event.Position)
 	target, ok := components.FirstInteractableAtPoint(world, point)
 	if !ok {
 		return
@@ -59,7 +59,7 @@ func (b InteractBehavior) Start(action *components.Action, world donburi.World, 
 	source_center := components.Center(source)
 	distance := interact_point.Distance(source_center)
 	if distance > interact_range {
-		moveTo(world, event.Source, interact_point, components.DEFAULT_STOP_DISTANCE, false)
+		setMoveTo(world, event.Source, interact_point, false)
 		components.Actor.Get(source).PushNextActionEvent(event)
 		return
 	}

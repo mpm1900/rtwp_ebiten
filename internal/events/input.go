@@ -19,7 +19,7 @@ func handleActionClick(world donburi.World, event components.ActionEvent) {
 		return
 	}
 
-	if !player.SelectedAction.Valid(world, event.Point) {
+	if !player.SelectedAction.Valid(world, event.Position) {
 		return
 	}
 

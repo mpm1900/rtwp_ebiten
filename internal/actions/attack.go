@@ -17,9 +17,9 @@ func (b AttackBehavior) Publish(action *components.Action, world donburi.World, 
 	for selected := range components.Selected.Iter(world) {
 		actor := components.Actor.Get(selected)
 		action_event := components.ActionEvent{
-			Action: action,
-			Source: selected.Entity(),
-			Point:  event.Point,
+			Action:   action,
+			Source:   selected.Entity(),
+			Position: event.Position,
 		}
 
 		actor.QueueActionEvent(world, action_event, shift)
@@ -27,7 +27,7 @@ func (b AttackBehavior) Publish(action *components.Action, world donburi.World, 
 
 }
 func (b AttackBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
-	entry, ok := components.FirstActorAtPoint(world, event.Point)
+	entry, ok := components.FirstActorAtPoint(world, event.Position)
 	if !ok {
 		return
 	}
@@ -38,7 +38,7 @@ func (b AttackBehavior) Start(action *components.Action, world donburi.World, ev
 	source := world.Entry(event.Source)
 	components.WithTargets(source, entry.Entity())
 	events.DamageAt.Publish(world, events.DamageEvent{
-		Point:  event.Point,
+		Point:  event.Position,
 		Amount: 10,
 	})
 }
@@ -61,9 +61,9 @@ func (b AttackBehavior) Update(action *components.Action, world donburi.World, e
 	if actor.ActionQueueLen() == 1 {
 		if target, ok := components.FirstTarget(world, entry); ok {
 			actor.PushActionEvent(components.ActionEvent{
-				Action: action,
-				Source: event.Source,
-				Point:  components.Center(target),
+				Action:   action,
+				Source:   event.Source,
+				Position: components.Center(target),
 			})
 		}
 	}

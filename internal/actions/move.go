@@ -2,7 +2,6 @@ package actions
 
 import (
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/pathing"
 	"rtwp_ebitengine/internal/util"
 	"slices"
@@ -12,14 +11,9 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-type MoveAction struct {
-	components.ActionData
-}
+type MoveBehavior struct{}
 
-func (a MoveAction) Data() components.ActionData {
-	return a.ActionData
-}
-func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
+func (b MoveBehavior) Publish(action *components.Action, world donburi.World, event components.ActionEvent) {
 	first, ok := components.SelectedActorsQuery.First(world)
 	if !ok {
 		return
@@ -45,7 +39,7 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 		}
 
 		event := components.ActionEvent{
-			Action: a,
+			Action: action,
 			Source: selected.Entity(),
 			Point:  point,
 			Loop:   loop,
@@ -55,12 +49,10 @@ func (a MoveAction) Publish(world donburi.World, event components.ActionEvent) {
 			event.Action = Interact
 		}
 
-		if actor.QueueActionEvent(world, event, shift) {
-			events.Actions.Publish(world, event)
-		}
+		actor.QueueAndAdvance(world, selected, event, shift)
 	}
 }
-func (a MoveAction) Handle(world donburi.World, event components.ActionEvent) {
+func (b MoveBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
 	if !components.IsInWorld(event.Point) {
 		return
 	}
@@ -84,31 +76,36 @@ func (a MoveAction) Handle(world donburi.World, event components.ActionEvent) {
 
 	moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE, event.Loop)
 }
-func (a MoveAction) IsComplete(world donburi.World, source donburi.Entity) bool {
-	if !world.Valid(source) {
-		return true
+func (b MoveBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
+	if !world.Valid(event.Source) {
+		return components.ActionComplete
 	}
 
-	return !world.Entry(source).HasComponent(components.Movement)
+	if world.Entry(event.Source).HasComponent(components.Movement) {
+		return components.ActionRunning
+	}
+
+	return components.ActionComplete
 }
-func (a MoveAction) Cancel(world donburi.World, source donburi.Entity) {
-	if !world.Valid(source) {
+func (b MoveBehavior) Cancel(action *components.Action, world donburi.World, event components.ActionEvent) {
+	if !world.Valid(event.Source) {
 		return
 	}
 
-	entry := world.Entry(source)
+	entry := world.Entry(event.Source)
 	if entry.HasComponent(components.Movement) {
 		entry.RemoveComponent(components.Movement)
 	}
 }
-func (a MoveAction) Valid(world donburi.World, point math.Vec2) bool {
+func (b MoveBehavior) Valid(action *components.Action, world donburi.World, point math.Vec2) bool {
 	return components.IsInWorld(point)
 }
 
-var Move = MoveAction{
+var Move = &components.Action{
 	Key:          ebiten.Key1,
 	Name:         "Move",
 	CursorOffset: math.NewVec2(-8, -8),
+	Behavior:     MoveBehavior{},
 }
 
 func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2, loop bool) bool {
@@ -116,7 +113,7 @@ func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components
 	if !ok || actor.ActionQueueLen() != 1 || !actor.ActionStarted {
 		return false
 	}
-	if _, ok := active_event.Action.(MoveAction); !ok {
+	if active_event.Action != Move {
 		return false
 	}
 	if !entry.HasComponent(components.Movement) {

@@ -10,29 +10,22 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-type AttackAction struct {
-	components.ActionData
-}
+type AttackBehavior struct{}
 
-func (a AttackAction) Data() components.ActionData {
-	return a.ActionData
-}
-func (a AttackAction) Publish(world donburi.World, event components.ActionEvent) {
+func (b AttackBehavior) Publish(action *components.Action, world donburi.World, event components.ActionEvent) {
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	for selected := range components.Selected.Iter(world) {
 		actor := components.Actor.Get(selected)
 		action_event := components.ActionEvent{
-			Action: a,
+			Action: action,
 			Source: selected.Entity(),
 			Point:  event.Point,
 		}
 
-		if actor.QueueActionEvent(world, action_event, shift) {
-			events.Actions.Publish(world, action_event)
-		}
+		actor.QueueAndAdvance(world, selected, action_event, shift)
 	}
 }
-func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) {
+func (b AttackBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
 	entry, ok := components.FirstActorAtPoint(world, event.Point)
 	if !ok {
 		return
@@ -49,49 +42,50 @@ func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) 
 	})
 }
 
-func (a AttackAction) IsComplete(world donburi.World, source donburi.Entity) bool {
-	if !world.Valid(source) {
-		return true
+func (b AttackBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
+	if !world.Valid(event.Source) {
+		return components.ActionComplete
 	}
 
-	entry := world.Entry(source)
+	entry := world.Entry(event.Source)
 	if !entry.HasComponent(components.Actor) {
-		return true
+		return components.ActionComplete
 	}
 
 	actor := components.Actor.Get(entry)
-	if actor.CooldownForAction(a) > 0 {
-		return false
+	if actor.CooldownForAction(action) > 0 {
+		return components.ActionRunning
 	}
 
 	if actor.ActionQueueLen() == 1 {
 		if target, ok := components.FirstTarget(world, entry); ok {
 			actor.PushActionEvent(components.ActionEvent{
-				Action: a,
-				Source: source,
+				Action: action,
+				Source: event.Source,
 				Point:  components.Center(target),
 			})
 		}
 	}
-	return true
+	return components.ActionComplete
 }
-func (a AttackAction) Cancel(world donburi.World, source donburi.Entity) {
-	if !world.Valid(source) {
+func (b AttackBehavior) Cancel(action *components.Action, world donburi.World, event components.ActionEvent) {
+	if !world.Valid(event.Source) {
 		return
 	}
 
-	entry := world.Entry(source)
+	entry := world.Entry(event.Source)
 	if entry.HasComponent(components.Targets) {
 		entry.RemoveComponent(components.Targets)
 	}
 }
-func (a AttackAction) Valid(world donburi.World, point math.Vec2) bool {
+func (b AttackBehavior) Valid(action *components.Action, world donburi.World, point math.Vec2) bool {
 	return components.IsInWorld(point)
 }
 
-var Attack = AttackAction{
+var Attack = &components.Action{
 	Key:      ebiten.Key2,
 	Name:     "Attack",
 	Delay:    10,
 	Cooldown: 60,
+	Behavior: AttackBehavior{},
 }

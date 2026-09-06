@@ -17,7 +17,7 @@ func RenderActionText(ecs *ecs.ECS, screen *ebiten.Image) {
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(0, float64(components.SCREEN_HEIGHT)-24)
-	text.Draw(screen, player.SelectedAction.Data().Name, &text.GoTextFace{
+	text.Draw(screen, player.SelectedAction.Name, &text.GoTextFace{
 		Source: assets.YolkFontSource,
 		Size:   24,
 	}, op)

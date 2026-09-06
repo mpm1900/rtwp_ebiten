@@ -28,23 +28,27 @@ const (
 )
 
 type ActionEvent struct {
-	Action Action
+	Action *Action
 	Keys   []ebiten.Key
 	Loop   bool
 	Point  math.Vec2
 	Source donburi.Entity
 }
 
-type Action interface {
-	Data() ActionData
-	Publish(donburi.World, ActionEvent)
-	Handle(donburi.World, ActionEvent)
-	IsComplete(donburi.World, donburi.Entity) bool
-	Cancel(donburi.World, donburi.Entity)
-	Valid(donburi.World, math.Vec2) bool
+type ActionStatus int
+
+const (
+	ActionRunning ActionStatus = iota
+	ActionComplete
+	ActionCanceled
+)
+
+type Action struct {
+	ActionConfig
+	Behavior ActionBehavior
 }
 
-type ActionData struct {
+type ActionConfig struct {
 	Key           ebiten.Key
 	Name          string
 	Delay         int
@@ -54,8 +58,61 @@ type ActionData struct {
 	CursorOffset  math.Vec2
 }
 
+type ActionBehavior interface {
+	// Publish turns input into queued ActionEvents for selected actors.
+	Publish(*Action, donburi.World, ActionEvent)
+	// Start applies one-time setup for a queued ActionEvent.
+	Start(*Action, donburi.World, ActionEvent)
+	// Update advances an active ActionEvent and reports its lifecycle state.
+	Update(*Action, donburi.World, ActionEvent) ActionStatus
+	// Cancel cleans up when the action is interrupted or popped.
+	Cancel(*Action, donburi.World, ActionEvent)
+	// Valid checks whether input at point can use this action.
+	Valid(*Action, donburi.World, math.Vec2) bool
+}
+
+func (a *Action) Publish(world donburi.World, event ActionEvent) {
+	if a == nil || a.Behavior == nil {
+		return
+	}
+
+	a.Behavior.Publish(a, world, event)
+}
+
+func (a *Action) Start(world donburi.World, event ActionEvent) {
+	if a == nil || a.Behavior == nil {
+		return
+	}
+
+	a.Behavior.Start(a, world, event)
+}
+
+func (a *Action) Update(world donburi.World, event ActionEvent) ActionStatus {
+	if a == nil || a.Behavior == nil {
+		return ActionComplete
+	}
+
+	return a.Behavior.Update(a, world, event)
+}
+
+func (a *Action) Cancel(world donburi.World, event ActionEvent) {
+	if a == nil || a.Behavior == nil {
+		return
+	}
+
+	a.Behavior.Cancel(a, world, event)
+}
+
+func (a *Action) Valid(world donburi.World, point math.Vec2) bool {
+	if a == nil || a.Behavior == nil {
+		return false
+	}
+
+	return a.Behavior.Valid(a, world, point)
+}
+
 type PlayerData struct {
-	SelectedAction Action
+	SelectedAction *Action
 	Camera         *camera.Camera
 	CameraDrag     *math.Vec2
 	DragStart      *math.Vec2
@@ -220,10 +277,10 @@ func (p *PlayerData) DragRect() image.Rectangle {
 var Player = donburi.NewComponentType[PlayerData]()
 
 func GetPlayerEntity(world donburi.World) donburi.Entity {
-	entry, _ := Player.First(world)
+	entry := Player.MustFirst(world)
 	return entry.Entity()
 }
 func GetPlayer(world donburi.World) *PlayerData {
-	entry, _ := Player.First(world)
+	entry := Player.MustFirst(world)
 	return Player.Get(entry)
 }

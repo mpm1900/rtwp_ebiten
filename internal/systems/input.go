@@ -85,7 +85,7 @@ func handleActionInput(ecs *ecs.ECS) {
 		return
 	}
 
-	actions := map[components.Action]int{}
+	actions := map[*components.Action]int{}
 	count := 0
 
 	for selected := range components.SelectedActorsQuery.Iter(ecs.World) {
@@ -97,7 +97,7 @@ func handleActionInput(ecs *ecs.ECS) {
 	}
 
 	for action := range actions {
-		if inpututil.IsKeyJustPressed(action.Data().Key) && actions[action] == count {
+		if inpututil.IsKeyJustPressed(action.Key) && actions[action] == count {
 			player.SelectedAction = action
 		}
 	}

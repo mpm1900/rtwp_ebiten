@@ -2,7 +2,6 @@ package actions
 
 import (
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/events"
 	"rtwp_ebitengine/internal/util"
 	"slices"
 
@@ -11,14 +10,9 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-type InteractAction struct {
-	components.ActionData
-}
+type InteractBehavior struct{}
 
-func (a InteractAction) Data() components.ActionData {
-	return a.ActionData
-}
-func (a InteractAction) Publish(world donburi.World, event components.ActionEvent) {
+func (b InteractBehavior) Publish(action *components.Action, world donburi.World, event components.ActionEvent) {
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	for selected := range components.SelectedActorsQuery.Iter(world) {
 		actor := components.Actor.Get(selected)
@@ -30,18 +24,16 @@ func (a InteractAction) Publish(world donburi.World, event components.ActionEven
 		}
 
 		event := components.ActionEvent{
-			Action: a,
+			Action: action,
 			Source: selected.Entity(),
 			Point:  point,
 			Loop:   false,
 		}
 
-		if actor.QueueActionEvent(world, event, shift) {
-			events.Actions.Publish(world, event)
-		}
+		actor.QueueAndAdvance(world, selected, event, shift)
 	}
 }
-func (a InteractAction) Handle(world donburi.World, event components.ActionEvent) {
+func (b InteractBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
 	if !components.IsInWorld(event.Point) {
 		return
 	}
@@ -74,30 +66,35 @@ func (a InteractAction) Handle(world donburi.World, event components.ActionEvent
 
 	entry.OnInteract(world, event.Source)
 }
-func (a InteractAction) IsComplete(world donburi.World, source donburi.Entity) bool {
-	if !world.Valid(source) {
-		return true
+func (b InteractBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
+	if !world.Valid(event.Source) {
+		return components.ActionComplete
 	}
 
-	return !world.Entry(source).HasComponent(components.Movement) // interacting?
+	if world.Entry(event.Source).HasComponent(components.Movement) {
+		return components.ActionRunning
+	}
+
+	return components.ActionComplete
 }
-func (a InteractAction) Cancel(world donburi.World, source donburi.Entity) {
-	if !world.Valid(source) {
+func (b InteractBehavior) Cancel(action *components.Action, world donburi.World, event components.ActionEvent) {
+	if !world.Valid(event.Source) {
 		return
 	}
 
-	entry := world.Entry(source)
+	entry := world.Entry(event.Source)
 	if entry.HasComponent(components.Movement) {
 		entry.RemoveComponent(components.Movement)
 	}
 }
-func (a InteractAction) Valid(world donburi.World, point math.Vec2) bool {
+func (b InteractBehavior) Valid(action *components.Action, world donburi.World, point math.Vec2) bool {
 	_, ok := components.FirstInteractableAtPoint(world, util.ToPoint(point))
 	return ok
 
 }
 
-var Interact = InteractAction{
-	Key:  ebiten.Key1,
-	Name: "Interact",
+var Interact = &components.Action{
+	Key:      ebiten.Key1,
+	Name:     "Interact",
+	Behavior: InteractBehavior{},
 }

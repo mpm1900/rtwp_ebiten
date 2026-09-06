@@ -4,7 +4,6 @@ import (
 	"image"
 	"rtwp_ebitengine/internal/util"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
@@ -13,9 +12,9 @@ import (
 
 type ActorData struct {
 	Player          donburi.Entity
-	Actions         []Action
+	Actions         []*Action
 	ActionQueue     util.Queue[ActionEvent]
-	ActionCooldowns map[ebiten.Key]int
+	ActionCooldowns map[*Action]int
 	ActionStarted   bool
 }
 
@@ -30,7 +29,7 @@ func (a *ActorData) ActionQueueLen() int {
 }
 func (a *ActorData) SetActionEvent(world donburi.World, event ActionEvent) bool {
 	if active_event, ok := a.PeekActionQueue(); ok && a.ActionStarted {
-		active_event.Action.Cancel(world, active_event.Source)
+		active_event.Action.Cancel(world, *active_event)
 	}
 
 	a.ActionStarted = false
@@ -68,6 +67,14 @@ func (a *ActorData) QueueActionEvent(world donburi.World, event ActionEvent, pus
 
 	return a.SetActionEvent(world, event)
 }
+func (a *ActorData) QueueAndAdvance(world donburi.World, entry *donburi.Entry, event ActionEvent, push bool) bool {
+	if !a.QueueActionEvent(world, event, push) {
+		return false
+	}
+
+	AdvanceActionQueue(world, entry)
+	return true
+}
 func (a *ActorData) NextActionEvent() (*ActionEvent, bool) {
 	next_event, ok := a.ActionQueue.Pop()
 	a.ActionStarted = false
@@ -87,27 +94,27 @@ func (a *ActorData) TickActionTimers() {
 func (a *ActorData) HasActionCooldowns() bool {
 	return len(a.ActionCooldowns) > 0
 }
-func (a *ActorData) CooldownForAction(action Action) int {
+func (a *ActorData) CooldownForAction(action *Action) int {
 	if action == nil {
 		return 0
 	}
 
-	return a.ActionCooldowns[action.Data().Key]
+	return a.ActionCooldowns[action]
 }
-func (a *ActorData) SetActionCooldown(action Action) {
+func (a *ActorData) SetActionCooldown(action *Action) {
 	if action == nil {
 		return
 	}
 
-	cooldown := action.Data().Cooldown
+	cooldown := action.Cooldown
 	if cooldown <= 0 {
 		return
 	}
 	if a.ActionCooldowns == nil {
-		a.ActionCooldowns = map[ebiten.Key]int{}
+		a.ActionCooldowns = map[*Action]int{}
 	}
 
-	a.ActionCooldowns[action.Data().Key] = cooldown
+	a.ActionCooldowns[action] = cooldown
 }
 
 var Actor = donburi.NewComponentType[ActorData]()

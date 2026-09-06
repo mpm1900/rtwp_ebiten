@@ -12,7 +12,7 @@ import (
 func CreateActor(
 	ecs *ecs.ECS,
 	position math.Vec2,
-	actions []components.Action,
+	actions []*components.Action,
 	player donburi.Entity,
 ) donburi.Entity {
 	entity := ecs.Create(ActorLayer, components.Actor, components.Stats)

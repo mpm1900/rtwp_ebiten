@@ -16,11 +16,11 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var amount = 10
+var amount = 30
 
 func main() {
 	g := game.NewGame()
-	actor_actions := []components.Action{
+	actor_actions := []*components.Action{
 		actions.Move,
 		actions.Attack,
 	}

@@ -29,7 +29,6 @@ func ProcessEvents(world donburi.World) {
 	ZoomCamera.ProcessEvents(world)
 	LeftClickMinimap.ProcessEvents(world)
 	DamageAt.ProcessEvents(world)
-	Actions.ProcessEvents(world)
 
 	// post events
 	ActorDeath.ProcessEvents(world)

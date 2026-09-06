@@ -1,14 +1,16 @@
 package systems
 
 import (
+	"math"
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/events"
 
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
+	dmath "github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/transform"
 )
 
-func MoveEntities(ecs *ecs.ECS) {
+func HandleMovement(ecs *ecs.ECS) {
 	completed := []donburi.Entity{}
 	if ecs.IsPaused() {
 		return
@@ -26,8 +28,7 @@ func MoveEntities(ecs *ecs.ECS) {
 			}
 
 			distance = movement.TargetDistance(ecs.World, entry)
-			result := MoveWithCollision(ecs.World, entry, delta)
-			if result.Collided && distance <= components.CollisionStopDistance(entry, movement.StopDistance) {
+			if moveWithCollision(ecs.World, entry, delta) && distance <= components.CollisionStopDistance(entry, movement.StopDistance) {
 				if movement.Next() {
 					completed = append(completed, entry.Entity())
 				}
@@ -50,10 +51,44 @@ func MoveEntities(ecs *ecs.ECS) {
 		if entry.HasComponent(components.Movement) {
 			entry.RemoveComponent(components.Movement)
 		}
-		if entry.HasComponent(components.Actor) {
-			events.HandleActionQueue(ecs.World, entity)
+	}
+}
+
+func moveWithCollision(world donburi.World, entry *donburi.Entry, delta dmath.Vec2) bool {
+	if delta.IsZero() {
+		return false
+	}
+
+	trans := transform.Transform.Get(entry)
+	start_pos := trans.LocalPosition
+	trans.LocalRotation = dmath.ToDegrees(math.Atan2(delta.Y, delta.X))
+
+	full_position := components.ClampWorldPosition(start_pos.Add(delta))
+	if isFreeAt(world, entry, full_position) {
+		trans.LocalPosition = full_position
+		return false
+	}
+
+	position := start_pos
+	axes := [2]dmath.Vec2{{X: delta.X}, {Y: delta.Y}}
+	for _, axis_delta := range axes {
+		if axis_delta.IsZero() {
+			continue
+		}
+
+		next_position := components.ClampWorldPosition(position.Add(axis_delta))
+		if isFreeAt(world, entry, next_position) {
+			position = next_position
 		}
 	}
+
+	trans.LocalPosition = position
+	return true
+}
+
+func isFreeAt(world donburi.World, entry *donburi.Entry, position dmath.Vec2) bool {
+	_, colliding := components.CollidesAt(world, entry, position)
+	return !colliding
 }
 
 func getSpeed(entry *donburi.Entry) float64 {

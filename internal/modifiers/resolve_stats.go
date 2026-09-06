@@ -1,4 +1,4 @@
-package effects
+package modifiers
 
 import (
 	"rtwp_ebitengine/internal/components"
@@ -10,14 +10,12 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-type ResolveStats struct {
-	components.ModifierData
-}
+type ResolveStatsBehavior struct{}
 
-func (e ResolveStats) Active(world donburi.World, modifier *donburi.Entry) bool {
+func (b ResolveStatsBehavior) Active(mod *components.ModifierData, world donburi.World, modifier *donburi.Entry) bool {
 	return true
 }
-func (e ResolveStats) Apply(world donburi.World, frame *util.Frame, modifier *donburi.Entry) {
+func (b ResolveStatsBehavior) Apply(mod *components.ModifierData, world donburi.World, frame *util.Frame, modifier *donburi.Entry) {
 	components.EachDependent(world, modifier, func(entry *donburi.Entry) {
 		if entry.HasComponent(components.Stats) {
 			frame.Modify(entry, components.Stats, func(stats *components.StatsData) {
@@ -26,8 +24,8 @@ func (e ResolveStats) Apply(world donburi.World, frame *util.Frame, modifier *do
 		}
 	})
 }
-func (e ResolveStats) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
-	entity := entities.CreateEffect(ecs, e, e.ModifierConfig)
+func (b ResolveStatsBehavior) Spawn(mod *components.ModifierData, ecs *ecs.ECS, position math.Vec2) donburi.Entity {
+	entity := entities.CreateEffect(ecs, mod)
 	entry := ecs.World.Entry(entity)
 	entry.AddComponent(components.TargetsWhere)
 	components.TargetsWhere.SetValue(entry, func(e donburi.Entity) bool {
@@ -37,6 +35,7 @@ func (e ResolveStats) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
 	return entity
 }
 
-var SystemResolveStats = ResolveStats{
+var SystemResolveStats = &components.ModifierData{
 	Priority: 1,
+	Behavior: ResolveStatsBehavior{},
 }

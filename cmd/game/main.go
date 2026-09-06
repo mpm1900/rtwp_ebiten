@@ -5,9 +5,9 @@ import (
 	"log"
 	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/game"
+	"rtwp_ebitengine/internal/modifiers"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -31,8 +31,8 @@ func main() {
 		}
 	}
 
-	speed_up := effects.SpeedUp.Spawn(g.ECS, math.NewVec2(800, 800))
-	effects.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))
+	speed_up := modifiers.SpeedUp.Spawn(g.ECS, math.NewVec2(800, 800))
+	modifiers.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))
 
 	components.WithDelay(g.ECS.World.Entry(speed_up), 60)
 	components.WithRange(g.ECS.World.Entry(speed_up), 120)

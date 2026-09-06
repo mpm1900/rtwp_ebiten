@@ -6,9 +6,9 @@ import (
 	"rtwp_ebitengine/internal/actions"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/effects"
 	"rtwp_ebitengine/internal/entities"
 	"rtwp_ebitengine/internal/events"
+	"rtwp_ebitengine/internal/modifiers"
 	"rtwp_ebitengine/internal/renderers"
 	"rtwp_ebitengine/internal/systems"
 	"rtwp_ebitengine/internal/util"
@@ -36,7 +36,7 @@ func NewGame() Game {
 	systems.Load(g.ECS, g.Frame)
 	renderers.Load(g.ECS)
 
-	effects.LoadSystemModifiers(g.ECS)
+	modifiers.LoadSystemModifiers(g.ECS)
 	entities.CreatePlayer(g.ECS)
 
 	return g

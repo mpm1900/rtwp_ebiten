@@ -7,8 +7,8 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func CreateEffect(ecs *ecs.ECS, effect components.Effect, mod components.ModifierConfig) donburi.Entity {
-	return CreateModifier(ecs, components.NewModifierInstance(effect, mod), EffectLayer)
+func CreateEffect(ecs *ecs.ECS, mod *components.ModifierData) donburi.Entity {
+	return CreateModifier(ecs, components.NewModifierInstance(mod), EffectLayer)
 }
 
 func CreateModifier(ecs *ecs.ECS, mod components.ModifierData, layer ecs.LayerID) donburi.Entity {

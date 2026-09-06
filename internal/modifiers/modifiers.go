@@ -1,4 +1,4 @@
-package effects
+package modifiers
 
 import (
 	"rtwp_ebitengine/internal/components"
@@ -7,7 +7,7 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var systemModifiers = []components.Effect{
+var systemModifiers = []*components.ModifierData{
 	SystemResolveStats,
 }
 

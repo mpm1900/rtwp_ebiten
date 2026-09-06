@@ -10,10 +10,9 @@ import (
 func ResolveModifiers(frame *util.Frame) ecs.System {
 	return func(ecs *ecs.ECS) {
 		for modifier := range components.ModifierQuery.IterOrdered(ecs.World, components.Modifier) {
-			instance := components.Modifier.Get(modifier)
-			effect := instance.Effect
-			if effect.Active(ecs.World, modifier) {
-				effect.Apply(ecs.World, frame, modifier)
+			mod := components.Modifier.Get(modifier)
+			if mod.Active(ecs.World, modifier) {
+				mod.Apply(ecs.World, frame, modifier)
 			}
 		}
 	}

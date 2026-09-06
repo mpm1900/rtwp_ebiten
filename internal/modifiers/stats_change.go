@@ -1,4 +1,4 @@
-package effects
+package modifiers
 
 import (
 	"rtwp_ebitengine/internal/assets"
@@ -12,19 +12,18 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-type StatsChange struct {
-	components.ModifierData
+type StatsChangeBehavior struct {
 	Update func(stats *components.StatsData)
 }
 
-func (e StatsChange) Active(world donburi.World, modifier *donburi.Entry) bool {
+func (b StatsChangeBehavior) Active(mod *components.ModifierData, world donburi.World, modifier *donburi.Entry) bool {
 	return true
 }
-func (e StatsChange) Apply(world donburi.World, frame *util.Frame, modifier *donburi.Entry) {
+func (b StatsChangeBehavior) Apply(mod *components.ModifierData, world donburi.World, frame *util.Frame, modifier *donburi.Entry) {
 	components.EachDependent(world, modifier, func(entry *donburi.Entry) {
 		if entry.HasComponent(components.Stats) {
 			frame.Modify(entry, components.Stats, func(stats *components.StatsData) {
-				e.Update(stats)
+				b.Update(stats)
 			})
 		}
 		if entry.HasComponent(components.Image) {
@@ -34,24 +33,28 @@ func (e StatsChange) Apply(world donburi.World, frame *util.Frame, modifier *don
 		}
 	})
 }
-func (e StatsChange) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity {
-	entity := entities.CreateEffect(ecs, e, e.ModifierConfig)
+func (b StatsChangeBehavior) Spawn(mod *components.ModifierData, ecs *ecs.ECS, position math.Vec2) donburi.Entity {
+	entity := entities.CreateEffect(ecs, mod)
 	entry := ecs.World.Entry(entity)
 	components.WithImage(entry, assets.YellowSquareImage, position)
 	components.WithRange(entry, 100)
 	return entity
 }
 
-var SpeedUp StatsChange = StatsChange{
+var SpeedUp = &components.ModifierData{
 	Priority: 0,
-	Update: func(stats *components.StatsData) {
-		stats.Stages[components.StatSpeed] += 2
+	Behavior: StatsChangeBehavior{
+		Update: func(stats *components.StatsData) {
+			stats.Stages[components.StatSpeed] += 2
+		},
 	},
 }
 
-var SpeedDown StatsChange = StatsChange{
+var SpeedDown = &components.ModifierData{
 	Priority: 0,
-	Update: func(stats *components.StatsData) {
-		stats.Stages[components.StatSpeed] -= 2
+	Behavior: StatsChangeBehavior{
+		Update: func(stats *components.StatsData) {
+			stats.Stages[components.StatSpeed] -= 2
+		},
 	},
 }

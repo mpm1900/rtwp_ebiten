@@ -56,6 +56,7 @@ type ActionConfig struct {
 	Cursor        *ebiten.Image
 	CursorInvalid *ebiten.Image
 	CursorOffset  math.Vec2
+	SingleOnly    bool
 }
 
 type ActionBehavior interface {

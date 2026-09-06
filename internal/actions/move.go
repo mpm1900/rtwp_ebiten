@@ -143,7 +143,7 @@ func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, sto
 	if entry.HasComponent(components.Movement) {
 		movement := components.Movement.Get(entry)
 		if len(movement.Path) > 0 {
-			start = movement.Path[len(movement.Path)-1]
+			start, _ = movement.Last()
 		}
 	}
 

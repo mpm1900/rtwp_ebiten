@@ -19,6 +19,13 @@ type MovementData struct {
 	StopDistance float64
 }
 
+func (m *MovementData) Last() (math.Vec2, bool) {
+	if len(m.Path) == 0 {
+		return math.Vec2{}, false
+	}
+
+	return m.Path[len(m.Path)-1], true
+}
 func (m *MovementData) PushPath(path ...math.Vec2) {
 	m.Path = append(m.Path, path...)
 	m.Follow = donburi.Null
@@ -105,9 +112,9 @@ func NewPathFollow(follow donburi.Entity) MovementData {
 }
 
 var Movement = donburi.NewComponentType[MovementData]()
-var MovementQuery = donburi.NewQuery(filter.And(
+var MovementQuery = donburi.NewQuery(
 	filter.Contains(Movement, transform.Transform),
-))
+)
 
 func WithMovement(entry *donburi.Entry, data MovementData) {
 	if !entry.HasComponent(Movement) {

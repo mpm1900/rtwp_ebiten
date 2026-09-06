@@ -51,7 +51,7 @@ func TestInitialTargetLoopIndex(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := initialTargetLoopIndex(test.targets, test.loop, test.current, DEFAULT_STOP_DISTANCE)
+			got := initialLoopIndex(test.targets, test.loop, test.current, DEFAULT_STOP_DISTANCE)
 			if got != test.expected {
 				t.Fatalf("expected index %d, got %d", test.expected, got)
 			}

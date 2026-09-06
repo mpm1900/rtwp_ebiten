@@ -43,7 +43,7 @@ func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
 		movement := components.Movement.Get(entry)
 		from := components.Center(entry)
 		if movement.Follow != donburi.Null {
-			to, ok := components.MovementPosition(ecs.World, movement)
+			to, ok := movement.Target(ecs.World)
 			if !ok {
 				continue
 			}
@@ -52,15 +52,15 @@ func RenderMovement(ecs *ecs.ECS, screen *ebiten.Image) {
 			continue
 		}
 
-		for i, to := range movement.Targets {
+		for i, to := range movement.Path {
 			if i > 0 || !movement.Loop {
 				has_segments = addMovementSegment(&movementPath, screen_bounds, view, from, to) || has_segments
 			}
 			from = to
 		}
 
-		if movement.Loop && len(movement.Targets) > 0 {
-			has_segments = addMovementSegment(&movementPath, screen_bounds, view, from, movement.Targets[0]) || has_segments
+		if movement.Loop && len(movement.Path) > 0 {
+			has_segments = addMovementSegment(&movementPath, screen_bounds, view, from, movement.Path[0]) || has_segments
 		}
 	}
 

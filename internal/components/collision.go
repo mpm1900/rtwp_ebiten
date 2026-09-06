@@ -1,10 +1,10 @@
 package components
 
 import (
-	"image"
+	"rtwp_ebitengine/internal/util"
 
 	"github.com/yohamta/donburi"
-	dmath "github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 	"github.com/yohamta/donburi/filter"
 )
@@ -16,7 +16,7 @@ func WithCollision(entry *donburi.Entry) {
 	entry.AddComponent(Collision)
 }
 
-func CollidesAt(world donburi.World, entry *donburi.Entry, position dmath.Vec2) (*donburi.Entry, bool) {
+func CollidesAt(world donburi.World, entry *donburi.Entry, position math.Vec2) (*donburi.Entry, bool) {
 	bounds, ok := RectAt(entry, position)
 	if !ok {
 		return nil, false
@@ -49,14 +49,15 @@ func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 	return max(stopDistance, scale.Magnitude())
 }
 
-func FirstColliderAtPoint(world donburi.World, point image.Point) (*donburi.Entry, bool) {
+func FirstColliderAtPoint(world donburi.World, point math.Vec2) (*donburi.Entry, bool) {
+	pt := util.ToPoint(point)
 	for entry := range CollisionQuery.Iter(world) {
 		bounds, ok := Rect(entry)
 		if !ok {
 			continue
 		}
 
-		if point.In(bounds) {
+		if pt.In(bounds) {
 			return entry, true
 		}
 	}

@@ -3,7 +3,6 @@ package events
 import (
 	"image"
 	"rtwp_ebitengine/internal/components"
-	"rtwp_ebitengine/internal/util"
 
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/events"
@@ -62,7 +61,7 @@ func selectAt(world donburi.World, event SelectAtEvent) {
 	player := components.GetPlayer(world)
 	player.SelectedAction = nil
 
-	components.EachActorAtPoint(world, util.ToPoint(event.Point), func(entry *donburi.Entry) {
+	components.EachActorAtPoint(world, event.Point, func(entry *donburi.Entry) {
 		selectActor(world, entry.Entity())
 		actor := components.Actor.Get(entry)
 		player.SelectedAction = actor.Actions[0]

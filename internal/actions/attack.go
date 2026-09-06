@@ -3,7 +3,6 @@ package actions
 import (
 	"rtwp_ebitengine/internal/components"
 	"rtwp_ebitengine/internal/events"
-	"rtwp_ebitengine/internal/util"
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -34,7 +33,7 @@ func (a AttackAction) Publish(world donburi.World, event components.ActionEvent)
 	}
 }
 func (a AttackAction) Handle(world donburi.World, event components.ActionEvent) {
-	entry, ok := components.FirstActorAtPoint(world, util.ToPoint(event.Point))
+	entry, ok := components.FirstActorAtPoint(world, event.Point)
 	if !ok {
 		return
 	}

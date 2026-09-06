@@ -69,22 +69,20 @@ func (a MoveAction) Handle(world donburi.World, event components.ActionEvent) {
 		return
 	}
 
-	stop_distance := components.DEFAULT_STOP_DISTANCE
-	point := util.ToPoint(event.Point)
-	if f, ok := components.FirstActorAtPoint(world, point); ok {
+	if f, ok := components.FirstActorAtPoint(world, event.Point); ok {
 		follow := f.Entity()
 		if follow == event.Source {
 			return
 		}
-		components.WithMovementFollow(world.Entry(event.Source), follow, stop_distance)
+		components.WithMovement(world.Entry(event.Source), components.NewPathFollow(follow))
 		return
 	}
 
-	if _, ok := components.FirstColliderAtPoint(world, point); ok {
+	if _, ok := components.FirstColliderAtPoint(world, event.Point); ok {
 		return
 	}
 
-	moveTo(world, event.Source, event.Point, stop_distance, event.Loop)
+	moveTo(world, event.Source, event.Point, components.DEFAULT_STOP_DISTANCE, event.Loop)
 }
 func (a MoveAction) IsComplete(world donburi.World, source donburi.Entity) bool {
 	if !world.Valid(source) {
@@ -140,15 +138,15 @@ func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDis
 		path = components.AppendLoopOrigin(path, start)
 	}
 
-	components.WithMovementList(entry, path, stopDistance, loop)
+	components.WithMovement(entry, components.NewPathMovement(entry, path, loop))
 }
 func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64, loop bool) {
 	entry := world.Entry(source)
 	start := components.Center(entry)
 	if entry.HasComponent(components.Movement) {
 		movement := components.Movement.Get(entry)
-		if len(movement.Targets) > 0 {
-			start = movement.Targets[len(movement.Targets)-1]
+		if len(movement.Path) > 0 {
+			start = movement.Path[len(movement.Path)-1]
 		}
 	}
 

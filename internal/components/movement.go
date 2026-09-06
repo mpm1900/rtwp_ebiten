@@ -2,7 +2,7 @@ package components
 
 import (
 	"github.com/yohamta/donburi"
-	dmath "github.com/yohamta/donburi/features/math"
+	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 	"github.com/yohamta/donburi/filter"
 )
@@ -12,64 +12,117 @@ const (
 )
 
 type MovementData struct {
-	Targets         []dmath.Vec2
-	TargetLoopIndex int
-	Loop            bool
-	Follow          donburi.Entity
-	StopDistance    float64
+	Follow       donburi.Entity
+	Loop         bool
+	Path         []math.Vec2
+	PathIndex    int
+	StopDistance float64
 }
 
-func (m *MovementData) NextTarget() bool {
+func (m *MovementData) PushPath(path ...math.Vec2) {
+	m.Path = append(m.Path, path...)
+	m.Follow = donburi.Null
+}
+func (m *MovementData) Next() bool {
 	if m.Follow != donburi.Null {
 		return false
 	}
 
-	if m.Loop && len(m.Targets) > 0 {
-		m.TargetLoopIndex = (m.TargetLoopIndex + 1) % len(m.Targets)
+	if m.Loop && len(m.Path) > 0 {
+		m.PathIndex = (m.PathIndex + 1) % len(m.Path)
 		return false
 	}
-	m.Targets = m.Targets[1:]
-	return len(m.Targets) == 0
+	m.Path = m.Path[1:]
+	return len(m.Path) == 0
+}
+func (m *MovementData) Target(world donburi.World) (math.Vec2, bool) {
+	if m.Follow != donburi.Null {
+		if !world.Valid(m.Follow) {
+			return math.Vec2{}, false
+		}
+
+		follow := world.Entry(m.Follow)
+		if !follow.HasComponent(transform.Transform) {
+			return math.Vec2{}, false
+		}
+
+		return Center(follow), true
+	}
+
+	if len(m.Path) == 0 {
+		return math.Vec2{}, false
+	}
+
+	target := m.Path[0]
+	if m.Loop {
+		if m.PathIndex >= len(m.Path) {
+			m.PathIndex = 0
+		}
+		target = m.Path[m.PathIndex]
+	}
+
+	return target, true
+}
+func (m *MovementData) TowardsTarget(world donburi.World, entry *donburi.Entry) (math.Vec2, bool) {
+	target, ok := m.Target(world)
+	if !ok {
+		return math.Vec2{}, false
+	}
+	vec := target.Sub(Center(entry))
+	return vec, true
+}
+func (m *MovementData) Delta(world donburi.World, entry *donburi.Entry, scalar float64) (math.Vec2, bool) {
+	vec, ok := m.TowardsTarget(world, entry)
+	if !ok {
+		return math.Vec2{}, false
+	}
+
+	return vec.Normalized().MulScalar(scalar), true
+}
+func (m *MovementData) TargetDistance(world donburi.World, entry *donburi.Entry) float64 {
+	target, ok := m.Target(world)
+	if !ok {
+		return 0
+	}
+
+	return Center(entry).Distance(target)
+}
+
+func NewPathMovement(parent *donburi.Entry, path []math.Vec2, loop bool) MovementData {
+	return MovementData{
+		Follow:       donburi.Null,
+		Loop:         loop,
+		Path:         path,
+		PathIndex:    initialLoopIndex(path, loop, Center(parent), DEFAULT_STOP_DISTANCE),
+		StopDistance: DEFAULT_STOP_DISTANCE,
+	}
+}
+func NewPathFollow(follow donburi.Entity) MovementData {
+	return MovementData{
+		Follow:       follow,
+		StopDistance: DEFAULT_STOP_DISTANCE,
+	}
 }
 
 var Movement = donburi.NewComponentType[MovementData]()
 var MovementQuery = donburi.NewQuery(filter.And(
 	filter.Contains(Movement, transform.Transform),
-	filter.Not(filter.Contains(Delay)),
 ))
 
-func WithMovementTo(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	WithMovementList(entry, []dmath.Vec2{target}, stopDistance, false)
-}
-func WithMovementLoopTo(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	WithMovementList(entry, []dmath.Vec2{target}, stopDistance, true)
-}
-
-func WithMovementFollow(entry *donburi.Entry, follow donburi.Entity, stopDistance float64) {
+func WithMovement(entry *donburi.Entry, data MovementData) {
 	if !entry.HasComponent(Movement) {
 		entry.AddComponent(Movement)
 	}
 
-	Movement.SetValue(entry, MovementData{
-		Follow:       follow,
-		Targets:      nil,
-		StopDistance: stopDistance,
-	})
+	Movement.SetValue(entry, data)
 }
 
-func PushMovement(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	PushMovementList(entry, []dmath.Vec2{target}, stopDistance, false)
-}
-func PushMovementLoop(entry *donburi.Entry, target dmath.Vec2, stopDistance float64) {
-	PushMovementList(entry, []dmath.Vec2{target}, stopDistance, true)
-}
-
-func PushMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64, loop bool) {
-	if len(targets) == 0 {
+func PushMovementList(entry *donburi.Entry, path []math.Vec2, stopDistance float64, loop bool) {
+	if len(path) == 0 {
 		return
 	}
 	if !entry.HasComponent(Movement) {
-		WithMovementList(entry, targets, stopDistance, loop)
+		WithMovement(entry, NewPathMovement(entry, path, loop))
 		return
 	}
 
@@ -77,53 +130,38 @@ func PushMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance f
 	movement.Follow = donburi.Null
 	movement.Loop = movement.Loop || loop
 	movement.StopDistance = stopDistance
-	movement.Targets = append(movement.Targets, targets...)
+	movement.Path = append(movement.Path, path...)
 }
 
-func WithMovementList(entry *donburi.Entry, targets []dmath.Vec2, stopDistance float64, loop bool) {
-	if !entry.HasComponent(Movement) {
-		entry.AddComponent(Movement)
-	}
-
-	current_center := Center(entry)
-	Movement.SetValue(entry, MovementData{
-		Follow:          donburi.Null,
-		Targets:         targets,
-		StopDistance:    stopDistance,
-		Loop:            loop,
-		TargetLoopIndex: initialTargetLoopIndex(targets, loop, current_center, stopDistance),
-	})
-}
-
-func initialTargetLoopIndex(targets []dmath.Vec2, loop bool, current dmath.Vec2, stopDistance float64) int {
-	if !loop || len(targets) == 0 {
+func initialLoopIndex(path []math.Vec2, loop bool, current math.Vec2, stopDistance float64) int {
+	if !loop || len(path) == 0 {
 		return 0
 	}
 
 	if stopDistance <= 0 {
 		stopDistance = DEFAULT_STOP_DISTANCE
 	}
-	if targets[0].Distance(current) <= stopDistance && len(targets) > 1 {
+	if path[0].Distance(current) <= stopDistance && len(path) > 1 {
 		return 1
 	}
 
 	return 0
 }
 
-func LoopOriginForEntry(entry *donburi.Entry) dmath.Vec2 {
+func LoopOriginForEntry(entry *donburi.Entry) math.Vec2 {
 	if entry.HasComponent(Movement) {
 		movement := Movement.Get(entry)
-		if movement.Loop && len(movement.Targets) > 0 {
-			return movement.Targets[len(movement.Targets)-1]
+		if movement.Loop && len(movement.Path) > 0 {
+			return movement.Path[len(movement.Path)-1]
 		}
 	}
 
 	return Center(entry)
 }
 
-func AppendLoopOrigin(targets []dmath.Vec2, origin dmath.Vec2) []dmath.Vec2 {
+func AppendLoopOrigin(targets []math.Vec2, origin math.Vec2) []math.Vec2 {
 	if len(targets) == 0 {
-		return []dmath.Vec2{origin}
+		return []math.Vec2{origin}
 	}
 
 	last_target := targets[len(targets)-1]
@@ -132,44 +170,4 @@ func AppendLoopOrigin(targets []dmath.Vec2, origin dmath.Vec2) []dmath.Vec2 {
 	}
 
 	return append(targets, origin)
-}
-
-func GetSpeed(entry *donburi.Entry) float64 {
-	speed := 0.0
-
-	if entry.HasComponent(Stats) {
-		stats := Stats.Get(entry)
-		speed = stats.Stats[StatSpeed]
-	}
-
-	return speed
-}
-
-func MovementPosition(world donburi.World, movement *MovementData) (dmath.Vec2, bool) {
-	if movement.Follow != donburi.Null {
-		if !world.Valid(movement.Follow) {
-			return dmath.Vec2{}, false
-		}
-
-		follow := world.Entry(movement.Follow)
-		if !follow.HasComponent(transform.Transform) {
-			return dmath.Vec2{}, false
-		}
-
-		return ClampWorldPosition(Center(follow)), true
-	}
-
-	if len(movement.Targets) == 0 {
-		return dmath.Vec2{}, false
-	}
-
-	target := movement.Targets[0]
-	if movement.Loop {
-		if movement.TargetLoopIndex >= len(movement.Targets) {
-			movement.TargetLoopIndex = 0
-		}
-		target = movement.Targets[movement.TargetLoopIndex]
-	}
-
-	return ClampWorldPosition(target), true
 }

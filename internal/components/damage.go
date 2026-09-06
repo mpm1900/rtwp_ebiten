@@ -1,8 +1,6 @@
 package components
 
 import (
-	"rtwp_ebitengine/internal/util"
-
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/filter"
@@ -29,7 +27,7 @@ func WithDamage(entry *donburi.Entry, damage float64) {
 }
 
 func DamageAt(world donburi.World, point math.Vec2, amount float64) (*donburi.Entry, bool) {
-	entry, ok := FirstActorAtPoint(world, util.ToPoint(point))
+	entry, ok := FirstActorAtPoint(world, point)
 	if !ok {
 		return nil, false
 	}

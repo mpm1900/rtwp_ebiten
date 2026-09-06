@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
 	"github.com/yohamta/donburi/filter"
 )
@@ -112,27 +113,29 @@ func (a *ActorData) SetActionCooldown(action Action) {
 var Actor = donburi.NewComponentType[ActorData]()
 var ActorQuery = donburi.NewQuery(filter.Contains(Actor, transform.Transform))
 
-func EachActorAtPoint(world donburi.World, point image.Point, yield func(*donburi.Entry)) {
+func EachActorAtPoint(world donburi.World, point math.Vec2, yield func(*donburi.Entry)) {
+	pt := image.Pt(int(point.X), int(point.Y))
 	for entry := range ActorQuery.Iter(world) {
 		bounds, ok := Rect(entry)
 		if !ok {
 			continue
 		}
 
-		if point.In(bounds) {
+		if pt.In(bounds) {
 			yield(entry)
 		}
 	}
 }
 
-func FirstActorAtPoint(world donburi.World, point image.Point) (*donburi.Entry, bool) {
+func FirstActorAtPoint(world donburi.World, point math.Vec2) (*donburi.Entry, bool) {
+	pt := image.Pt(int(point.X), int(point.Y))
 	for entry := range ActorQuery.Iter(world) {
 		bounds, ok := Rect(entry)
 		if !ok {
 			continue
 		}
 
-		if point.In(bounds) {
+		if pt.In(bounds) {
 			return entry, true
 		}
 	}

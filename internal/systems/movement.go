@@ -16,37 +16,28 @@ func MoveEntities(ecs *ecs.ECS) {
 
 	for entry := range components.MovementQuery.Iter(ecs.World) {
 		movement := components.Movement.Get(entry)
-		target, ok := components.MovementPosition(ecs.World, movement)
-		if !ok {
-			completed = append(completed, entry.Entity())
-			continue
-		}
+		distance := movement.TargetDistance(ecs.World, entry)
+		if distance > movement.StopDistance {
+			step := min(getSpeed(entry), distance)
+			delta, ok := movement.Delta(ecs.World, entry, step)
+			if !ok {
+				completed = append(completed, entry.Entity())
+				continue
+			}
 
-		position := components.Center(entry)
-		direction := target.Sub(position)
-		distance := direction.Magnitude()
-		stopDistance := movement.StopDistance
-		if stopDistance <= 0 {
-			stopDistance = components.DEFAULT_STOP_DISTANCE
-		}
-
-		remainingDistance := distance
-		if distance > stopDistance {
-			step := min(components.GetSpeed(entry), distance)
-			moveResult := MoveWithCollision(ecs.World, entry, direction.Normalized().MulScalar(step))
-			remainingDistance = components.Center(entry).Distance(target)
-			if moveResult.Collided && remainingDistance <= components.CollisionStopDistance(entry, stopDistance) {
-				if movement.NextTarget() {
+			distance = movement.TargetDistance(ecs.World, entry)
+			result := MoveWithCollision(ecs.World, entry, delta)
+			if result.Collided && distance <= components.CollisionStopDistance(entry, movement.StopDistance) {
+				if movement.Next() {
 					completed = append(completed, entry.Entity())
 				}
 				continue
 			}
-		}
-
-		if remainingDistance <= stopDistance {
-			if movement.NextTarget() {
+		} else {
+			if movement.Next() {
 				completed = append(completed, entry.Entity())
 			}
+			continue
 		}
 	}
 
@@ -63,4 +54,15 @@ func MoveEntities(ecs *ecs.ECS) {
 			events.HandleActionQueue(ecs.World, entity)
 		}
 	}
+}
+
+func getSpeed(entry *donburi.Entry) float64 {
+	speed := 0.0
+
+	if entry.HasComponent(components.Stats) {
+		stats := components.Stats.Get(entry)
+		speed = stats.Stats[components.StatSpeed]
+	}
+
+	return speed
 }

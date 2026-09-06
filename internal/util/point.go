@@ -22,18 +22,7 @@ func ToPoint(v dmath.Vec2) image.Point {
 }
 
 func ToRect(start, end dmath.Vec2) image.Rectangle {
-	min := image.Pt(
-		int(math.Floor(math.Min(start.X, end.X))),
-		int(math.Floor(math.Min(start.Y, end.Y))),
-	)
-	max := image.Pt(
-		int(math.Ceil(math.Max(start.X, end.X))),
-		int(math.Ceil(math.Max(start.Y, end.Y))),
-	)
-	return image.Rectangle{
-		Min: min,
-		Max: max,
-	}
+	return image.Rect(int(start.X), int(start.Y), int(end.X), int(end.Y))
 }
 
 func DrawPoints(screen *ebiten.Image, start, end dmath.Vec2, strokeWidth float32, strokeColor color.Color) {

@@ -30,7 +30,7 @@ func (b InteractBehavior) Publish(action *components.Action, world donburi.World
 			Loop:   false,
 		}
 
-		actor.QueueAndAdvance(world, selected, event, shift)
+		actor.QueueActionEvent(world, event, shift)
 	}
 }
 func (b InteractBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {

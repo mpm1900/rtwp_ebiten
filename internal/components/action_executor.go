@@ -26,52 +26,29 @@ func advanceActionStep(world donburi.World, entry *donburi.Entry) bool {
 	}
 
 	actor := Actor.Get(entry)
-	active_event, ok := actor.PeekActionQueue()
+	event, ok := actor.PeekActionQueue()
 	if !ok {
 		return false
 	}
-	if active_event.Action == nil {
+	if event.Action == nil {
 		actor.NextActionEvent()
 		return true
 	}
 
-	event := *active_event
 	if !actor.ActionStarted {
-		if !startAction(world, entry, actor, event) {
+		if !actor.StartAction(world, entry, *event) {
 			return false
 		}
 	}
 
-	switch event.Action.Update(world, event) {
+	switch event.Action.Update(world, *event) {
 	case ActionRunning:
 		return false
 	case ActionComplete, ActionCanceled:
-		event.Action.Cancel(world, event)
+		event.Action.Cancel(world, *event)
 		actor.NextActionEvent()
 		return true
 	default:
 		return false
 	}
-}
-
-func startAction(world donburi.World, entry *donburi.Entry, actor *ActorData, event ActionEvent) bool {
-	if actor.CooldownForAction(event.Action) > 0 {
-		return false
-	}
-
-	if entry.HasComponent(Delay) {
-		if delay := *Delay.Get(entry); delay > 0 {
-			return false
-		}
-
-		entry.RemoveComponent(Delay)
-	} else if delay := event.Action.Delay; delay > 0 {
-		WithDelay(entry, delay)
-		return false
-	}
-
-	actor.ActionStarted = true
-	event.Action.Start(world, event)
-	actor.SetActionCooldown(event.Action)
-	return true
 }

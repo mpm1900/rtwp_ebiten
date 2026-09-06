@@ -65,16 +65,32 @@ func (a *ActorData) QueueActionEvent(world donburi.World, event ActionEvent, pus
 		return a.PushActionEvent(event)
 	}
 
+	defer AdvanceActionQueue(world, world.Entry(event.Source))
 	return a.SetActionEvent(world, event)
 }
-func (a *ActorData) QueueAndAdvance(world donburi.World, entry *donburi.Entry, event ActionEvent, push bool) bool {
-	if !a.QueueActionEvent(world, event, push) {
+
+func (a *ActorData) StartAction(world donburi.World, entry *donburi.Entry, event ActionEvent) bool {
+	if a.CooldownForAction(event.Action) > 0 {
 		return false
 	}
 
-	AdvanceActionQueue(world, entry)
+	if entry.HasComponent(Delay) {
+		if delay := *Delay.Get(entry); delay > 0 {
+			return false
+		}
+
+		entry.RemoveComponent(Delay)
+	} else if delay := event.Action.Delay; delay > 0 {
+		WithDelay(entry, delay)
+		return false
+	}
+
+	a.ActionStarted = true
+	event.Action.Start(world, event)
+	a.SetActionCooldown(event.Action)
 	return true
 }
+
 func (a *ActorData) NextActionEvent() (*ActionEvent, bool) {
 	next_event, ok := a.ActionQueue.Pop()
 	a.ActionStarted = false

@@ -22,8 +22,9 @@ func (b AttackBehavior) Publish(action *components.Action, world donburi.World, 
 			Point:  event.Point,
 		}
 
-		actor.QueueAndAdvance(world, selected, action_event, shift)
+		actor.QueueActionEvent(world, action_event, shift)
 	}
+
 }
 func (b AttackBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
 	entry, ok := components.FirstActorAtPoint(world, event.Point)

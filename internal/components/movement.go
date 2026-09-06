@@ -12,20 +12,45 @@ const (
 )
 
 type MovementData struct {
-	Follow       donburi.Entity
-	Loop         bool
-	Path         []math.Vec2
-	PathIndex    int
-	StopDistance float64
+	Follow        donburi.Entity
+	Loop          bool
+	LoopOrigin    math.Vec2
+	HasLoopOrigin bool
+	Path          []math.Vec2
+	PathIndex     int
+	StopDistance  float64
 }
 
 func (m *MovementData) Last() (math.Vec2, bool) {
-	if len(m.Path) == 0 {
+	path_len := len(m.Path)
+	if path_len == 0 {
 		return math.Vec2{}, false
 	}
 
-	return m.Path[len(m.Path)-1], true
+	if m.HasLoopOrigin && m.Path[path_len-1].Distance(m.LoopOrigin) <= DEFAULT_STOP_DISTANCE {
+		path_len--
+	}
+	if path_len == 0 {
+		return m.LoopOrigin, true
+	}
+
+	return m.Path[path_len-1], true
 }
+
+func (m *MovementData) StripLoopOriginTarget() {
+	if !m.HasLoopOrigin || len(m.Path) == 0 {
+		return
+	}
+
+	last_path := m.Path[len(m.Path)-1]
+	if last_path.Distance(m.LoopOrigin) <= DEFAULT_STOP_DISTANCE {
+		m.Path = m.Path[:len(m.Path)-1]
+		if m.PathIndex >= len(m.Path) {
+			m.PathIndex = 0
+		}
+	}
+}
+
 func (m *MovementData) PushPath(path ...math.Vec2) {
 	m.Path = append(m.Path, path...)
 	m.Follow = donburi.Null
@@ -96,12 +121,20 @@ func (m *MovementData) TargetDistance(world donburi.World, entry *donburi.Entry)
 }
 
 func NewPathMovement(parent *donburi.Entry, path []math.Vec2, loop bool) MovementData {
+	loop_origin := math.Vec2{}
+	if loop {
+		loop_origin = Center(parent)
+		path = AppendLoopOrigin(path, loop_origin)
+	}
+
 	return MovementData{
-		Follow:       donburi.Null,
-		Loop:         loop,
-		Path:         path,
-		PathIndex:    initialLoopIndex(path, loop, Center(parent), DEFAULT_STOP_DISTANCE),
-		StopDistance: DEFAULT_STOP_DISTANCE,
+		Follow:        donburi.Null,
+		Loop:          loop,
+		LoopOrigin:    loop_origin,
+		HasLoopOrigin: loop,
+		Path:          path,
+		PathIndex:     initialLoopIndex(path, loop, Center(parent), DEFAULT_STOP_DISTANCE),
+		StopDistance:  DEFAULT_STOP_DISTANCE,
 	}
 }
 func NewPathFollow(follow donburi.Entity) MovementData {
@@ -135,8 +168,18 @@ func PushMovementList(entry *donburi.Entry, path []math.Vec2, stopDistance float
 
 	movement := Movement.Get(entry)
 	movement.Follow = donburi.Null
+	if movement.Loop || loop {
+		movement.StripLoopOriginTarget()
+	}
+	if loop && !movement.HasLoopOrigin {
+		movement.LoopOrigin = Center(entry)
+		movement.HasLoopOrigin = true
+	}
 	movement.Loop = movement.Loop || loop
 	movement.StopDistance = stopDistance
+	if movement.Loop && movement.HasLoopOrigin {
+		path = AppendLoopOrigin(path, movement.LoopOrigin)
+	}
 	movement.Path = append(movement.Path, path...)
 }
 
@@ -158,8 +201,8 @@ func initialLoopIndex(path []math.Vec2, loop bool, current math.Vec2, stopDistan
 func LoopOriginForEntry(entry *donburi.Entry) math.Vec2 {
 	if entry.HasComponent(Movement) {
 		movement := Movement.Get(entry)
-		if movement.Loop && len(movement.Path) > 0 {
-			return movement.Path[len(movement.Path)-1]
+		if movement.HasLoopOrigin {
+			return movement.LoopOrigin
 		}
 	}
 

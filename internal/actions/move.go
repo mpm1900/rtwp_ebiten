@@ -22,6 +22,7 @@ func (b MoveBehavior) Publish(action *components.Action, world donburi.World, ev
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	ctrl := slices.Contains(event.Keys, ebiten.KeyControl)
 	loop := slices.Contains(event.Keys, ebiten.KeyZ)
+	first_anchor := moveAnchor(first, shift)
 
 	_, interact := components.FirstInteractableAtPoint(world, util.ToPoint(event.Point))
 	for selected := range components.SelectedActorsQuery.Iter(world) {
@@ -29,9 +30,8 @@ func (b MoveBehavior) Publish(action *components.Action, world donburi.World, ev
 		point := event.Point
 
 		if ctrl {
-			first_center := components.Center(first)
-			center := components.Center(selected)
-			point = point.Add(center.Sub(first_center))
+			anchor := moveAnchor(selected, shift)
+			point = point.Add(anchor.Sub(first_anchor))
 		}
 
 		if shift && pushActiveMove(world, selected, actor, point, loop) {
@@ -49,7 +49,7 @@ func (b MoveBehavior) Publish(action *components.Action, world donburi.World, ev
 			event.Action = Interact
 		}
 
-		actor.QueueAndAdvance(world, selected, event, shift)
+		actor.QueueActionEvent(world, event, shift)
 	}
 }
 func (b MoveBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
@@ -123,6 +123,18 @@ func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components
 	pushMoveTo(world, entry.Entity(), point, components.DEFAULT_STOP_DISTANCE, loop)
 	return true
 }
+
+func moveAnchor(entry *donburi.Entry, queued bool) math.Vec2 {
+	if queued && entry.HasComponent(components.Movement) {
+		movement := components.Movement.Get(entry)
+		if last, ok := movement.Last(); ok {
+			return last
+		}
+	}
+
+	return components.Center(entry)
+}
+
 func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDistance float64, loop bool) {
 	entry := world.Entry(source)
 	start := components.Center(entry)
@@ -130,9 +142,6 @@ func moveTo(world donburi.World, source donburi.Entity, point math.Vec2, stopDis
 	path, ok := pathing.FindPath(world, start, point)
 	if !ok || len(path) == 0 {
 		path = []math.Vec2{point}
-	}
-	if loop {
-		path = components.AppendLoopOrigin(path, start)
 	}
 
 	components.WithMovement(entry, components.NewPathMovement(entry, path, loop))
@@ -150,9 +159,6 @@ func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, sto
 	path, ok := pathing.FindPath(world, start, point)
 	if !ok || len(path) == 0 {
 		path = []math.Vec2{point}
-	}
-	if loop {
-		path = components.AppendLoopOrigin(path, components.LoopOriginForEntry(entry))
 	}
 
 	components.PushMovementList(entry, path, stopDistance, loop)

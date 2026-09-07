@@ -42,6 +42,8 @@ func main() {
 		OnInteract: func(world donburi.World, entity donburi.Entity) {
 			stats := components.Stats.Get(world.Entry(entity))
 			fmt.Println(entity, "resolved stats:", stats.Stats)
+			modified := components.Modified.Get(world.Entry(entity))
+			fmt.Println(*modified)
 		},
 	})
 

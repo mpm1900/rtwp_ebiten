@@ -61,12 +61,29 @@ func (mod ModifierData) Order() int {
 }
 
 var Modifier = donburi.NewComponentType[ModifierData]()
+var Modified = donburi.NewComponentType[map[donburi.Entity]int]()
 var ModifierQuery = donburi.NewOrderedQuery[ModifierData](
 	filter.And(
 		filter.Contains(Modifier),
 		filter.Not(filter.Contains(Delay)),
 	),
 )
+
+func ResetModified(world donburi.World) {
+	for modified := range Modified.Iter(world) {
+		modified.RemoveComponent(Modified)
+	}
+}
+func ModifiedBy(actor *donburi.Entry, modifier donburi.Entity) {
+	if !actor.HasComponent(Modified) {
+		actor.AddComponent(Modified)
+		Modified.SetValue(actor, map[donburi.Entity]int{})
+	}
+
+	modifiers := *Modified.Get(actor)
+	modifiers[modifier] = 1
+	Modified.SetValue(actor, modifiers)
+}
 
 func EachDependent(world donburi.World, modifier *donburi.Entry, yield func(*donburi.Entry)) {
 	if modifier.HasComponent(Targets) {

@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"math/rand/v2"
 
 	"github.com/yohamta/donburi"
@@ -76,6 +77,12 @@ func GetDamageResult(action *Action, level int, source StatsData, target StatsDa
 	ratio := source.Stats[StatMelee] / target.Stats[StatDefense]
 	level_mod := float64(level*2)/5 + 2
 	amount := (action.Power*ratio*level_mod)/50 + 2
+	if !accuracy_result.Success {
+		fmt.Println("MISS")
+		amount = 0
+	} else {
+		fmt.Println("HIT")
+	}
 
 	return DamageResult{
 		AccuracyResult: accuracy_result,

@@ -25,7 +25,29 @@ func getWorldBackground() *ebiten.Image {
 
 	for y := range components.WORLD_TILE_COUNT {
 		for x := range components.WORLD_TILE_COUNT {
-			tileIndex := rand.IntN(assets.GrassTileCount / 2)
+			tileIndex := 0
+			if rand.IntN(2) > 0 {
+				tileIndex = 1
+				if rand.IntN(2) > 0 {
+					tileIndex = 2
+					if rand.IntN(2) > 0 {
+						tileIndex = 3
+						if rand.IntN(2) > 0 {
+							tileIndex = 4
+							if rand.IntN(2) > 0 {
+								tileIndex = 5
+								if rand.IntN(2) > 0 {
+									tileIndex = 6
+									if rand.IntN(2) > 0 {
+										tileIndex = 7
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
 			col := tileIndex % assets.GrassTilesetCols
 			row := tileIndex / assets.GrassTilesetCols
 			tileRect := image.Rect(

@@ -112,6 +112,7 @@ var Attack = &components.Action{
 	Behavior: AttackBehavior{},
 	Key:      ebiten.Key2,
 	Name:     "Attack",
+	Accuracy: 50,
 	Cooldown: 60,
 	Delay:    10,
 	Power:    50,

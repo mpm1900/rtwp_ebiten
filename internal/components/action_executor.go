@@ -46,6 +46,7 @@ func advanceActionStep(world donburi.World, entry *donburi.Entry) bool {
 		return false
 	case ActionComplete, ActionCanceled:
 		event.Action.Cancel(world, *event)
+		actor.EndAction(world, entry, event)
 		actor.NextActionEvent()
 		return true
 	default:

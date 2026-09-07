@@ -39,6 +39,7 @@ type ActionConfig struct {
 	CursorInvalid *ebiten.Image
 	CursorOffset  math.Vec2
 	Delay         int
+	PostDelay     int
 	Power         float64
 	Range         []float64
 }

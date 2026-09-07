@@ -90,6 +90,11 @@ func (a *ActorData) StartAction(world donburi.World, entry *donburi.Entry, event
 	a.SetActionCooldown(event.Action)
 	return true
 }
+func (a *ActorData) EndAction(world donburi.World, entry *donburi.Entry, event *ActionEvent) {
+	if delay := event.Action.PostDelay; delay > 0 {
+		WithDelay(entry, delay)
+	}
+}
 
 func (a *ActorData) NextActionEvent() (*ActionEvent, bool) {
 	next_event, ok := a.ActionQueue.Pop()

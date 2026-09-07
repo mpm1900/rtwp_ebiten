@@ -1,7 +1,6 @@
 package renderers
 
 import (
-	"fmt"
 	"image/color"
 	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
@@ -147,14 +146,6 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 		}
 
 		renderOutlinedSprite(screen, sprite, *options, outlineColor, thickness)
-
-		if !entry.HasComponent(components.Selected) {
-			continue
-		}
-
-		textop := &text.DrawOptions{}
-		textop.GeoM.Translate(center_point.X-6, center_point.Y-10)
-		text.Draw(screen, fmt.Sprintf("%d", actor.ActionQueueLen()), actorQueueFont(), textop)
 	}
 }
 

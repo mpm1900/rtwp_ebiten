@@ -109,10 +109,11 @@ func (b AttackBehavior) Valid(action *components.Action, world donburi.World, po
 }
 
 var Attack = &components.Action{
+	Behavior: AttackBehavior{},
 	Key:      ebiten.Key2,
 	Name:     "Attack",
-	Delay:    10,
 	Cooldown: 60,
-	Behavior: AttackBehavior{},
+	Delay:    10,
+	Power:    50,
 	Range:    []float64{5, 55},
 }

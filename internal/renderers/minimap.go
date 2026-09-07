@@ -32,7 +32,7 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 	worldW := float64(worldRect.Dx())
 	worldH := float64(worldRect.Dy())
 	playerEntity := components.GetPlayerEntity(ecs.World)
-	for entry := range components.ImageQuery.Iter(ecs.world) {
+	for entry := range components.ImageQuery.Iter(ecs.World) {
 		position := components.Center(entry)
 		mapX := (position.X - float64(worldRect.Min.X)) / worldW * components.MINIMAP_SIZE
 		mapY := (position.Y - float64(worldRect.Min.Y)) / worldH * components.MINIMAP_SIZE

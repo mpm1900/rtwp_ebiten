@@ -11,9 +11,13 @@ import (
 type Stat int
 
 const (
-	StatHealth Stat = iota
-	StatMelee  Stat = iota
-	StatSpeed  Stat = iota
+	StatHealth  Stat = iota
+	StatMelee   Stat = iota
+	StatDefense Stat = iota
+	StatSpeed   Stat = iota
+
+	StatAccuracy Stat = iota
+	StatEvasion  Stat = iota
 )
 
 func (s Stat) String() string {
@@ -22,6 +26,8 @@ func (s Stat) String() string {
 		return "Health"
 	case StatMelee:
 		return "Melee"
+	case StatDefense:
+		return "Defense"
 	case StatSpeed:
 		return "Speed"
 	default:
@@ -67,14 +73,21 @@ func resolveBaseStat(value float64, level float64) float64 {
 
 func (s *StatsData) ResolveBaseStats() {
 	for stat, value := range s.Stats {
-		s.Stats[stat] = resolveBaseStat(value, 5)
+		if stat == StatAccuracy || stat == StatEvasion {
+			continue
+		}
+
+		s.Stats[stat] = resolveBaseStat(value, 25)
 	}
 }
 
 func (s *StatsData) MapStages() {
 	for stat, value := range s.Stats {
-		stage := s.Stages[stat]
-		value *= getStageMult(stage, 2)
+		if stat == StatAccuracy || stat == StatEvasion {
+			value *= getStageMult(s.Stages[stat], 3)
+		} else {
+			value *= getStageMult(s.Stages[stat], 2)
+		}
 
 		s.Stats[stat] = value
 	}

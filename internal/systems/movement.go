@@ -128,5 +128,5 @@ func getSpeed(entry *donburi.Entry) float64 {
 		speed = stats.Stats[components.StatSpeed]
 	}
 
-	return speed / 5
+	return speed / 10.0
 }

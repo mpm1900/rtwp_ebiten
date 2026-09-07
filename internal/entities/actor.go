@@ -22,9 +22,12 @@ func CreateActor(
 		Player:  player,
 	})
 	components.Stats.SetValue(entry, *components.NewStatsData(map[components.Stat]float64{
-		components.StatHealth: 100.0,
-		components.StatMelee:  10.0,
-		components.StatSpeed:  1.0,
+		components.StatHealth:   100.0,
+		components.StatMelee:    80.0,
+		components.StatDefense:  80.0,
+		components.StatSpeed:    60.0,
+		components.StatAccuracy: 1.0,
+		components.StatEvasion:  1.0,
 	}))
 	components.WithDamage(entry, 0)
 	components.WithImage(entry, assets.ActorImage, position)

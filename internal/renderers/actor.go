@@ -23,6 +23,18 @@ const (
 
 var renderActorsQuery = donburi.NewQuery(filter.Contains(components.Actor, components.Image))
 var outlineCache = map[*ebiten.Image]map[uint32]*ebiten.Image{}
+var actorQueueTextFace *text.GoTextFace
+
+func actorQueueFont() *text.GoTextFace {
+	if actorQueueTextFace == nil {
+		actorQueueTextFace = &text.GoTextFace{
+			Source: assets.YolkFontSource,
+			Size:   24,
+		}
+	}
+
+	return actorQueueTextFace
+}
 
 func outlineColorKey(outline color.Color, thickness int) uint32 {
 	rgba := color.RGBAModel.Convert(outline).(color.RGBA)
@@ -104,15 +116,22 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 	for entry := range renderActorsQuery.Iter(ecs.World) {
 		trans := transform.Transform.Get(entry)
 		image := *components.Image.Get(entry)
-		options := ebiten.DrawImageOptions{}
+		options := &ebiten.DrawImageOptions{}
 
-		centerScale := components.CenterScale(*trans)
-		options.GeoM.Translate(centerScale.X, centerScale.Y)
-		options.GeoM.Rotate(dmath.ToRadians(trans.LocalRotation))
+		sprite := image
+		if image == assets.ActorImage {
+			sprite = assets.ActorFacingSprite(trans.LocalRotation)
+			bounds := sprite.Bounds()
+			center_scale := dmath.NewVec2(-float64(bounds.Dx())/2, -float64(bounds.Dy())/2)
+			options.GeoM.Translate(center_scale.X, center_scale.Y)
+		} else {
+			center_scale := components.CenterScale(*trans)
+			options.GeoM.Translate(center_scale.X, center_scale.Y)
+		}
 
 		center := components.CenterTrans(*trans)
-		centerPoint := view.Point(center)
-		options.GeoM.Translate(centerPoint.X, centerPoint.Y)
+		center_point := view.Point(center)
+		options.GeoM.Translate(center_point.X, center_point.Y)
 
 		outlineColor := assets.ColorEnemy
 		actor := components.Actor.Get(entry)
@@ -127,14 +146,15 @@ func RenderActors(ecs *ecs.ECS, screen *ebiten.Image) {
 			thickness = 2
 		}
 
-		renderOutlinedSprite(screen, image, options, outlineColor, thickness)
+		renderOutlinedSprite(screen, sprite, *options, outlineColor, thickness)
+
+		if !entry.HasComponent(components.Selected) {
+			continue
+		}
 
 		textop := &text.DrawOptions{}
-		textop.GeoM.Translate(centerPoint.X-6, centerPoint.Y-10)
-		text.Draw(screen, fmt.Sprintf("%d", actor.ActionQueueLen()), &text.GoTextFace{
-			Source: assets.YolkFontSource,
-			Size:   24,
-		}, textop)
+		textop.GeoM.Translate(center_point.X-6, center_point.Y-10)
+		text.Draw(screen, fmt.Sprintf("%d", actor.ActionQueueLen()), actorQueueFont(), textop)
 	}
 }
 

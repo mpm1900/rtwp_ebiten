@@ -12,6 +12,7 @@ import (
 
 func HandleMovement(ecs *ecs.ECS) {
 	completed := []donburi.Entity{}
+	components.RebuildCollisionIndex(ecs.World)
 	if ecs.IsPaused() {
 		return
 	}

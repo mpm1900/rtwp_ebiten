@@ -22,15 +22,18 @@ func CollidesAt(world donburi.World, entry *donburi.Entry, position math.Vec2) (
 		return nil, false
 	}
 
-	for other := range CollisionQuery.Iter(world) {
-		if other.Entity() == entry.Entity() {
-			continue
+	var colliding *donburi.Entry
+	collisionSpatial.eachCandidate(bounds, entry.Entity(), func(other *donburi.Entry) bool {
+		other_bounds, ok := Rect(other)
+		if ok && bounds.Overlaps(other_bounds) {
+			colliding = other
+			return false
 		}
 
-		otherBounds, ok := Rect(other)
-		if ok && bounds.Overlaps(otherBounds) {
-			return other, true
-		}
+		return true
+	})
+	if colliding != nil {
+		return colliding, true
 	}
 
 	return nil, false
@@ -51,7 +54,9 @@ func CollisionStopDistance(entry *donburi.Entry, stopDistance float64) float64 {
 
 func FirstColliderAtPoint(world donburi.World, point math.Vec2) (*donburi.Entry, bool) {
 	pt := util.ToPoint(point)
-	for entry := range CollisionQuery.Iter(world) {
+	key := [2]int{cellCoord(pt.X), cellCoord(pt.Y)}
+
+	for _, entry := range collisionSpatial.cells[key] {
 		bounds, ok := Rect(entry)
 		if !ok {
 			continue

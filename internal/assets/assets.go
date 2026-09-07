@@ -31,8 +31,12 @@ func MustLoadAssets() {
 	CursorMoveImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-move.png")
 	CursorAttackImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-attack.png")
 	CursorInteractImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-interact.png")
-	ActorImage = ebiten.NewImage(24, 24)
-	ActorImage.Fill(ColorActor)
+	cultist, _, err := ebitenutil.NewImageFromFile("assets/images/crowned-skull.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ActorImage = resizeImage(cultist, 24, 24)
+	initActorFacingSprites(ActorImage)
 	BlueSquareImage = ebiten.NewImage(24, 24)
 	BlueSquareImage.Fill(color.RGBA{0, 0, 0xff, 0xff})
 	GreenSquareImage = ebiten.NewImage(24, 24)
@@ -45,4 +49,16 @@ func MustLoadAssets() {
 		log.Fatal(err)
 	}
 	YolkFontSource = s
+}
+
+func resizeImage(source *ebiten.Image, width, height int) *ebiten.Image {
+	dst := ebiten.NewImage(width, height)
+	op := &ebiten.DrawImageOptions{}
+	bounds := source.Bounds()
+	op.GeoM.Scale(
+		float64(width)/float64(bounds.Dx()),
+		float64(height)/float64(bounds.Dy()),
+	)
+	dst.DrawImage(source, op)
+	return dst
 }

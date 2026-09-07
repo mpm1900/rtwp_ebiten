@@ -24,6 +24,7 @@ func (b StatsChangeBehavior) Apply(mod *components.ModifierData, world donburi.W
 		if entry.HasComponent(components.Stats) {
 			frame.Modify(entry, components.Stats, func(stats *components.StatsData) {
 				b.Update(stats)
+				stats.MapStages()
 			})
 		}
 		if entry.HasComponent(components.Image) {

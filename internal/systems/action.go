@@ -8,6 +8,7 @@ import (
 
 // TickActorActions ticks cooldown timers and advances queued actions for every actor.
 func TickActorActions(ecs *ecs.ECS) {
+	components.RebuildCollisionIndex(ecs.World)
 	if ecs.IsPaused() {
 		return
 	}

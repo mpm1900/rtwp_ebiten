@@ -23,12 +23,12 @@ func getWorldBackground() *ebiten.Image {
 
 func RenderBackground(ecs *ecs.ECS, screen *ebiten.Image) {
 	view := newCameraView(ecs)
-	worldMinX, worldMinY, _, _ := components.WorldRect()
+	worldRect := components.WorldRect()
 
 	screen.Fill(color.Black)
 
 	playableOp := &ebiten.DrawImageOptions{}
-	playableOrigin := view.Point(dmath.NewVec2(worldMinX, worldMinY))
+	playableOrigin := view.Point(dmath.NewVec2(float64(worldRect.Min.X), float64(worldRect.Min.Y)))
 	playableOp.GeoM.Translate(playableOrigin.X, playableOrigin.Y)
 	screen.DrawImage(getWorldBackground(), playableOp)
 }

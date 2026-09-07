@@ -14,7 +14,9 @@ import (
 func handleMouseInput(ecs *ecs.ECS, point math.Vec2) {
 	// zoom
 	_, wheelY := ebiten.Wheel()
-	if wheelY != 0 && !components.IsOverMinimap(point, components.MinimapRect()) {
+	mapRect := components.MinimapRect()
+	p := util.ToPoint(point)
+	if wheelY != 0 && (p.X < mapRect.Min.X || p.Y < mapRect.Min.Y || p.X >= mapRect.Max.X || p.Y >= mapRect.Max.Y) {
 		events.ZoomCamera.Publish(ecs.World, events.ZoomCameraData{
 			Delta:  wheelY,
 			Cursor: point,

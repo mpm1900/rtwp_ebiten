@@ -10,7 +10,7 @@ import (
 func CreatePlayer(esc *ecs.ECS) donburi.Entity {
 	entity := esc.World.Create(components.Player)
 	entry := esc.World.Entry(entity)
-	components.Player.SetValue(entry, components.NewPlayerData())
+	components.Player.SetValue(entry, components.PlayerData{})
 	components.WithCursor(entry, components.CursorData{})
 	components.WithCamera(entry, components.NewCameraData())
 	return entity

@@ -16,7 +16,7 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 		return
 	}
 
-	worldMinX, worldMinY, worldMaxX, worldMaxY := components.WorldRect()
+	worldRect := components.WorldRect()
 	mapRect := components.MinimapRect()
 
 	vector.FillRect(
@@ -29,13 +29,13 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 		false,
 	)
 
-	worldW := worldMaxX - worldMinX
-	worldH := worldMaxY - worldMinY
+	worldW := float64(worldRect.Dx())
+	worldH := float64(worldRect.Dy())
 	playerEntity := components.GetPlayerEntity(ecs.World)
-	for entry := range components.ImageQuery.Iter(ecs.World) {
+	for entry := range components.ImageQuery.Iter(ecs.world) {
 		position := components.Center(entry)
-		mapX := (position.X - worldMinX) / worldW * components.MINIMAP_SIZE
-		mapY := (position.Y - worldMinY) / worldH * components.MINIMAP_SIZE
+		mapX := (position.X - float64(worldRect.Min.X)) / worldW * components.MINIMAP_SIZE
+		mapY := (position.Y - float64(worldRect.Min.Y)) / worldH * components.MINIMAP_SIZE
 		if mapX < 0 || mapX >= components.MINIMAP_SIZE || mapY < 0 || mapY >= components.MINIMAP_SIZE {
 			continue
 		}
@@ -69,13 +69,13 @@ func RenderMinimap(ecs *ecs.ECS, screen *ebiten.Image) {
 	viewRight := camera.Camera.X + halfWidth
 	viewBottom := camera.Camera.Y + halfHeight
 
-	viewLeft = max(viewLeft, worldMinX)
-	viewTop = max(viewTop, worldMinY)
-	viewRight = min(viewRight, worldMaxX)
-	viewBottom = min(viewBottom, worldMaxY)
+	viewLeft = max(viewLeft, float64(worldRect.Min.X))
+	viewTop = max(viewTop, float64(worldRect.Min.Y))
+	viewRight = min(viewRight, float64(worldRect.Max.X))
+	viewBottom = min(viewBottom, float64(worldRect.Max.Y))
 
-	viewportX := (viewLeft - worldMinX) / worldW * components.MINIMAP_SIZE
-	viewportY := (viewTop - worldMinY) / worldH * components.MINIMAP_SIZE
+	viewportX := (viewLeft - float64(worldRect.Min.X)) / worldW * components.MINIMAP_SIZE
+	viewportY := (viewTop - float64(worldRect.Min.Y)) / worldH * components.MINIMAP_SIZE
 	viewportW := (viewRight - viewLeft) / worldW * components.MINIMAP_SIZE
 	viewportH := (viewBottom - viewTop) / worldH * components.MINIMAP_SIZE
 

@@ -33,9 +33,9 @@ func init() {
 }
 
 func initGridAndAStar(cellSize float64) {
-	worldMinX, worldMinY, worldMaxX, worldMaxY := components.WorldRect()
-	maxX := worldMaxX + components.WORLD_BORDER
-	maxY := worldMaxY + components.WORLD_BORDER
+	worldRect := components.WorldRect()
+	maxX := float64(worldRect.Max.X + components.WORLD_BORDER)
+	maxY := float64(worldRect.Max.Y + components.WORLD_BORDER)
 
 	cols := uint(math.Ceil(maxX / cellSize))
 	rows := uint(math.Ceil(maxY / cellSize))
@@ -52,8 +52,8 @@ func initGridAndAStar(cellSize float64) {
 		NumRows: uint(grid.NumRows()),
 	})
 
-	playableMinCoord = grid.PosToCoord(worldMinX, worldMinY)
-	playableMaxCoord = grid.PosToCoord(worldMaxX-1, worldMaxY-1)
+	playableMinCoord = grid.PosToCoord(float64(worldRect.Min.X), float64(worldRect.Min.Y))
+	playableMaxCoord = grid.PosToCoord(float64(worldRect.Max.X-1), float64(worldRect.Max.Y-1))
 
 	// Permanently block all cells in the world border area
 	for x := 0; x < grid.NumCols(); x++ {

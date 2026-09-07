@@ -11,4 +11,5 @@ var ColorSelected = color.RGBA{251, 200, 94, 0xff}
 var ColorPlayer = color.RGBA{104, 209, 90, 0xff}
 var ColorEnemy = color.RGBA{168, 55, 45, 0xff}
 
+var ColorRange = color.RGBA{251, 200, 94, 0xff}
 var ColorEffectTarget = color.RGBA{0, 0, 255, 0xff}

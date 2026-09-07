@@ -20,10 +20,10 @@ func createObstacle(world donburi.World, pos, size dmath.Vec2) donburi.Entity {
 }
 
 func assertNoPointsInBorder(t *testing.T, path []dmath.Vec2) {
-	minX, minY, maxX, maxY := components.WorldRect()
+	worldRect := components.WorldRect()
 	for i, pt := range path {
-		if pt.X < minX || pt.X > maxX || pt.Y < minY || pt.Y > maxY {
-			t.Errorf("point %d (%v) is in world border! Playable bounds: [%v, %v] x [%v, %v]", i, pt, minX, maxX, minY, maxY)
+		if pt.X < float64(worldRect.Min.X) || pt.X > float64(worldRect.Max.X) || pt.Y < float64(worldRect.Min.Y) || pt.Y > float64(worldRect.Max.Y) {
+			t.Errorf("point %d (%v) is in world border! Playable bounds: %v", i, pt, worldRect)
 		}
 	}
 }

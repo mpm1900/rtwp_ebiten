@@ -9,8 +9,9 @@ import (
 )
 
 type DamageEvent struct {
-	Point  math.Vec2
-	Amount float64
+	Position math.Vec2
+	Source   donburi.Entity
+	Action   *components.Action
 }
 
 var DamageAt = events.NewEventType[DamageEvent]()
@@ -20,7 +21,7 @@ func InitDamage(world donburi.World) {
 }
 
 func damageAt(world donburi.World, event DamageEvent) {
-	entry, ok := components.DamageAt(world, event.Point, event.Amount)
+	entry, ok := components.DamageAt(world, event.Source, event.Position, event.Action)
 	if ok {
 		damage := components.Damage.Get(entry)
 		stats := components.Stats.Get(entry)

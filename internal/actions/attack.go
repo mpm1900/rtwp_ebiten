@@ -62,8 +62,9 @@ func (b AttackBehavior) Start(action *components.Action, world donburi.World, ev
 	source := world.Entry(event.Source)
 	components.WithTargets(source, entry.Entity())
 	events.DamageAt.Publish(world, events.DamageEvent{
-		Point:  event.Position,
-		Amount: 10,
+		Source:   event.Source,
+		Position: event.Position,
+		Action:   action,
 	})
 }
 

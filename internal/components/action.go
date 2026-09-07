@@ -33,6 +33,7 @@ type Action struct {
 type ActionConfig struct {
 	Key           ebiten.Key
 	Name          string
+	Accuracy      float64
 	Cooldown      int
 	Cursor        *ebiten.Image
 	CursorInvalid *ebiten.Image

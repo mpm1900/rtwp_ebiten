@@ -40,10 +40,16 @@ func main() {
 	components.WitherInteractable(g.ECS.World.Entry(speed_up), components.InteractableData{
 		TargetOffset: math.NewVec2(0, -24),
 		OnInteract: func(world donburi.World, entity donburi.Entity) {
-			stats := components.Stats.Get(world.Entry(entity))
+			entry := world.Entry(entity)
+			if !entry.HasComponent(components.Stats) {
+				return
+			}
+
+			stats := components.Stats.Get(entry)
 			fmt.Println(entity, "resolved stats:", stats.Stats)
-			modified := components.Modified.Get(world.Entry(entity))
-			fmt.Println(*modified)
+			if entry.HasComponent(components.Modified) {
+				fmt.Println(*components.Modified.Get(entry))
+			}
 		},
 	})
 

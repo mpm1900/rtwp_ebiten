@@ -74,6 +74,11 @@ func (b MoveBehavior) Start(action *components.Action, world donburi.World, even
 		return
 	}
 
+	if len(event.Path) > 0 {
+		setMoveThroughPath(world, event.Source, event.Path, event.Position, event.Loop)
+		return
+	}
+
 	setMoveTo(world, event.Source, event.Position, event.Loop)
 }
 func (b MoveBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
@@ -109,10 +114,21 @@ var Move = &components.Action{
 }
 
 func moveAnchor(entry *donburi.Entry, queued bool) math.Vec2 {
-	if queued && entry.HasComponent(components.Movement) {
-		movement := components.Movement.Get(entry)
-		if last, ok := movement.Last(); ok {
-			return last
+	if queued {
+		if entry.HasComponent(components.Movement) {
+			movement := components.Movement.Get(entry)
+			if last, ok := movement.Last(); ok {
+				return last
+			}
+		}
+		if entry.HasComponent(components.Actor) {
+			actor := components.Actor.Get(entry)
+			if active, ok := actor.PeekActionQueue(); ok && active.Action == Move {
+				if len(active.Path) > 0 {
+					return active.Path[len(active.Path)-1]
+				}
+				return active.Position
+			}
 		}
 	}
 
@@ -131,6 +147,9 @@ func setMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, loop
 	start := components.Center(entry)
 
 	path := getPath(world, start, point)
+	if len(path) == 0 {
+		return
+	}
 	components.WithMovement(entry, components.NewPathMovement(entry, path, loop))
 }
 func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, loop bool) {
@@ -144,18 +163,36 @@ func pushMoveTo(world donburi.World, source donburi.Entity, point math.Vec2, loo
 	path := getPath(world, start, point)
 	components.PushMovementList(entry, path, movement.StopDistance, loop)
 }
+func setMoveThroughPath(world donburi.World, source donburi.Entity, path []math.Vec2, final math.Vec2, loop bool) {
+	entry := world.Entry(source)
+	start := components.Center(entry)
+
+	var full_path []math.Vec2
+	for _, wp := range path {
+		full_path = append(full_path, getPath(world, start, wp)...)
+		start = wp
+	}
+	full_path = append(full_path, getPath(world, start, final)...)
+
+	if len(full_path) == 0 {
+		return
+	}
+	components.WithMovement(entry, components.NewPathMovement(entry, full_path, loop))
+}
 func pushActiveMove(world donburi.World, entry *donburi.Entry, actor *components.ActorData, point math.Vec2, loop bool) bool {
 	active_event, ok := actor.PeekActionQueue()
-	if !ok || actor.ActionQueueLen() != 1 || !actor.ActionStarted {
-		return false
-	}
-	if active_event.Action != Move {
-		return false
-	}
-	if !entry.HasComponent(components.Movement) {
+	if !ok || actor.ActionQueueLen() != 1 || active_event.Action != Move {
 		return false
 	}
 
-	pushMoveTo(world, entry.Entity(), point, loop)
+	if actor.ActionStarted {
+		if !entry.HasComponent(components.Movement) {
+			return false
+		}
+		pushMoveTo(world, entry.Entity(), point, loop)
+		return true
+	}
+
+	active_event.Path = append(active_event.Path, point)
 	return true
 }

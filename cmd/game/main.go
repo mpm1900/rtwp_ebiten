@@ -40,7 +40,8 @@ func main() {
 	components.WitherInteractable(g.ECS.World.Entry(speed_up), components.InteractableData{
 		TargetOffset: math.NewVec2(0, -24),
 		OnInteract: func(world donburi.World, entity donburi.Entity) {
-			fmt.Println(entity, "did the thing")
+			stats := components.Stats.Get(world.Entry(entity))
+			fmt.Println(entity, "resolved stats:", stats.Stats)
 		},
 	})
 

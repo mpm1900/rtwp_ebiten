@@ -8,7 +8,7 @@ import (
 )
 
 var systemModifiers = []*components.ModifierData{
-	SystemResolveStats,
+	SystemResolveBaseStats,
 }
 
 func LoadSystemModifiers(ecs *ecs.ECS) {

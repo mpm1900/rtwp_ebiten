@@ -11,6 +11,7 @@ type ActionEvent struct {
 	Keys             []ebiten.Key
 	Loop             bool
 	Position         math.Vec2
+	Path             []math.Vec2
 	Source           donburi.Entity
 	OnActionStart    func()
 	OnActionComplete func()
@@ -32,12 +33,13 @@ type Action struct {
 type ActionConfig struct {
 	Key           ebiten.Key
 	Name          string
-	Delay         int
 	Cooldown      int
 	Cursor        *ebiten.Image
 	CursorInvalid *ebiten.Image
 	CursorOffset  math.Vec2
-	SingleOnly    bool
+	Delay         int
+	Power         float64
+	Range         []float64
 }
 
 type ActionBehavior interface {

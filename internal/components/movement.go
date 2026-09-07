@@ -59,8 +59,11 @@ func (m *MovementData) Next() bool {
 	if m.Follow != donburi.Null {
 		return false
 	}
+	if len(m.Path) == 0 {
+		return true
+	}
 
-	if m.Loop && len(m.Path) > 0 {
+	if m.Loop {
 		m.PathIndex = (m.PathIndex + 1) % len(m.Path)
 		return false
 	}

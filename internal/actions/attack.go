@@ -24,7 +24,6 @@ func (b AttackBehavior) Publish(action *components.Action, world donburi.World, 
 
 		actor.QueueActionEvent(world, action_event, shift)
 	}
-
 }
 func (b AttackBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
 	entry, ok := components.FirstActorAtPoint(world, event.Position)
@@ -89,4 +88,5 @@ var Attack = &components.Action{
 	Delay:    10,
 	Cooldown: 60,
 	Behavior: AttackBehavior{},
+	Range:    []float64{5, 55},
 }

@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"maps"
 
 	"github.com/yohamta/donburi"
@@ -14,6 +15,19 @@ const (
 	StatMelee  Stat = iota
 	StatSpeed  Stat = iota
 )
+
+func (s Stat) String() string {
+	switch s {
+	case StatHealth:
+		return "Health"
+	case StatMelee:
+		return "Melee"
+	case StatSpeed:
+		return "Speed"
+	default:
+		return fmt.Sprintf("Stat(%d)", s)
+	}
+}
 
 type StatsData struct {
 	Base   map[Stat]float64
@@ -47,16 +61,23 @@ func getStageMult(stage int, factor float64) float64 {
 	return n / d
 }
 
+func resolveBaseStat(value float64, level float64) float64 {
+	return (((2 * value) * level) / 100) + level + 10
+}
+
+func (s *StatsData) ResolveBaseStats() {
+	for stat, value := range s.Stats {
+		s.Stats[stat] = resolveBaseStat(value, 5)
+	}
+}
+
 func (s *StatsData) MapStages() {
-	stats := maps.Clone(s.Base)
-	for stat := range stats {
-		value := stats[stat]
+	for stat, value := range s.Stats {
 		stage := s.Stages[stat]
 		value *= getStageMult(stage, 2)
 
-		stats[stat] = value
+		s.Stats[stat] = value
 	}
-	s.Stats = stats
 }
 
 func (stats StatsData) Clone() StatsData {

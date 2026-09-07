@@ -18,27 +18,38 @@ func HandleMovement(ecs *ecs.ECS) {
 
 	for entry := range components.MovementQuery.Iter(ecs.World) {
 		movement := components.Movement.Get(entry)
-		distance := movement.TargetDistance(ecs.World, entry)
-		if distance > movement.StopDistance {
-			step := min(getSpeed(entry), distance)
-			delta, ok := movement.Delta(ecs.World, entry, step)
-			if !ok {
-				completed = append(completed, entry.Entity())
-				continue
-			}
+		budget := getSpeed(entry)
 
-			distance = movement.TargetDistance(ecs.World, entry)
-			if moveWithCollision(ecs.World, entry, delta) && distance <= components.CollisionStopDistance(entry, movement.StopDistance) {
+		for budget > 0 {
+			distance := movement.TargetDistance(ecs.World, entry)
+			if distance <= movement.StopDistance {
 				if movement.Next() {
 					completed = append(completed, entry.Entity())
+					break
 				}
 				continue
 			}
-		} else {
-			if movement.Next() {
+
+			step := min(budget, distance)
+			delta, ok := movement.Delta(ecs.World, entry, step)
+			if !ok {
 				completed = append(completed, entry.Entity())
+				break
 			}
-			continue
+
+			budget -= step
+			if !moveWithCollision(ecs.World, entry, delta) {
+				continue
+			}
+
+			if movement.TargetDistance(ecs.World, entry) <= components.CollisionStopDistance(entry, movement.StopDistance) {
+				if movement.Next() {
+					completed = append(completed, entry.Entity())
+					break
+				}
+				continue
+			}
+			break
 		}
 	}
 
@@ -63,22 +74,40 @@ func moveWithCollision(world donburi.World, entry *donburi.Entry, delta dmath.Ve
 	start_pos := trans.LocalPosition
 	trans.LocalRotation = dmath.ToDegrees(math.Atan2(delta.Y, delta.X))
 
+	// Fast path: try the full delta in one collision check.
 	full_position := components.ClampWorldPosition(start_pos.Add(delta))
 	if isFreeAt(world, entry, full_position) {
 		trans.LocalPosition = full_position
 		return false
 	}
 
+	// Blocked: sub-step to find how far we can get before the collision.
+	magnitude := delta.Magnitude()
+	direction := delta.Normalized()
 	position := start_pos
-	axes := [2]dmath.Vec2{{X: delta.X}, {Y: delta.Y}}
-	for _, axis_delta := range axes {
-		if axis_delta.IsZero() {
-			continue
+	traveled := 0.0
+	for traveled < magnitude {
+		step := min(1.0, magnitude-traveled)
+		next := components.ClampWorldPosition(position.Add(direction.MulScalar(step)))
+		if !isFreeAt(world, entry, next) {
+			break
 		}
+		position = next
+		traveled += step
+	}
 
-		next_position := components.ClampWorldPosition(position.Add(axis_delta))
-		if isFreeAt(world, entry, next_position) {
-			position = next_position
+	// Slide along axes for the remaining distance.
+	remaining := magnitude - traveled
+	if remaining > 0 {
+		axes := [2]dmath.Vec2{{X: direction.X * remaining}, {Y: direction.Y * remaining}}
+		for _, axis_delta := range axes {
+			if axis_delta.IsZero() {
+				continue
+			}
+			next := components.ClampWorldPosition(position.Add(axis_delta))
+			if isFreeAt(world, entry, next) {
+				position = next
+			}
 		}
 	}
 
@@ -99,5 +128,5 @@ func getSpeed(entry *donburi.Entry) float64 {
 		speed = stats.Stats[components.StatSpeed]
 	}
 
-	return speed
+	return speed / 5
 }

@@ -24,7 +24,7 @@ func CreateActor(
 	components.Stats.SetValue(entry, *components.NewStatsData(map[components.Stat]float64{
 		components.StatHealth: 100.0,
 		components.StatMelee:  10.0,
-		components.StatSpeed:  2.0,
+		components.StatSpeed:  1.0,
 	}))
 	components.WithDamage(entry, 0)
 	components.WithImage(entry, assets.ActorImage, position)

@@ -25,4 +25,31 @@ func RenderRanges(ecs *ecs.ECS, screen *ebiten.Image) {
 			true,
 		)
 	}
+
+	player := components.GetPlayer(ecs.World)
+	if player.SelectedAction != nil && player.SelectedAction.Range != nil {
+		for selected := range components.SelectedActorsQuery.Iter(ecs.World) {
+			inside := player.SelectedAction.Range[0]
+			outside := player.SelectedAction.Range[1]
+			center := view.Point(components.Center(selected))
+			vector.StrokeCircle(
+				screen,
+				float32(center.X),
+				float32(center.Y),
+				float32(inside),
+				2,
+				assets.ColorRange,
+				true,
+			)
+			vector.StrokeCircle(
+				screen,
+				float32(center.X),
+				float32(center.Y),
+				float32(outside),
+				2,
+				assets.ColorRange,
+				true,
+			)
+		}
+	}
 }

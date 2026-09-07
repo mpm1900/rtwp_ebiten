@@ -1,7 +1,10 @@
 package renderers
 
 import (
+	"image"
 	"image/color"
+	"math/rand/v2"
+	"rtwp_ebitengine/internal/assets"
 	"rtwp_ebitengine/internal/components"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,7 +20,27 @@ func getWorldBackground() *ebiten.Image {
 	}
 
 	worldBackground = ebiten.NewImage(int(components.WORLD_WIDTH), int(components.WORLD_HEIGHT))
-	worldBackground.Fill(color.RGBA{R: 0x22, G: 0x1a, B: 0x2d, A: 0xff})
+	tileset := assets.GrassTilesetImage
+	tileSize := components.TILE_SIZE
+
+	for y := range components.WORLD_TILE_COUNT {
+		for x := range components.WORLD_TILE_COUNT {
+			tileIndex := rand.IntN(assets.GrassTileCount / 2)
+			col := tileIndex % assets.GrassTilesetCols
+			row := tileIndex / assets.GrassTilesetCols
+			tileRect := image.Rect(
+				col*tileSize,
+				row*tileSize,
+				(col+1)*tileSize,
+				(row+1)*tileSize,
+			)
+			tile := tileset.SubImage(tileRect).(*ebiten.Image)
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(float64(x*tileSize), float64(y*tileSize))
+			worldBackground.DrawImage(tile, op)
+		}
+	}
+
 	return worldBackground
 }
 

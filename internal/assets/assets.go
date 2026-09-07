@@ -24,6 +24,13 @@ var YellowSquareImage *ebiten.Image
 
 var YolkFontSource *text.GoTextFaceSource
 
+var GrassTilesetImage *ebiten.Image
+
+const (
+	GrassTilesetCols = 8
+	GrassTileCount   = GrassTilesetCols * GrassTilesetCols
+)
+
 func MustLoadAssets() {
 	var err error
 	CursorPointerImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-pointer.png")
@@ -43,6 +50,11 @@ func MustLoadAssets() {
 	GreenSquareImage.Fill(color.RGBA{0, 0xff, 0, 0xff})
 	YellowSquareImage = ebiten.NewImage(48, 48)
 	YellowSquareImage.Fill(color.RGBA{0xff, 0xff, 0, 0xff})
+
+	GrassTilesetImage, _, err = ebitenutil.NewImageFromFile("assets/images/TX Tileset Grass.png")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.Yolk6TTF))
 	if err != nil {

@@ -10,7 +10,7 @@ func Load(world donburi.World) {
 	InitMinimap(world)
 	InitDamage(world)
 	InitActions(world)
-	InitDeath(world)
+	InitDestroy(world)
 }
 
 func ProcessEvents(world donburi.World) {
@@ -31,5 +31,5 @@ func ProcessEvents(world donburi.World) {
 	DamageAt.ProcessEvents(world)
 
 	// post events
-	ActorDeath.ProcessEvents(world)
+	Destroy.ProcessEvents(world)
 }

@@ -33,7 +33,7 @@ func HandleMovement(ecs *ecs.ECS) {
 			entry = ecs.World.Entry(entity)
 
 			distance := movement.TargetDistance(ecs.World, entry)
-			if distance <= movement.StopDistance {
+			if movement.Follow == donburi.Null && distance <= movement.StopDistance {
 				if movement.Next() {
 					completed = append(completed, entity)
 					break
@@ -155,6 +155,11 @@ func isFreeAt(world donburi.World, entity donburi.Entity, position dmath.Vec2) b
 	}
 
 	entry := world.Entry(entity)
+	follow := donburi.Null
+	if entry.HasComponent(components.Movement) {
+		follow = components.Movement.Get(entry).Follow
+	}
+
 	other, colliding := components.CollidesAt(world, entry, position)
 	if colliding && other != nil {
 		if entry.HasComponent(components.Collision) {
@@ -175,11 +180,25 @@ func isFreeAt(world donburi.World, entity donburi.Entity, position dmath.Vec2) b
 		return true
 	}
 
+	if follow != donburi.Null && colliding && other != nil {
+		if other.HasComponent(components.Actor) {
+			return false
+		}
+		return true
+	}
+
 	return !colliding
 }
 
 func getSpeed(entry *donburi.Entry) float64 {
 	speed := 0.0
+
+	if entry.HasComponent(components.Movement) {
+		movement := components.Movement.Get(entry)
+		if movement.Speed > 0 {
+			speed = movement.Speed
+		}
+	}
 
 	if entry.HasComponent(components.Stats) {
 		stats := components.Stats.Get(entry)

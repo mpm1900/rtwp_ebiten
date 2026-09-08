@@ -18,6 +18,7 @@ type MovementData struct {
 	HasLoopOrigin bool
 	Path          []math.Vec2
 	PathIndex     int
+	Speed         float64
 	StopDistance  float64
 }
 
@@ -144,6 +145,14 @@ func NewPathFollow(follow donburi.Entity) MovementData {
 	return MovementData{
 		Follow:       follow,
 		StopDistance: DEFAULT_STOP_DISTANCE,
+	}
+}
+
+func NewHomingMovement(follow donburi.Entity, speed float64) MovementData {
+	return MovementData{
+		Follow:       follow,
+		Speed:        speed,
+		StopDistance: 0,
 	}
 }
 

@@ -10,17 +10,22 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-var renderModifiersQuery = donburi.NewQuery(filter.And(
-	filter.Contains(components.Modifier, components.Image),
+var renderEffectsQuery = donburi.NewQuery(filter.And(
+	filter.Contains(components.Image, transform.Transform),
 	filter.Not(filter.Contains(components.Delay)),
+	filter.Not(filter.Contains(components.Actor)),
 ))
 
 func RenderEffect(ecs *ecs.ECS, screen *ebiten.Image) {
 	view := newCameraView(ecs)
 
-	for entry := range renderModifiersQuery.Iter(ecs.World) {
+	for entry := range renderEffectsQuery.Iter(ecs.World) {
 		trans := transform.Transform.Get(entry)
-		image := *components.Image.Get(entry)
+		image := components.Image.Get(entry)
+		if image == nil || *image == nil {
+			continue
+		}
+
 		options := ebiten.DrawImageOptions{}
 
 		center_scale := components.CenterScale(*trans)
@@ -28,6 +33,6 @@ func RenderEffect(ecs *ecs.ECS, screen *ebiten.Image) {
 		center := components.CenterTrans(*trans)
 		center_point := view.Point(center)
 		options.GeoM.Translate(center_point.X, center_point.Y)
-		screen.DrawImage(image, &options)
+		screen.DrawImage(*image, &options)
 	}
 }

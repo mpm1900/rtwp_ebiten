@@ -19,6 +19,7 @@ var CursorInteractImage *ebiten.Image
 
 var ActorImage *ebiten.Image
 var BlueSquareImage *ebiten.Image
+var FireImage *ebiten.Image
 var GreenSquareImage *ebiten.Image
 var YellowSquareImage *ebiten.Image
 
@@ -42,8 +43,13 @@ func MustLoadAssets() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fire, _, err := ebitenutil.NewImageFromFile("assets/images/Fire7.png")
+	if err != nil {
+		log.Fatal(err)
+	}
 	ActorImage = resizeImage(cultist, 24, 24)
 	initActorFacingSprites(ActorImage)
+	FireImage = fire
 	BlueSquareImage = ebiten.NewImage(24, 24)
 	BlueSquareImage.Fill(color.RGBA{0, 0, 0xff, 0xff})
 	GreenSquareImage = ebiten.NewImage(24, 24)

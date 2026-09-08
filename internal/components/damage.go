@@ -29,23 +29,36 @@ func WithDamage(entry *donburi.Entry, damage float64) {
 	Damage.SetValue(entry, damage)
 }
 
-func DamageAt(world donburi.World, source donburi.Entity, point math.Vec2, action *Action) (*donburi.Entry, bool) {
+func DamageAt(world donburi.World, source donburi.Entity, point math.Vec2, accuracy, power float64) (*donburi.Entry, bool) {
 	entry, ok := FirstActorAtPoint(world, point)
 	if !ok {
 		return nil, false
 	}
 
-	source_stats := Stats.Get(world.Entry(source))
-	target_stats := Stats.Get(entry)
-	result := GetDamageResult(action, 20, *source_stats, *target_stats)
-	if !entry.HasComponent(Damage) {
-		WithDamage(entry, result.Amount)
+	return DamageTo(world, source, entry.Entity(), accuracy, power)
+}
+func DamageTo(world donburi.World, source donburi.Entity, target donburi.Entity, accuracy, power float64) (*donburi.Entry, bool) {
+	if !world.Valid(source) || !world.Valid(target) {
 		return nil, false
 	}
 
-	damage := Damage.Get(entry)
-	Damage.SetValue(entry, *damage+result.Amount)
-	return entry, true
+	source_entry := world.Entry(source)
+	target_entry := world.Entry(target)
+	if !source_entry.HasComponent(Stats) || !target_entry.HasComponent(Stats) {
+		return nil, false
+	}
+
+	source_stats := Stats.Get(source_entry)
+	target_stats := Stats.Get(target_entry)
+	result := GetDamageResult(accuracy, power, 20, *source_stats, *target_stats)
+	if !target_entry.HasComponent(Damage) {
+		WithDamage(target_entry, result.Amount)
+		return nil, false
+	}
+
+	damage := Damage.Get(target_entry)
+	Damage.SetValue(target_entry, *damage+result.Amount)
+	return target_entry, true
 }
 
 type AccuracyResult struct {
@@ -60,23 +73,23 @@ type DamageResult struct {
 	Amount         float64
 }
 
-func GetAccuracyResult(action *Action, source StatsData, target StatsData) AccuracyResult {
+func GetAccuracyResult(base_accuracy float64, source StatsData, target StatsData) AccuracyResult {
 	stage := source.Stages[StatAccuracy] - target.Stages[StatEvasion]
-	accuracy := action.Accuracy * getStageMult(stage, 3)
+	accuracy := base_accuracy * getStageMult(stage, 3)
 	roll := rand.Float64() * 100
 	return AccuracyResult{
-		BaseAccuracy: action.Accuracy,
+		BaseAccuracy: base_accuracy,
 		Accuracy:     accuracy,
 		Roll:         roll,
 		Success:      accuracy > roll,
 	}
 }
 
-func GetDamageResult(action *Action, level int, source StatsData, target StatsData) DamageResult {
-	accuracy_result := GetAccuracyResult(action, source, target)
+func GetDamageResult(accuracy, power float64, level int, source StatsData, target StatsData) DamageResult {
+	accuracy_result := GetAccuracyResult(accuracy, source, target)
 	ratio := source.Stats[StatMelee] / target.Stats[StatDefense]
 	level_mod := float64(level*2)/5 + 2
-	amount := (action.Power*ratio*level_mod)/50 + 2
+	amount := (power*ratio*level_mod)/50 + 2
 	if !accuracy_result.Success {
 		fmt.Println("MISS")
 		amount = 0

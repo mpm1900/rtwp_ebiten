@@ -21,12 +21,12 @@ func InitDamage(world donburi.World) {
 }
 
 func damageAt(world donburi.World, event DamageEvent) {
-	entry, ok := components.DamageAt(world, event.Source, event.Position, event.Action)
+	entry, ok := components.DamageAt(world, event.Source, event.Position, event.Action.Accuracy, event.Action.Power)
 	if ok {
 		damage := components.Damage.Get(entry)
 		stats := components.Stats.Get(entry)
 		if *damage >= stats.Stats[components.StatHealth] {
-			ActorDeath.Publish(world, entry.Entity())
+			Destroy.Publish(world, entry.Entity())
 		}
 	}
 }

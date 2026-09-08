@@ -31,6 +31,9 @@ func main() {
 		}
 	}
 
+	target := components.Actor.MustFirst(g.ECS.World)
+	entities.CreateFireball(g.ECS, target.Entity(), target.Entity(), math.NewVec2(2000, 2000))
+
 	speed_up := modifiers.SpeedUp.Spawn(g.ECS, math.NewVec2(800, 800))
 	modifiers.SpeedDown.Spawn(g.ECS, math.NewVec2(300, 250))
 

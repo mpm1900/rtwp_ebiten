@@ -22,6 +22,15 @@ func GetHealth(entry *donburi.Entry) (health float64, damage float64) {
 	return stats.Stats[StatHealth], damage
 }
 
+func IsAlive(entry *donburi.Entry) bool {
+	if !entry.HasComponent(Stats) {
+		return true
+	}
+
+	health, damage := GetHealth(entry)
+	return health > damage
+}
+
 func WithDamage(entry *donburi.Entry, damage float64) {
 	if !entry.HasComponent(Damage) {
 		entry.AddComponent(Damage)

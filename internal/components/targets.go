@@ -30,7 +30,7 @@ func EachTarget(world donburi.World, entry *donburi.Entry, yield func(*donburi.E
 		}
 
 		target_entry := world.Entry(target)
-		if !target_entry.HasComponent(transform.Transform) {
+		if !target_entry.HasComponent(transform.Transform) || !IsAlive(target_entry) {
 			continue
 		}
 
@@ -47,4 +47,32 @@ func FirstTarget(world donburi.World, entry *donburi.Entry) (*donburi.Entry, boo
 	})
 
 	return first, first != nil
+}
+
+func PruneTargets(world donburi.World, entry *donburi.Entry) {
+	if !entry.HasComponent(Targets) {
+		return
+	}
+
+	targets := Targets.Get(entry)
+	alive := []donburi.Entity{}
+	for _, target := range *targets {
+		if !world.Valid(target) {
+			continue
+		}
+
+		target_entry := world.Entry(target)
+		if !IsAlive(target_entry) {
+			continue
+		}
+
+		alive = append(alive, target)
+	}
+
+	if len(alive) == 0 {
+		entry.RemoveComponent(Targets)
+		return
+	}
+
+	Targets.SetValue(entry, alive)
 }

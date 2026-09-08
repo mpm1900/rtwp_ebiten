@@ -91,6 +91,10 @@ func (a *ActorData) StartAction(world donburi.World, entry *donburi.Entry, event
 	return true
 }
 func (a *ActorData) EndAction(world donburi.World, entry *donburi.Entry, event *ActionEvent) {
+	if event == nil || event.Action == nil {
+		return
+	}
+
 	if delay := event.Action.PostDelay; delay > 0 {
 		WithDelay(entry, delay)
 	}

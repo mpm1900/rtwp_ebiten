@@ -35,18 +35,20 @@ func advanceActionStep(world donburi.World, entry *donburi.Entry) bool {
 		return true
 	}
 
+	active_event := *event
+
 	if !actor.ActionStarted {
-		if !actor.StartAction(world, entry, *event) {
+		if !actor.StartAction(world, entry, active_event) {
 			return false
 		}
 	}
 
-	switch event.Action.Update(world, *event) {
+	switch active_event.Action.Update(world, active_event) {
 	case ActionRunning:
 		return false
 	case ActionComplete, ActionCanceled:
-		event.Action.Cancel(world, *event)
-		actor.EndAction(world, entry, event)
+		active_event.Action.Cancel(world, active_event)
+		actor.EndAction(world, entry, &active_event)
 		actor.NextActionEvent()
 		return true
 	default:

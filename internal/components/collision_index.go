@@ -4,19 +4,20 @@ import (
 	"image"
 
 	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/transform"
 )
 
 const collisionCellSize = 64
 
 type collisionIndex struct {
-	cells map[[2]int][]*donburi.Entry
+	cells map[[2]int][]donburi.Entity
 }
 
 var collisionSpatial collisionIndex
 
 func RebuildCollisionIndex(world donburi.World) {
 	if collisionSpatial.cells == nil {
-		collisionSpatial.cells = map[[2]int][]*donburi.Entry{}
+		collisionSpatial.cells = map[[2]int][]donburi.Entity{}
 	}
 	clear(collisionSpatial.cells)
 
@@ -26,11 +27,11 @@ func RebuildCollisionIndex(world donburi.World) {
 			continue
 		}
 
-		collisionSpatial.add(entry, bounds)
+		collisionSpatial.add(entry.Entity(), bounds)
 	}
 }
 
-func (idx *collisionIndex) add(entry *donburi.Entry, bounds image.Rectangle) {
+func (idx *collisionIndex) add(entity donburi.Entity, bounds image.Rectangle) {
 	min_x := cellCoord(bounds.Min.X)
 	min_y := cellCoord(bounds.Min.Y)
 	max_x := cellCoord(bounds.Max.X - 1)
@@ -39,12 +40,17 @@ func (idx *collisionIndex) add(entry *donburi.Entry, bounds image.Rectangle) {
 	for x := min_x; x <= max_x; x++ {
 		for y := min_y; y <= max_y; y++ {
 			key := [2]int{x, y}
-			idx.cells[key] = append(idx.cells[key], entry)
+			idx.cells[key] = append(idx.cells[key], entity)
 		}
 	}
 }
 
-func (idx *collisionIndex) eachCandidate(bounds image.Rectangle, skip donburi.Entity, yield func(*donburi.Entry) bool) {
+func (idx *collisionIndex) eachCandidate(
+	world donburi.World,
+	bounds image.Rectangle,
+	skip donburi.Entity,
+	yield func(*donburi.Entry) bool,
+) {
 	min_x := cellCoord(bounds.Min.X)
 	min_y := cellCoord(bounds.Min.Y)
 	max_x := cellCoord(bounds.Max.X - 1)
@@ -52,10 +58,16 @@ func (idx *collisionIndex) eachCandidate(bounds image.Rectangle, skip donburi.En
 
 	for x := min_x; x <= max_x; x++ {
 		for y := min_y; y <= max_y; y++ {
-			for _, other := range idx.cells[[2]int{x, y}] {
-				if other.Entity() == skip {
+			for _, entity := range idx.cells[[2]int{x, y}] {
+				if entity == skip || !world.Valid(entity) {
 					continue
 				}
+
+				other := world.Entry(entity)
+				if !other.HasComponent(Collision) || !other.HasComponent(transform.Transform) {
+					continue
+				}
+
 				if !yield(other) {
 					return
 				}

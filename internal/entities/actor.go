@@ -31,6 +31,6 @@ func CreateActor(
 	}))
 	components.WithDamage(entry, 0)
 	components.WithImage(entry, assets.ActorImage, position)
-	components.WithCollision(entry)
+	components.WithCollision(entry, components.CollisionData{})
 	return entity
 }

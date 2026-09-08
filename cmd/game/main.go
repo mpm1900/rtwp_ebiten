@@ -16,7 +16,7 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var amount = 30
+var amount = 10
 
 func main() {
 	g := game.NewGame()
@@ -36,7 +36,7 @@ func main() {
 
 	components.WithDelay(g.ECS.World.Entry(speed_up), 60)
 	components.WithRange(g.ECS.World.Entry(speed_up), 120)
-	components.WithCollision(g.ECS.World.Entry(speed_up))
+	components.WithCollision(g.ECS.World.Entry(speed_up), components.CollisionData{})
 	components.WitherInteractable(g.ECS.World.Entry(speed_up), components.InteractableData{
 		TargetOffset: math.NewVec2(0, -24),
 		OnInteract: func(world donburi.World, entity donburi.Entity) {

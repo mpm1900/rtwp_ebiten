@@ -18,14 +18,24 @@ func HandleMovement(ecs *ecs.ECS) {
 	}
 
 	for entry := range components.MovementQuery.Iter(ecs.World) {
+		entity := entry.Entity()
+		if !ecs.World.Valid(entity) {
+			continue
+		}
+
 		movement := components.Movement.Get(entry)
 		budget := getSpeed(entry)
 
 		for budget > 0 {
+			if !ecs.World.Valid(entity) {
+				break
+			}
+			entry = ecs.World.Entry(entity)
+
 			distance := movement.TargetDistance(ecs.World, entry)
 			if distance <= movement.StopDistance {
 				if movement.Next() {
-					completed = append(completed, entry.Entity())
+					completed = append(completed, entity)
 					break
 				}
 				continue
@@ -34,18 +44,23 @@ func HandleMovement(ecs *ecs.ECS) {
 			step := min(budget, distance)
 			delta, ok := movement.Delta(ecs.World, entry, step)
 			if !ok {
-				completed = append(completed, entry.Entity())
+				completed = append(completed, entity)
 				break
 			}
 
 			budget -= step
-			if !moveWithCollision(ecs.World, entry, delta) {
+			if !moveWithCollision(ecs.World, entity, delta) {
 				continue
 			}
 
+			if !ecs.World.Valid(entity) {
+				break
+			}
+			entry = ecs.World.Entry(entity)
+
 			if movement.TargetDistance(ecs.World, entry) <= components.CollisionStopDistance(entry, movement.StopDistance) {
 				if movement.Next() {
-					completed = append(completed, entry.Entity())
+					completed = append(completed, entity)
 					break
 				}
 				continue
@@ -66,58 +81,100 @@ func HandleMovement(ecs *ecs.ECS) {
 	}
 }
 
-func moveWithCollision(world donburi.World, entry *donburi.Entry, delta dmath.Vec2) bool {
-	if delta.IsZero() {
+func moveWithCollision(world donburi.World, entity donburi.Entity, delta dmath.Vec2) bool {
+	if delta.IsZero() || !world.Valid(entity) {
 		return false
 	}
 
+	entry := world.Entry(entity)
 	trans := transform.Transform.Get(entry)
 	start_pos := trans.LocalPosition
 	trans.LocalRotation = dmath.ToDegrees(math.Atan2(delta.Y, delta.X))
 
-	// Fast path: try the full delta in one collision check.
 	full_position := components.ClampWorldPosition(start_pos.Add(delta))
-	if isFreeAt(world, entry, full_position) {
-		trans.LocalPosition = full_position
+	if isFreeAt(world, entity, full_position) {
+		if !world.Valid(entity) {
+			return false
+		}
+
+		transform.Transform.Get(world.Entry(entity)).LocalPosition = full_position
 		return false
 	}
 
-	// Blocked: sub-step to find how far we can get before the collision.
 	magnitude := delta.Magnitude()
 	direction := delta.Normalized()
 	position := start_pos
 	traveled := 0.0
 	for traveled < magnitude {
+		if !world.Valid(entity) {
+			return false
+		}
+
 		step := min(1.0, magnitude-traveled)
 		next := components.ClampWorldPosition(position.Add(direction.MulScalar(step)))
-		if !isFreeAt(world, entry, next) {
+		if !isFreeAt(world, entity, next) {
 			break
 		}
+		if !world.Valid(entity) {
+			return false
+		}
+
 		position = next
 		traveled += step
 	}
 
-	// Slide along axes for the remaining distance.
 	remaining := magnitude - traveled
-	if remaining > 0 {
+	if remaining > 0 && world.Valid(entity) {
 		axes := [2]dmath.Vec2{{X: direction.X * remaining}, {Y: direction.Y * remaining}}
 		for _, axis_delta := range axes {
-			if axis_delta.IsZero() {
+			if axis_delta.IsZero() || !world.Valid(entity) {
 				continue
 			}
+
 			next := components.ClampWorldPosition(position.Add(axis_delta))
-			if isFreeAt(world, entry, next) {
+			if isFreeAt(world, entity, next) {
+				if !world.Valid(entity) {
+					return false
+				}
 				position = next
 			}
 		}
 	}
 
-	trans.LocalPosition = position
+	if !world.Valid(entity) {
+		return false
+	}
+
+	transform.Transform.Get(world.Entry(entity)).LocalPosition = position
 	return true
 }
 
-func isFreeAt(world donburi.World, entry *donburi.Entry, position dmath.Vec2) bool {
-	_, colliding := components.CollidesAt(world, entry, position)
+func isFreeAt(world donburi.World, entity donburi.Entity, position dmath.Vec2) bool {
+	if !world.Valid(entity) {
+		return true
+	}
+
+	entry := world.Entry(entity)
+	other, colliding := components.CollidesAt(world, entry, position)
+	if colliding && other != nil {
+		if entry.HasComponent(components.Collision) {
+			collision := components.Collision.Get(entry)
+			if collision.OnCollide != nil {
+				collision.OnCollide(world, entry, other.Entity())
+			}
+		}
+		if world.Valid(other.Entity()) && other.HasComponent(components.Collision) {
+			collision := components.Collision.Get(other)
+			if collision.OnCollide != nil {
+				collision.OnCollide(world, other, entity)
+			}
+		}
+	}
+
+	if !world.Valid(entity) {
+		return true
+	}
+
 	return !colliding
 }
 

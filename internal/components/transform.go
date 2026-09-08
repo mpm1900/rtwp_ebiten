@@ -31,11 +31,19 @@ func SetCenter(entry *donburi.Entry, center dmath.Vec2) {
 }
 
 func Rect(entry *donburi.Entry) (image.Rectangle, bool) {
+	if !entry.HasComponent(transform.Transform) {
+		return image.Rectangle{}, false
+	}
+
 	trans := transform.Transform.Get(entry)
 	return RectAt(entry, trans.LocalPosition)
 }
 
 func RectAt(entry *donburi.Entry, position dmath.Vec2) (image.Rectangle, bool) {
+	if !entry.HasComponent(transform.Transform) {
+		return image.Rectangle{}, false
+	}
+
 	trans := transform.Transform.Get(entry)
 	if trans.LocalScale.X <= 0 || trans.LocalScale.Y <= 0 {
 		return image.Rectangle{}, false

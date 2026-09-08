@@ -32,7 +32,7 @@ const (
 	GrassTileCount   = GrassTilesetCols * GrassTilesetCols
 )
 
-func MustLoadAssets() {
+func Load() {
 	var err error
 	CursorPointerImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-pointer.png")
 	CursorInvalidImage, _, _ = ebitenutil.NewImageFromFile("assets/images/cursor-invalid.png")

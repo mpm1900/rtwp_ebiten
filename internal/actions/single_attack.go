@@ -10,9 +10,9 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-type AttackBehavior struct{}
+type SingleAttackBehavior struct{}
 
-func (b AttackBehavior) Publish(action *components.Action, world donburi.World, event components.ActionEvent) {
+func (b SingleAttackBehavior) Publish(action *components.Action, world donburi.World, event components.ActionEvent) {
 	shift := slices.Contains(event.Keys, ebiten.KeyShift)
 	for selected := range components.Selected.Iter(world) {
 		actor := components.Actor.Get(selected)
@@ -50,7 +50,7 @@ func (b AttackBehavior) Publish(action *components.Action, world donburi.World, 
 		actor.QueueActionEvent(world, action_event, shift)
 	}
 }
-func (b AttackBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
+func (b SingleAttackBehavior) Start(action *components.Action, world donburi.World, event components.ActionEvent) {
 	entry, ok := components.FirstActorAtPoint(world, event.Position)
 	if !ok {
 		return
@@ -68,7 +68,7 @@ func (b AttackBehavior) Start(action *components.Action, world donburi.World, ev
 	})
 }
 
-func (b AttackBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
+func (b SingleAttackBehavior) Update(action *components.Action, world donburi.World, event components.ActionEvent) components.ActionStatus {
 	if !world.Valid(event.Source) {
 		return components.ActionComplete
 	}
@@ -94,7 +94,7 @@ func (b AttackBehavior) Update(action *components.Action, world donburi.World, e
 	}
 	return components.ActionComplete
 }
-func (b AttackBehavior) Cancel(action *components.Action, world donburi.World, event components.ActionEvent) {
+func (b SingleAttackBehavior) Cancel(action *components.Action, world donburi.World, event components.ActionEvent) {
 	if !world.Valid(event.Source) {
 		return
 	}
@@ -104,14 +104,14 @@ func (b AttackBehavior) Cancel(action *components.Action, world donburi.World, e
 		entry.RemoveComponent(components.Targets)
 	}
 }
-func (b AttackBehavior) Valid(action *components.Action, world donburi.World, point math.Vec2) bool {
+func (b SingleAttackBehavior) Valid(action *components.Action, world donburi.World, point math.Vec2) bool {
 	return components.IsInWorld(point)
 }
 
-var Attack = &components.Action{
-	Behavior: AttackBehavior{},
+var SingleAttack = &components.Action{
+	Behavior: SingleAttackBehavior{},
 	Key:      ebiten.Key2,
-	Name:     "Attack",
+	Name:     "Single Attack",
 	Accuracy: 50,
 	Cooldown: 60,
 	Delay:    10,

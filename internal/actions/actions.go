@@ -4,8 +4,8 @@ import (
 	"rtwp_ebitengine/internal/assets"
 )
 
-func LoadAbilities() {
+func Load() {
 	Move.Cursor = assets.CursorMoveImage
 	Move.CursorInvalid = assets.CursorInvalidImage
-	Attack.Cursor = assets.CursorAttackImage
+	SingleAttack.Cursor = assets.CursorAttackImage
 }

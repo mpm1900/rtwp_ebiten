@@ -30,8 +30,8 @@ func NewGame() Game {
 		ECS:   ecs.NewECS(donburi.NewWorld()),
 	}
 
-	assets.MustLoadAssets()
-	actions.LoadAbilities()
+	assets.Load()
+	actions.Load()
 	events.Load(g.ECS.World)
 	systems.Load(g.ECS, g.Frame)
 	renderers.Load(g.ECS)

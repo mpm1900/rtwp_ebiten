@@ -13,7 +13,7 @@ import (
 )
 
 var renderTargetsQuery = donburi.NewQuery(
-	filter.Contains(components.Targets, transform.Transform, components.Selected),
+	filter.Contains(components.Targets, transform.Transform),
 )
 
 var targetsLineColor = color.RGBA{0xff, 0, 0, 0xff}

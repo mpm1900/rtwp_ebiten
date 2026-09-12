@@ -184,16 +184,24 @@ func RenderHealthbars(ecs *ecs.ECS, screen *ebiten.Image) {
 			color.RGBA{0, 0, 0, 0xff},
 			false,
 		)
-		if percent > 0 {
-			vector.FillRect(
-				screen,
-				float32(barX+1),
-				float32(barY+1),
-				HEALTH_BAR_WIDTH*percent-2,
-				HEALTH_BAR_HEIGHT-2,
-				assets.ColorHpFull,
-				false,
-			)
+		hp_color := assets.ColorHp25
+		if percent > .25 {
+			hp_color = assets.ColorHp50
 		}
+		if percent > .50 {
+			hp_color = assets.ColorHp75
+		}
+		if percent > .75 {
+			hp_color = assets.ColorHp100
+		}
+		vector.FillRect(
+			screen,
+			float32(barX+1),
+			float32(barY+1),
+			(HEALTH_BAR_WIDTH-2)*percent,
+			HEALTH_BAR_HEIGHT-2,
+			hp_color,
+			false,
+		)
 	}
 }

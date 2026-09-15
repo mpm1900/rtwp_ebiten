@@ -7,12 +7,8 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
-func CreateEffect(ecs *ecs.ECS, mod *components.ModifierData) donburi.Entity {
-	return CreateModifier(ecs, components.NewModifierInstance(mod), EffectLayer)
-}
-
-func CreateModifier(ecs *ecs.ECS, mod components.ModifierData, layer ecs.LayerID) donburi.Entity {
-	entity := ecs.Create(layer, components.Modifier)
+func CreateModifier(ecs *ecs.ECS, mod components.ModifierData) donburi.Entity {
+	entity := ecs.Create(EffectLayer, components.Modifier)
 	entry := ecs.World.Entry(entity)
 	components.Modifier.SetValue(entry, mod)
 	return entity

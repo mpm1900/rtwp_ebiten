@@ -36,7 +36,7 @@ func (b StatsChangeBehavior) Apply(mod *components.ModifierData, world donburi.W
 	})
 }
 func (b StatsChangeBehavior) Spawn(mod *components.ModifierData, ecs *ecs.ECS, position math.Vec2) donburi.Entity {
-	entity := entities.CreateEffect(ecs, mod)
+	entity := entities.CreateModifier(ecs, *mod)
 	entry := ecs.World.Entry(entity)
 	components.WithImage(entry, assets.YellowSquareImage, position)
 	components.WithRange(entry, 100)

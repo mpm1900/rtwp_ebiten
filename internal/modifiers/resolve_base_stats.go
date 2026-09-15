@@ -28,7 +28,7 @@ func (b ResolveBaseStatsBehavior) Apply(mod *components.ModifierData, world donb
 	})
 }
 func (b ResolveBaseStatsBehavior) Spawn(mod *components.ModifierData, ecs *ecs.ECS, position math.Vec2) donburi.Entity {
-	entity := entities.CreateEffect(ecs, mod)
+	entity := entities.CreateModifier(ecs, *mod)
 	entry := ecs.World.Entry(entity)
 	entry.AddComponent(components.TargetsWhere)
 	components.TargetsWhere.SetValue(entry, func(e donburi.Entity) bool {

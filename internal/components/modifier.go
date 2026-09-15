@@ -48,14 +48,6 @@ func (mod *ModifierData) Spawn(ecs *ecs.ECS, position math.Vec2) donburi.Entity 
 	return mod.Behavior.Spawn(mod, ecs, position)
 }
 
-func NewModifierInstance(mod *ModifierData) ModifierData {
-	if mod == nil {
-		return ModifierData{}
-	}
-
-	return *mod
-}
-
 func (mod ModifierData) Order() int {
 	return mod.Priority
 }

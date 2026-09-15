@@ -11,6 +11,7 @@ import (
 	"rtwp_ebitengine/internal/modifiers"
 	"rtwp_ebitengine/internal/renderers"
 	"rtwp_ebitengine/internal/systems"
+	"rtwp_ebitengine/internal/tiles"
 	"rtwp_ebitengine/internal/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -36,6 +37,10 @@ func NewGame() Game {
 	systems.Load(g.ECS, g.Frame)
 	renderers.Load(g.ECS)
 
+	tiles.LoadDefinitions()
+	tileLayer := entities.CreateTileMap(g.ECS, "assets/maps/example.map", components.WORLD_BORDER, components.WORLD_BORDER)
+	renderers.SetTileLayer(tileLayer)
+
 	modifiers.LoadSystemModifiers(g.ECS)
 	entities.CreatePlayer(g.ECS)
 
@@ -56,6 +61,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	camera_surface.Fill(color.Black)
 
 	g.ECS.DrawLayer(renderers.RenderLayerBackground, camera_surface)
+	g.ECS.DrawLayer(renderers.RenderLayerTiles, camera_surface)
 	g.ECS.DrawLayer(renderers.RenderLayerEffects, camera_surface)
 	g.ECS.DrawLayer(renderers.RenderLayerActors, camera_surface)
 	camera.Camera.Blit(screen)

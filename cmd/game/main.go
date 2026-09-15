@@ -16,7 +16,7 @@ import (
 	"github.com/yohamta/donburi/features/math"
 )
 
-var amount = 30
+var amount = 1
 
 func main() {
 	g := game.NewGame()

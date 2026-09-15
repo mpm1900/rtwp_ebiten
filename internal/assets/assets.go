@@ -26,10 +26,16 @@ var YellowSquareImage *ebiten.Image
 var YolkFontSource *text.GoTextFaceSource
 
 var GrassTilesetImage *ebiten.Image
+var WallTilesetImage *ebiten.Image
+var StructTilesetImage *ebiten.Image
 
 const (
 	GrassTilesetCols = 8
 	GrassTileCount   = GrassTilesetCols * GrassTilesetCols
+
+	// Wall/Struct tilesets are 512x512 at 32px tiles -> 16x16 grid.
+	WallTilesetCols = 16
+	WallTilesetRows = 16
 )
 
 func Load() {
@@ -58,6 +64,14 @@ func Load() {
 	YellowSquareImage.Fill(color.RGBA{0xff, 0xff, 0, 0xff})
 
 	GrassTilesetImage, _, err = ebitenutil.NewImageFromFile("assets/images/TX Tileset Grass.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	WallTilesetImage, _, err = ebitenutil.NewImageFromFile("assets/images/TX Tileset Wall.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	StructTilesetImage, _, err = ebitenutil.NewImageFromFile("assets/images/TX Struct.png")
 	if err != nil {
 		log.Fatal(err)
 	}

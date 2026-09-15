@@ -4,6 +4,7 @@ import "github.com/yohamta/donburi/ecs"
 
 func Load(ecs *ecs.ECS) {
 	ecs.AddRenderer(RenderLayerBackground, RenderBackground)
+	ecs.AddRenderer(RenderLayerTiles, RenderTiles)
 	ecs.AddRenderer(RenderLayerActors, RenderActors)
 	ecs.AddRenderer(RenderLayerEffects, RenderMovement)
 	ecs.AddRenderer(RenderLayerEffects, RenderTargets)

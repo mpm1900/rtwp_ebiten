@@ -180,6 +180,13 @@ func isFreeAt(world donburi.World, entity donburi.Entity, position dmath.Vec2) b
 		return true
 	}
 
+	// Per-side tile collision: solid tile edges act as thin walls independent
+	// of entity-vs-entity collision. An entity may be free of other entities
+	// but still blocked by a tile wall.
+	if components.CollidesWithTile(world, entry, position) {
+		return false
+	}
+
 	if follow != donburi.Null && colliding && other != nil {
 		if other.HasComponent(components.Actor) {
 			return false

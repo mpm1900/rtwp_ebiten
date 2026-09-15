@@ -147,6 +147,31 @@ func blockObstacles(world donburi.World, start, goal dmath.Vec2) []qpathing.Grid
 		}
 	}
 
+	// Block pathfinding cells that overlap any solid tile area. Fully-sealed
+	// tiles block all their cells; partial tiles (e.g. stairs) block only the
+	// cells overlapping their thin railings, leaving the open middle pathable
+	// so paths route through the gap while movement-time collision enforces
+	// the railings.
+	tileMap := components.GetTileMap(world)
+	if tileMap != nil {
+		tileMap.ForEachSolidArea(func(bounds image.Rectangle) {
+			if rectContains(bounds, start) || rectContains(bounds, goal) {
+				return
+			}
+			minCoord := grid.PosToCoord(float64(bounds.Min.X), float64(bounds.Min.Y))
+			maxCoord := grid.PosToCoord(float64(bounds.Max.X-1), float64(bounds.Max.Y-1))
+			for x := minCoord.X; x <= maxCoord.X; x++ {
+				for y := minCoord.Y; y <= maxCoord.Y; y++ {
+					c := qpathing.GridCoord{X: x, Y: y}
+					if inBounds(c) && !grid.GetCellIsBlocked(c) {
+						grid.SetCellIsBlocked(c, true)
+						blocked = append(blocked, c)
+					}
+				}
+			}
+		})
+	}
+
 	return blocked
 }
 
